@@ -292,7 +292,17 @@ const CONFIG = {
     sendeRate: 20,         // Zustände pro Sekunde
     puffer: 0.10,          // fremde Fahrzeuge werden so viele Sekunden verzögert dargestellt (weiche Interpolation)
     codeLaenge: 5,         // Länge des Raum-Codes
-    verbindenTimeout: 15,  // nach so vielen Sekunden gilt ein Verbindungsversuch als gescheitert
+    vermittlerTimeout: 12, // so viele Sekunden darf die Anmeldung beim Vermittlungs-Server dauern
+    verbindenTimeout: 12,  // so viele Sekunden darf ein Versuch dauern, die direkte Verbindung zum Host aufzubauen
+    verbindenVersuche: 3,  // so oft versucht es ein Gast von selbst, bevor die Fehlermeldung kommt
+    lobbyTimeout: 8,       // steht die Verbindung, muss der Host innert so vielen Sekunden die Raum-Daten schicken
+    neuAnmelden: 10,       // war das Fenster des Hosts so viele Sekunden im Hintergrund, meldet sich der Raum frisch beim Vermittler an
+    // Wege, über die sich zwei Browser finden (STUN) und über die sie notfalls umgeleitet werden (TURN).
+    // Einen eigenen TURN-Server kannst du hier anfügen: { urls: 'turn:…', username: '…', credential: '…' }
+    iceServer: [
+      { urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
+      { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+    ],
     ausfallTimeout: 6,     // hört man so lange nichts von jemandem, gilt die Verbindung als verloren
   },
 
@@ -3244,14 +3254,15 @@ const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 
 
 const Online = {
   peer: null, host: false, code: '', gaeste: {}, zumHost: null, zumHostZ: null, meineId: '', lobby: null, imRennen: false, bereit: false,
-  versatz: 0, rtt: 0, bestRtt: 1e9, t0: 0, schrittNr: 0, puffer: [], bekannt: {}, letzterEmpfang: 0, meinKart: -1, endeGesendet: false, takte: [], zeitlimit: null,
+  versatz: 0, rtt: 0, bestRtt: 1e9, t0: 0, schrittNr: 0, puffer: [], bekannt: {}, letzterEmpfang: 0, meinKart: -1, endeGesendet: false, takte: [], zeitlimit: null, verstecktSeit: 0, lauf: 0,
 
   profil() { const D = Speicher.daten; return { name: D.name, fahrzeug: D.fahrzeug, farbe: D.farbe }; },
   jetzt() { return performance.now() + (this.host ? 0 : this.versatz); },           // gemeinsame Uhr (die des Hosts)
   peerOptionen() {
+    const o = { debug: 1, config: { iceServers: CONFIG.netz.iceServer, sdpSemantics: 'unified-plan' } };
     const p = App.parameter.get('peer');            // nur für Tests: eigener Vermittlungs-Server, z. B. ?peer=localhost:9000
-    if (p) { const t = p.split(':'); return { host: t[0], port: +t[1] || 9000, path: '/', secure: false, debug: 1 }; }
-    return { debug: 1 };
+    if (p) { const t = p.split(':'); o.host = t[0]; o.port = +t[1] || 9000; o.path = '/'; o.secure = false; }
+    return o;
   },
   ladeBibliothek(fertig) {
     if (window.Peer) { fertig(); return; }
@@ -3259,21 +3270,32 @@ const Online = {
   },
   fehlerText(e) {
     const t = e && e.type;
-    if (t === 'peer-unavailable') return 'Diesen Raum gibt es nicht (mehr). Prüfe den Code oder bitte den Host um einen neuen Link.';
-    if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return 'Der Vermittlungs-Server ist gerade nicht erreichbar. Versuch es in ein paar Minuten nochmals.';
+    if (t === 'peer-unavailable') return 'Diesen Raum gibt es nicht (mehr). Prüfe den Code. Stimmt er, hat der Host das Spiel geschlossen oder sein Gerät ist eingeschlafen: Dann soll er das Spiel wieder nach vorne holen oder einen neuen Raum erstellen.';
+    if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed' || t === 'disconnected') return 'Der Vermittlungs-Server ist gerade nicht erreichbar. Prüfe deine Internetverbindung und versuch es in ein paar Minuten nochmals.';
     if (t === 'browser-incompatible') return 'Dein Browser unterstützt keine direkten Verbindungen (WebRTC).';
     if (t === 'webrtc') return 'Die direkte Verbindung kam nicht zustande. Manche Firmen- und Schulnetze blockieren das.';
     return 'Verbindungsfehler' + (t ? ' (' + t + ')' : '') + '.';
   },
   // Verständliche Fehlermeldung mit Hinweis auf die Modi, die immer gehen
-  fehler(text) {
+  // code: Raum, bei dem «Nochmals versuchen» angeboten wird · diagnose: klein gedruckte Zeile für die Fehlersuche
+  fehler(text, code, diagnose) {
     this.verlassen();
     if (!Spiel.demo) Spiel.starteDemo();
     Menue.wahlen = {};
-    Menue.zeige('fehler', '<div class="tafel"><h2>Online-Spiel</h2><div class="karte" style="border-left-color:var(--rot)"><p>' + text + '</p><p class="hinweis">Gegen Bots und lokal am selben Gerät kannst du jederzeit spielen.</p></div>' +
-      '<div class="knoepfe"><button class="knopf" data-a="zurueck">Zum Menü</button></div></div>', { zurueck: () => Menue.haupt() });
+    Menue.zeige('fehler', '<div class="tafel"><h2>Online-Spiel</h2><div class="karte" style="border-left-color:var(--rot)"><p>' + text + '</p>' +
+      (diagnose ? '<p class="hinweis" id="netz-diagnose" style="font-size:12px;word-break:break-word">' + esc(diagnose) + '</p>' : '') +
+      '<p class="hinweis">Gegen Bots und lokal am selben Gerät kannst du jederzeit spielen.</p></div>' +
+      '<div class="knoepfe">' + (code ? '<button class="knopf los" data-a="nochmals">Nochmals versuchen</button>' : '') + '<button class="knopf' + (code ? ' zweit' : '') + '" data-a="zurueck">Zum Menü</button></div></div>',
+      { nochmals: () => this.beitreten(code), zurueck: () => Menue.haupt() });
+  },
+  // Warte-Bild mit «Abbrechen» (heisst wie das normale Lade-Bild, damit die Lobby es ablösen kann)
+  warte(text, hinweis) {
+    Menue.zeige('laden', '<div class="tafel"><h1 class="logo">Baustellen-<small>Rennen</small></h1><div class="band"></div><p id="netz-warte">' + text + '</p>' + (hinweis ? '<p class="hinweis">' + hinweis + '</p>' : '') +
+      '<div class="knoepfe"><button class="knopf zweit" data-a="zurueck">Abbrechen</button></div></div>', { zurueck: () => App.zumMenue() });
+    const k = Menue.el.querySelector('.knopf'); if (k) k.blur();      // sonst bricht eine noch gedrückte Enter-Taste gleich wieder ab
   },
   verlassen() {
+    this.lauf++;                                    // ein noch laufender Beitritt (Bibliothek lädt gerade) gilt damit als abgebrochen
     for (const t of this.takte) clearInterval(t);
     this.takte = [];
     clearTimeout(this.zeitlimit);
@@ -3281,6 +3303,18 @@ const Online = {
     if (p) { try { p.destroy(); } catch (e) { /* schon geschlossen */ } }
     this.gaeste = {}; this.zumHost = null; this.zumHostZ = null; this.imRennen = false; this.bereit = false; this.lobby = null; this.bestRtt = 1e9;
     Spiel.netz = null; Menue.beiProfil = null;
+  },
+  // Handys und Tablets frieren Seiten im Hintergrund ein. Kommt das Fenster des Hosts zurück, meldet sich der Raum frisch beim Vermittler an,
+  // damit neue Mitspieler ihn sicher wieder finden. Bestehende direkte Verbindungen bleiben dabei bestehen.
+  sichtbar() {
+    if (document.hidden) { this.verstecktSeit = Date.now(); return; }
+    const p = this.peer, weg = this.verstecktSeit ? (Date.now() - this.verstecktSeit) / 1000 : 0;
+    this.verstecktSeit = 0;
+    if (!p || !this.host || !this.lobby || p.destroyed) return;
+    try {
+      if (!p.disconnected && weg >= CONFIG.netz.neuAnmelden) p.disconnect();
+      if (p.disconnected) p.reconnect();
+    } catch (e) { /* egal */ }
   },
 
   // ── Host: Raum erstellen ────────────────────────────────────────────────
@@ -3295,8 +3329,9 @@ const Online = {
         const p = new Peer(RAUM_VORSATZ + code, this.peerOptionen());
         this.peer = p; this.host = true; this.code = code; this.gaeste = {};
         clearTimeout(this.zeitlimit);
-        this.zeitlimit = setTimeout(() => { if (this.peer === p && !p.open) this.fehler('Der Vermittlungs-Server antwortet nicht. Prüfe deine Internetverbindung und versuch es nochmals.'); }, CONFIG.netz.verbindenTimeout * 1000);
+        this.zeitlimit = setTimeout(() => { if (this.peer === p && !this.lobby) this.fehler('Der Vermittlungs-Server antwortet nicht. Prüfe deine Internetverbindung und versuch es nochmals.'); }, CONFIG.netz.vermittlerTimeout * 1000);
         p.on('open', () => {
+          if (this.peer !== p || this.lobby) return;      // nach einer Neu-Anmeldung beim Vermittler kommt «open» nochmals: Dann bleibt alles, wie es ist
           clearTimeout(this.zeitlimit);
           this.lobby = { code, strecke: D.strecke, runden: D.runden, bots: Math.min(D.bots, 6), stufe: D.stufe, spieler: [] };
           this.zeigeLobby();
@@ -3305,11 +3340,11 @@ const Online = {
         p.on('connection', (c) => this.neuerGast(c));
         p.on('error', (e) => {
           if (this.peer !== p) return;
-          if (e.type === 'unavailable-id' && versuche++ < 5) { this.peer = null; try { p.destroy(); } catch (x) { /* egal */ } neu(); }     // Code schon vergeben: neuen würfeln
-          else if (!p.open || e.type === 'browser-incompatible') this.fehler(this.fehlerText(e));
+          if (e.type === 'unavailable-id' && !this.lobby && versuche++ < 5) { this.peer = null; try { p.destroy(); } catch (x) { /* egal */ } neu(); }     // Code schon vergeben: neuen würfeln
+          else if (!this.lobby || e.type === 'browser-incompatible') this.fehler(this.fehlerText(e));
         });
-        // Fällt nur der Vermittler aus, bleiben die Spieler trotzdem direkt verbunden
-        p.on('disconnected', () => { if (this.peer === p && !p.destroyed) { try { p.reconnect(); } catch (e) { /* egal */ } } });
+        // Steht der Raum und fällt nur der Vermittler aus, bleiben die Spieler trotzdem direkt verbunden. Der Raum meldet sich von selbst wieder an.
+        p.on('disconnected', () => { setTimeout(() => { if (this.peer === p && !p.destroyed && p.disconnected) { try { p.reconnect(); } catch (e) { /* egal */ } } }, 2000); });
       };
       neu();
     });
@@ -3318,12 +3353,15 @@ const Online = {
     c.on('open', () => {
       if (c.label === 'z') { const g = this.gaeste[c.peer]; if (g) { g.z = c; c.on('data', (d) => this.vomGast(c.peer, d)); } return; }
       const nein = (text) => { try { c.send(['nein', text]); } catch (e) { /* egal */ } setTimeout(() => { try { c.close(); } catch (e) { /* egal */ } }, 800); };
-      if (this.imRennen) { nein('In diesem Raum läuft gerade ein Rennen. Versuch es in ein paar Minuten nochmals.'); return; }
-      if (Object.keys(this.gaeste).length >= CONFIG.rennen.maxFahrer - 1) { nein('Der Raum ist voll (höchstens ' + CONFIG.rennen.maxFahrer + ' Fahrer).'); return; }
-      this.gaeste[c.peer] = { id: c.peer, k: c, z: null, name: 'Gast', fahrzeug: 0, farbe: 1, bereit: false, ping: 0, kart: -1, zuletzt: performance.now() };
-      c.on('data', (d) => this.vomGast(c.peer, d));
-      c.on('close', () => this.gastWeg(c.peer));
-      c.on('error', () => this.gastWeg(c.peer));
+      const alt = this.gaeste[c.peer];           // derselbe Gast nochmals (zweiter Verbindungsversuch): nur die Leitung tauschen
+      if (!alt && this.imRennen) { nein('In diesem Raum läuft gerade ein Rennen. Versuch es in ein paar Minuten nochmals.'); return; }
+      if (!alt && Object.keys(this.gaeste).length >= CONFIG.rennen.maxFahrer - 1) { nein('Der Raum ist voll (höchstens ' + CONFIG.rennen.maxFahrer + ' Fahrer).'); return; }
+      if (alt) { const k = alt.k; alt.k = c; alt.zuletzt = performance.now(); try { k.close(); } catch (e) { /* egal */ } }
+      else this.gaeste[c.peer] = { id: c.peer, k: c, z: null, name: 'Gast', fahrzeug: 0, farbe: 1, bereit: false, ping: 0, kart: -1, zuletzt: performance.now() };
+      const weg = () => { const g = this.gaeste[c.peer]; if (g && g.k === c) this.gastWeg(c.peer); };      // eine abgelöste alte Leitung darf den Gast nicht abmelden
+      c.on('data', (d) => { const g = this.gaeste[c.peer]; if (g && g.k === c) this.vomGast(c.peer, d); });
+      c.on('close', weg);
+      c.on('error', weg);
     });
   },
   gastWeg(id) {
@@ -3408,32 +3446,72 @@ const Online = {
     });
     $('f-code').onkeydown = (ev) => { if (ev.key === 'Enter') Menue.aktionen.los(); };
   },
+  // Der Beitritt läuft in Stufen, damit die Fehlermeldung sagen kann, woran es liegt:
+  // 1 Anmeldung beim Vermittler · 2 direkte Verbindung zum Host (mehrere Versuche) · 3 Raum-Daten vom Host
   beitreten(code) {
-    Menue.laden('Verbinde mit Raum ' + code + ' …');
+    this.warte('Verbinde mit dem Vermittlungs-Server …');
+    const lauf = ++this.lauf;
     this.ladeBibliothek(() => {
-      const p = new Peer(this.peerOptionen());
+      if (lauf !== this.lauf) return;               // inzwischen abgebrochen
+      const N = CONFIG.netz, p = new Peer(this.peerOptionen());
       this.peer = p; this.host = false; this.code = code; this.bereit = false; this.bestRtt = 1e9;
-      clearTimeout(this.zeitlimit);
-      this.zeitlimit = setTimeout(() => { if (this.peer === p && !this.lobby) this.fehler('Der Raum ' + code + ' antwortet nicht. Prüfe den Code. Vielleicht hat der Host das Spiel schon geschlossen.'); }, CONFIG.netz.verbindenTimeout * 1000);
-      p.on('open', () => {
-        this.meineId = p.id;
+      const laeuft = () => this.peer === p && !this.lobby && !this.imRennen;
+      const frist = (sekunden, dann) => { clearTimeout(this.zeitlimit); this.zeitlimit = setTimeout(() => { if (laeuft()) dann(); }, sekunden * 1000); };
+      let versuch = 0;
+      const verbinde = () => {
+        versuch++;
+        this.warte('Verbinde mit Raum ' + code + ' …', versuch > 1 ? 'Versuch ' + versuch + ' von ' + N.verbindenVersuche + '. Der Host muss die Lobby offen und im Vordergrund haben.' : '');
         const c = p.connect(RAUM_VORSATZ + code, { reliable: true, label: 'k', serialization: 'json' });
+        if (!c) return;                               // Vermittler gerade getrennt: Die Meldung dazu kommt über p.on('error')
         this.zumHost = c;
         c.on('open', () => {
+          if (!laeuft() || this.zumHost !== c) return;
           this.letzterEmpfang = performance.now();
           c.send(['hallo', this.profil()]);
           // zweiter, ungeordneter Kanal für die häufigen Zustands-Pakete (ein verlorenes Paket hält dann nichts auf)
           const z = p.connect(RAUM_VORSATZ + code, { reliable: false, label: 'z', serialization: 'json' });
-          z.on('open', () => { this.zumHostZ = z; });
-          z.on('data', (d) => this.vomHost(d));
+          if (z) { z.on('open', () => { this.zumHostZ = z; }); z.on('data', (d) => this.vomHost(d)); }
           this.takte.push(setInterval(() => this.zumHostSenden(['p', performance.now(), Math.round(this.rtt)]), 1500));
           this.zumHostSenden(['p', performance.now(), 0]);
+          frist(N.lobbyTimeout, () => this.beitrittFehler(code, 'lobby', c, versuch));
         });
-        c.on('data', (d) => this.vomHost(d));
-        c.on('close', () => this.hostWeg());
+        c.on('data', (d) => { if (this.zumHost === c) this.vomHost(d); });
+        c.on('close', () => { if (this.zumHost === c) this.hostWeg(); });
+        frist(N.verbindenTimeout, () => {
+          const pc = c.peerConnection, antwort = !!(pc && pc.remoteDescription);       // hat das Gerät des Hosts auf die Anfrage geantwortet?
+          // Ohne Antwort lohnt sich Warten (der Host holt das Spiel vielleicht gerade nach vorne), bei blockiertem Netz kaum
+          if (versuch < (antwort ? Math.min(2, N.verbindenVersuche) : N.verbindenVersuche)) { this.zumHost = null; try { c.close(); } catch (e) { /* egal */ } verbinde(); }
+          else this.beitrittFehler(code, antwort ? 'direkt' : 'stumm', c, versuch);
+        });
+      };
+      frist(N.vermittlerTimeout, () => this.beitrittFehler(code, 'vermittler', null, 0));
+      p.on('open', () => { this.meineId = p.id; if (laeuft() && !versuch) verbinde(); });
+      p.on('error', (e) => {
+        if (this.peer === p && !this.imRennen && (!this.lobby || e.type === 'peer-unavailable')) this.fehler(this.fehlerText(e), code, 'Diagnose: ' + (e && e.type) + (versuch ? ' · Versuch ' + versuch : ''));
       });
-      p.on('error', (e) => { if (this.peer === p && !this.imRennen && (!this.lobby || e.type === 'peer-unavailable')) this.fehler(this.fehlerText(e)); });
     });
+  },
+  // Beitritt gescheitert: sagen, an welcher Stelle es hängt, und eine Zeile für die Fehlersuche dazuschreiben
+  beitrittFehler(code, stufe, c, versuche) {
+    const pc = c && c.peerConnection;
+    const texte = {
+      vermittler: 'Der Vermittlungs-Server antwortet nicht. Prüfe deine Internetverbindung und versuch es nochmals.',
+      stumm: 'Der Raum ' + code + ' ist angemeldet, aber das Gerät des Hosts antwortet nicht. Meistens ist das Spiel dort nicht mehr im Vordergrund (anderer Tab, andere App oder Bildschirm aus). Der Host soll die Lobby offen und sichtbar lassen, dann versuchst du es nochmals.',
+      direkt: 'Der Host hat geantwortet, aber die direkte Verbindung zwischen den beiden Geräten kam nicht zustande. Das liegt am Netz: Gäste-WLAN, VPN und manche Mobilfunk-, Schul- und Firmennetze lassen sie nicht durch. Am ehesten klappt es, wenn beide Geräte im selben WLAN sind (ohne VPN).',
+      lobby: 'Die Verbindung zum Host steht, aber er schickt keine Raum-Daten. Der Host soll einen neuen Raum erstellen.',
+    };
+    let diagnose = 'Diagnose: ' + stufe + (versuche ? ' · Versuche ' + versuche : '');
+    if (pc) diagnose += ' · ICE ' + pc.iceConnectionState + '/' + pc.iceGatheringState + ' · Signal ' + pc.signalingState;
+    if (pc) {
+      // Welche Adressen kennen die beiden Seiten voneinander? host = im selben Netz · srflx = öffentliche Adresse · relay = Umleitung über einen TURN-Server
+      const adressen = (b) => {
+        const n = {};
+        String((b && b.sdp) || '').replace(/a=candidate:[^\r\n]* typ (\w+)/g, (_, art) => { n[art] = (n[art] || 0) + 1; return ''; });
+        return ['host', 'srflx', 'prflx', 'relay'].filter((a) => n[a]).map((a) => a + ' ' + n[a]).join(', ') || 'keine';
+      };
+      try { diagnose += ' · eigene Adressen: ' + adressen(pc.localDescription) + ' · Adressen des Hosts: ' + adressen(pc.remoteDescription); } catch (e) { /* nur eine Zusatz-Angabe */ }
+    }
+    this.fehler(texte[stufe], code, diagnose);
   },
   zumHostSenden(d, schnell) {
     const c = schnell && this.zumHostZ && this.zumHostZ.open ? this.zumHostZ : this.zumHost;
@@ -3496,7 +3574,7 @@ const Online = {
     Menue.zeige('lobby', '<div class="tafel breit"><h2>Raum ' + this.code + '</h2>' +
       '<div class="zeile"><input class="feld" id="f-link" readonly value="' + esc(link) + '" style="width:min(430px,100%);font-size:14px"><button class="knopf klein" data-a="kopieren">Link kopieren</button></div>' +
       '<div class="spalten"><div><h3>Fahrer</h3><div class="spielerliste" id="lobby-liste"></div><p class="hinweis">' +
-      (host ? 'Schick den Link oder den Code an deine Mitspieler. Du bist der Host: Verlässt du das Spiel, endet es für alle.' : 'Der Host startet das Rennen, sobald alle bereit sind.') + '</p></div>' +
+      (host ? 'Schick den Link oder den Code an deine Mitspieler und komm gleich wieder hierher zurück: Ist dieses Fenster im Hintergrund, kann auf Handys und Tablets niemand beitreten. Du bist der Host: Verlässt du das Spiel, endet es für alle.' :'Der Host startet das Rennen, sobald alle bereit sind.') + '</p></div>' +
       '<div><h3>Du</h3>' + Menue.fahrerZeilen() + '<h3>Rennen</h3>' + rennen + '</div></div>' +
       '<div class="zeile" style="margin-top:12px">' + (host ? '<button class="knopf los" data-a="start">Rennen starten</button>' : '<button class="knopf los" data-a="bereit" id="k-bereit">Bereit</button>') +
       '<button class="knopf zweit" data-a="zurueck">Verlassen</button></div></div>', {
@@ -3648,6 +3726,7 @@ const Online = {
       ' · Puffer ' + this.puffer.map((p) => p.length).join('/');
   },
 };
+document.addEventListener('visibilitychange', () => Online.sichtbar());
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 11: Einstellungen, Anzeige im Rennen (HUD) und Spielablauf
    ══════════════════════════════════════════════════════════════════════════ */

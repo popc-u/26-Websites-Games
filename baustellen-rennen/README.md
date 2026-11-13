@@ -51,7 +51,22 @@ Baustellen gelten nur für Fahrer, die beim Bauen vor dir lagen. Für alle ander
 2. Mit «Link kopieren» schickt er den Einladungslink (`…/index.html?raum=CODE`) an die Mitspieler. Der Link funktioniert, sobald das Spiel im Internet liegt. Wer die Datei lokal öffnet, wählt «Online: Raum beitreten» und tippt den Code ein.
 3. Alle wählen Name, Fahrzeug und Farbe und drücken «Bereit». Der Host stellt Strecke, Runden und Bots ein und startet.
 
-Die Verbindung läuft direkt von Browser zu Browser (WebRTC), vermittelt über den öffentlichen PeerJS-Server. In strengen Netzen (Schule, Firma) kann das scheitern, dann erscheint eine Meldung mit dem Hinweis auf Bots und lokales Spiel. Fällt ein Mitspieler aus, fährt ein Bot für ihn weiter. Verlässt der Host das Spiel, endet es für alle.
+Die Verbindung läuft direkt von Browser zu Browser (WebRTC), vermittelt über den öffentlichen PeerJS-Server. Fällt ein Mitspieler aus, fährt ein Bot für ihn weiter. Verlässt der Host das Spiel, endet es für alle.
+
+**Wichtig für den Host:** Lass die Lobby offen und im Vordergrund, bis alle da sind. Handys und Tablets frieren eine Seite im Hintergrund ein (andere App, Bildschirm aus), dann kann niemand beitreten. Kommst du zurück, meldet sich der Raum von selbst wieder an.
+
+### Wenn der Beitritt nicht klappt
+
+Der Gast versucht es bis zu dreimal von selbst (je 12 s). Danach sagt die Meldung, woran es liegt, und «Nochmals versuchen» startet einen neuen Anlauf.
+
+| Meldung | Bedeutung | Was hilft |
+|---|---|---|
+| «Diesen Raum gibt es nicht (mehr)» | Code falsch, Raum geschlossen oder Gerät des Hosts eingeschlafen | Code prüfen. Der Host holt das Spiel nach vorne oder erstellt einen neuen Raum. |
+| «… das Gerät des Hosts antwortet nicht» | Der Raum ist angemeldet, aber die Seite des Hosts ist im Hintergrund | Der Host lässt die Lobby sichtbar, der Gast versucht es nochmals. |
+| «… die direkte Verbindung … kam nicht zustande» | Das Netz lässt keine direkte Verbindung zu (Gäste-WLAN, VPN, manche Mobilfunk-, Schul- und Firmennetze) | Beide Geräte ins selbe WLAN ohne VPN. Sonst einen eigenen TURN-Server in `CONFIG.netz.iceServer` eintragen. |
+| «Der Vermittlungs-Server antwortet nicht» oder «… ist gerade nicht erreichbar» | Kein Internet, oder der PeerJS-Server ist überlastet | Internetverbindung prüfen, später nochmals versuchen. |
+
+Unter der Meldung steht klein eine Zeile «Diagnose: …» mit der Stufe, der Anzahl Versuche und den gefundenen Adressen. `host` sind Adressen im selben Netz, `srflx` öffentliche Adressen, `relay` Umleitungen über einen TURN-Server. Diese Zeile hilft bei der Fehlersuche.
 
 ## Hochladen
 
@@ -106,7 +121,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 
 ## Bekannte Grenzen
 
-- Der Online-Modus ist mit zwei Browsern gegen einen lokalen Vermittlungsserver getestet (Lobby, Rennen, Ergebnis, Revanche, Bot-Übernahme). Über den öffentlichen PeerJS-Server im echten Internet konnte ich ihn in meiner Testumgebung nicht ausprobieren.
+- Der Online-Modus ist mit zwei Browsern gegen einen lokalen Vermittlungsserver getestet (Lobby, Rennen, Ergebnis, Revanche, Bot-Übernahme), ebenso die Fehlerfälle beim Beitritt (falscher Code, Host antwortet nicht, Netz blockiert, Vermittler nicht erreichbar). Über den öffentlichen PeerJS-Server im echten Internet konnte ich ihn in meiner Testumgebung nicht ausprobieren. Ein erster Versuch mit zwei Geräten scheiterte am 13.11.2026 beim Beitritt. Die Ursache ist noch offen, die Diagnose-Zeile unter der Fehlermeldung soll sie zeigen. Zwischen Geräten in verschiedenen Netzen braucht es manchmal einen TURN-Server, und die mitgelieferten von PeerJS sind nicht immer erreichbar.
 - Die Bildrate ist nur mit Software-Grafik geprüft. Ruckelt es auf einem Gerät, hilft die Grafikstufe «Niedrig».
 - Die Touch-Steuerung ist eingebaut, aber nicht getestet.
 - Einen Grand-Prix-Modus gibt es nicht.
