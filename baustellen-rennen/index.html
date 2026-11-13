@@ -200,7 +200,7 @@ const CONFIG = {
     zeit: 1.5,             // so lange muss man dicht hinter jemandem bleiben
     distanz: 14,           // maximaler Abstand nach vorn (m)
     breite: 2.0,           // maximaler seitlicher Versatz (m)
-    bonus: 0.075,          // + so viel Höchsttempo (Anteil)
+    bonus: 0.05,          // + so viel Höchsttempo (Anteil)
     nachlauf: 0.7,         // so lange hält der Bonus nach dem Ausscheren noch an (s)
     minTempo: 17,          // nur oberhalb dieses Tempos
   },
@@ -215,6 +215,7 @@ const CONFIG = {
     bestwertVerfall: 1.0,  // der Aufhol-Bestwert «verjährt» mit so vielen Metern pro Sekunde
     ueberholAbstand: 2.5,  // man muss so viele Meter vorbei sein, damit es als Überholen zählt
     ueberholPause: 8,      // dasselbe Paar zählt frühestens nach so vielen Sekunden wieder
+    geschenktZeit: 6,           // s: Wer in eine Baustelle gefahren ist, bringt so lange keine BP fürs Überholen/Aufholen (das wäre geschenkt)
     fuehrenderVerdient: false, // true = auch der Führende sammelt BP (nicht empfohlen)
   },
 
@@ -243,7 +244,7 @@ const CONFIG = {
     rampe: { laenge: 7, breite: 5.5, hoehe: 1.5, boostDauer: 1.5, boostStaerke: 1.30 },
     pylonen: { tempoFaktor: 0.72, radius: 0.4, reihenAbstand: 13 },
     schlamm: { laenge: 15, tempoFaktor: 0.5, lenkFaktor: 0.55, anteil: 0.5 },
-    absperrung: { anteil: 0.6, tempoFaktor: 0.3, lahmZeit: 0.9, lahmFaktor: 0.55 },
+    absperrung: { anteil: 0.6, tempoFaktor: 0.42, lahmZeit: 0.6, lahmFaktor: 0.55 },
     minTempoNachTreffer: 8,   // langsamer wird man durch einen Treffer nie (man bleibt nie stehen)
     umleitungLaenge: 34,      // Länge der schrägen Leitwand (m)
   },
@@ -419,7 +420,7 @@ const STRECKEN = {
       { id: 'grube', art: 'abkuerzung', name: 'Grubenweg', breite: 8, rand: 1.2, belag: 'kies',
         punkte: [[-157, 229], [-156, 194, -2.5], [-156, 156, -5], [-156, 118, -2.8], [-156, 84]] },
       { id: 'werkhof', art: 'umleitung', name: 'Werkhof', breite: 12, rand: 1.5, belag: 'kies',
-        punkte: [[150, 158], [160, 176], [186, 190], [200, 212], [190, 236], [166, 252], [148, 264]] },
+        punkte: [[150, 158], [158, 176], [178, 190], [190, 212], [182, 236], [162, 252], [148, 264]] },
     ],
     slots: [
       { id: 'R1', art: 'rampe', pos: [5, 0] },
@@ -452,6 +453,66 @@ const STRECKEN = {
       { art: 'foerderband', x: -184, z: 138, dreh: 0.9 },
       { art: 'tribuene', x: -20, z: -20, dreh: 0 },
       { art: 'bogen', s: 0 },
+    ],
+  },
+  // ── Bergpass: drei Serpentinen hinauf, Brücke über die Schlucht, steile Abfahrt ──
+  bergpass: {
+    name: 'Bergpass',
+    text: 'Drei Serpentinen hinauf, über die Schluchtbrücke und steil wieder ins Tal.',
+    breite: 15,
+    rand: 3.5,
+    belag: 'asphalt',
+    himmel: [0x9ccdf0, 0xeaf6fb],
+    boden: { gras: 0x7d9a55, kies: 0xa9a08c, fels: 0x8a8580 },
+    punkte: [
+      [-60, 0, 0], [0, 0, 0], [50, 0, 0.5],                                 // Start/Ziel-Gerade im Tal
+      [90, 0, 1.2], [107, 7, 2], [114, 24, 3], [107, 41, 4], [90, 48, 5],   // Serpentine 1 (links)
+      [50, 48, 7],
+      [10, 48, 9.2], [-7, 55, 10], [-14, 72, 11], [-7, 89, 12], [10, 96, 13],   // Serpentine 2 (rechts)
+      [50, 96, 15],
+      [90, 96, 17], [107, 103, 17.8], [114, 120, 18.8], [107, 137, 19.8], [90, 144, 20.8],   // Serpentine 3 (links)
+      [40, 144, 23], [-20, 144, 25],                                        // Passhöhe
+      [-60, 144, 25.5], [-110, 144, 25],                                    // Brücke über die Schlucht
+      [-140, 144, 24.5], [-170, 136, 23.5], [-186, 114, 22],                // weite Linkskurve
+      [-190, 100, 20.5], [-216, 84, 18], [-228, 60, 15.5], [-216, 36, 13], [-190, 20, 10.5],   // Abfahrt um den Felskopf
+      [-172, 6, 8.5], [-150, 0, 7], [-110, 0, 4],                           // Schlusskurve und Zielhang
+    ],
+    bruecken: [{ von: [-52, 144], bis: [-118, 144] }],
+    schanzen: [{ pos: [-125, 0], laenge: 12, hoehe: 1.8 }],
+    wege: [
+      { id: 'steilhang', art: 'abkuerzung', name: 'Steilhang', breite: 8, rand: 1.2, belag: 'kies',
+        punkte: [[-190, 100], [-181, 80, 18.4], [-178, 60, 15.6], [-181, 40, 13], [-190, 20]] },
+      { id: 'alpweg', art: 'umleitung', name: 'Alpweg', breite: 12, rand: 1.5, belag: 'kies',
+        punkte: [[62, 144], [50, 153, 22.6], [34, 170, 23.6], [14, 178, 24.4], [-6, 170, 25], [-20, 153, 25.2], [-32, 144]] },
+    ],
+    slots: [
+      { id: 'R1', art: 'rampe', pos: [15, 0] },
+      { id: 'R2', art: 'rampe', pos: [75, 48] },
+      { id: 'R3', art: 'rampe', pos: [25, 96] },
+      { id: 'A1', art: 'abkuerzung', weg: 'steilhang' },
+      { id: 'H1', art: 'hindernis', pos: [60, 0] },
+      { id: 'H2', art: 'hindernis', pos: [114, 24] },
+      { id: 'H3', art: 'hindernis', pos: [30, 48] },
+      { id: 'H4', art: 'hindernis', pos: [-14, 72] },
+      { id: 'H5', art: 'hindernis', pos: [72, 96] },
+      { id: 'H6', art: 'hindernis', pos: [114, 120] },
+      { id: 'H7', art: 'hindernis', pos: [-85, 144] },
+      { id: 'H8', art: 'hindernis', pos: [-175, 130] },
+      { id: 'H9', art: 'hindernis', pos: [-228, 60] },
+      { id: 'H10', art: 'hindernis', pos: [-165, 3] },
+      { id: 'U1', art: 'umleitung', weg: 'alpweg' },
+    ],
+    gelaende: [[-85, 152, -15, 24], [-85, 110, -12, 26], [-85, 190, -12, 26], [50, 72, 3, 26], [0, 240, 38, 70], [-130, 235, 30, 60], [150, 210, 30, 60], [-300, 70, 26, 60], [170, 60, 14, 50], [-100, 60, 10, 45]],
+    wasser: [{ x: -85, z: 150, r: 22, y: 12.5 }],
+    deko: [
+      { art: 'tribuene', x: -15, z: -22, dreh: 0 },
+      { art: 'bogen', s: 0 },
+      { art: 'bagger', x: 60, z: 72, dreh: 1.1 },
+      { art: 'kran', x: -48, z: 178, dreh: 2.2 },
+      { art: 'container', x: 138, z: 30, dreh: 0.4 },
+      { art: 'container', x: 136, z: 118, dreh: 1.3 },
+      { art: 'silo', x: -150, z: 72, dreh: 0 },
+      { art: 'foerderband', x: -150, z: 46, dreh: 1.2 },
     ],
   },
 };
@@ -860,7 +921,7 @@ class Rennen {
       falschZeit: 0, stehZeit: 0, resetSperre: 0, sicher: { pfad: 0, s: sp.s }, resets: 0, maxStehZeit: 0,
       // Baupunkte und Bauen
       bp: CONFIG.bp.start, bpVerdient: 0, bpAusgegeben: 0, ueberholt: 0, treffer: 0, trefferErzielt: 0, gebaut: 0,
-      vordermann: -1, bestAbstand: Infinity, bauWahl: 0, slotWahl: 0, bauSperre: 0,
+      trefferZeit: -99, vordermann: -1, bestAbstand: Infinity, bauWahl: 0, slotWahl: 0, bauSperre: 0,
       eingabe: LEERE_EINGABE,
     };
   }
@@ -897,6 +958,7 @@ class Rennen {
       if (k.bauSperre > 0) k.bauSperre -= dt;
       if (k.typ !== 'fern') this.ueberwache(k, dt);
     }
+    if (this.netz && this.netz.nachOrten) this.netz.nachOrten(this);     // Online-Host: gemeldete Streckenmeter der Mitspieler übernehmen
     if (this.schiri) this.regeln(dt);
   }
 
@@ -1312,7 +1374,7 @@ class Rennen {
     if (!bw) return;
     if (teil >= 0 && bw.teile && bw.teile[teil]) bw.teile[teil].weg = true;
     const k = this.karts[kIdx];
-    k.treffer++;
+    k.treffer++; k.trefferZeit = this.zeit;
     this.karts[bw.besitzer].trefferErzielt++;
     this.trefferLog.push({ k: kIdx, art: bw.art, zeit: this.zeit, strecke: k.strecke });
     this.melde('treffer', kIdx, bwId, teil);
@@ -1401,7 +1463,8 @@ class Rennen {
             if (this.zeit - this.ueberholZeit[q] > B.ueberholPause && this.zeit > 1) {
               this.ueberholZeit[q] = this.zeit;
               ka.ueberholt++;
-              this.gibBP(ka, B.ueberholen, rangVorher[a], 'ueberholt');
+              // Kein Lohn, wenn der Überholte gerade in eine Baustelle gefahren ist (sonst füttert jeder Treffer neue Baustellen)
+              if (this.zeit - K[b].trefferZeit > B.geschenktZeit) this.gibBP(ka, B.ueberholen, rangVorher[a], 'ueberholt');
               this.melde('ueberholt', a, b);
             }
           }
@@ -1414,7 +1477,7 @@ class Rennen {
         const abstand = vm.strecke - k.strecke;
         if (k.vordermann !== vm.idx) { k.vordermann = vm.idx; k.bestAbstand = abstand; continue; }
         if (abstand < k.bestAbstand) {
-          this.gibBP(k, (k.bestAbstand - abstand) / B.meterProBP, k.rang, 'aufholen');
+          if (this.zeit - vm.trefferZeit > B.geschenktZeit) this.gibBP(k, (k.bestAbstand - abstand) / B.meterProBP, k.rang, 'aufholen');
           k.bestAbstand = abstand;
         } else {
           k.bestAbstand = Math.min(abstand, k.bestAbstand + B.bestwertVerfall * dt);   // Bestwert verjährt langsam
@@ -3092,6 +3155,425 @@ const Eingabe = {
   },
 };
 /* ══════════════════════════════════════════════════════════════════════════
+   TEIL 10b: Online-Modus ohne eigenen Server (WebRTC über PeerJS)
+   Der Host ist Schiedsrichter: Er startet das Rennen, zählt Runden, Plätze und
+   Baupunkte, prüft Bau-Anfragen und lässt die Bots fahren. Jeder Mitspieler
+   rechnet nur sein eigenes Fahrzeug und schickt dessen Zustand 20-mal pro Sekunde.
+   Fremde Fahrzeuge werden mit 100 ms Verzögerung weich nachgezeichnet.
+   Nachrichten sind kleine Listen: ['z', …] Zustand, ['s', …] Bild vom Host, ['bw', …] Bauwerk usw.
+   ══════════════════════════════════════════════════════════════════════════ */
+const PEER_QUELLEN = ['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js', 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'];
+const RAUM_VORSATZ = 'bsr26-';
+const CODE_ZEICHEN = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';      // ohne 0/O und 1/I (leicht zu verwechseln)
+const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
+
+const Online = {
+  peer: null, host: false, code: '', gaeste: {}, zumHost: null, zumHostZ: null, meineId: '', lobby: null, imRennen: false, bereit: false,
+  versatz: 0, rtt: 0, bestRtt: 1e9, t0: 0, schrittNr: 0, puffer: [], bekannt: {}, letzterEmpfang: 0, meinKart: -1, endeGesendet: false, takte: [], zeitlimit: null,
+
+  profil() { const D = Speicher.daten; return { name: D.name, fahrzeug: D.fahrzeug, farbe: D.farbe }; },
+  jetzt() { return performance.now() + (this.host ? 0 : this.versatz); },           // gemeinsame Uhr (die des Hosts)
+  peerOptionen() {
+    const p = App.parameter.get('peer');            // nur für Tests: eigener Vermittlungs-Server, z. B. ?peer=localhost:9000
+    if (p) { const t = p.split(':'); return { host: t[0], port: +t[1] || 9000, path: '/', secure: false, debug: 1 }; }
+    return { debug: 1 };
+  },
+  ladeBibliothek(fertig) {
+    if (window.Peer) { fertig(); return; }
+    ladeSkript(PEER_QUELLEN, fertig, () => this.fehler('Die Netzwerk-Bibliothek (PeerJS) konnte nicht geladen werden. Prüfe deine Internetverbindung.'));
+  },
+  fehlerText(e) {
+    const t = e && e.type;
+    if (t === 'peer-unavailable') return 'Diesen Raum gibt es nicht (mehr). Prüfe den Code oder bitte den Host um einen neuen Link.';
+    if (t === 'network' || t === 'server-error' || t === 'socket-error' || t === 'socket-closed') return 'Der Vermittlungs-Server ist gerade nicht erreichbar. Versuch es in ein paar Minuten nochmals.';
+    if (t === 'browser-incompatible') return 'Dein Browser unterstützt keine direkten Verbindungen (WebRTC).';
+    if (t === 'webrtc') return 'Die direkte Verbindung kam nicht zustande. Manche Firmen- und Schulnetze blockieren das.';
+    return 'Verbindungsfehler' + (t ? ' (' + t + ')' : '') + '.';
+  },
+  // Verständliche Fehlermeldung mit Hinweis auf die Modi, die immer gehen
+  fehler(text) {
+    this.verlassen();
+    if (!Spiel.demo) Spiel.starteDemo();
+    Menue.wahlen = {};
+    Menue.zeige('fehler', '<div class="tafel"><h2>Online-Spiel</h2><div class="karte" style="border-left-color:var(--rot)"><p>' + text + '</p><p class="hinweis">Gegen Bots und lokal am selben Gerät kannst du jederzeit spielen.</p></div>' +
+      '<div class="knoepfe"><button class="knopf" data-a="zurueck">Zum Menü</button></div></div>', { zurueck: () => Menue.haupt() });
+  },
+  verlassen() {
+    for (const t of this.takte) clearInterval(t);
+    this.takte = [];
+    clearTimeout(this.zeitlimit);
+    const p = this.peer; this.peer = null;
+    if (p) { try { p.destroy(); } catch (e) { /* schon geschlossen */ } }
+    this.gaeste = {}; this.zumHost = null; this.zumHostZ = null; this.imRennen = false; this.bereit = false; this.lobby = null; this.bestRtt = 1e9;
+    Spiel.netz = null; Menue.beiProfil = null;
+  },
+
+  // ── Host: Raum erstellen ────────────────────────────────────────────────
+  erstellen() {
+    Menue.laden('Erstelle einen Raum …');
+    this.ladeBibliothek(() => {
+      const D = Speicher.daten;
+      let versuche = 0;
+      const neu = () => {
+        let code = '';
+        for (let i = 0; i < CONFIG.netz.codeLaenge; i++) code += CODE_ZEICHEN[Math.floor(Math.random() * CODE_ZEICHEN.length)];
+        const p = new Peer(RAUM_VORSATZ + code, this.peerOptionen());
+        this.peer = p; this.host = true; this.code = code; this.gaeste = {};
+        clearTimeout(this.zeitlimit);
+        this.zeitlimit = setTimeout(() => { if (this.peer === p && !p.open) this.fehler('Der Vermittlungs-Server antwortet nicht. Prüfe deine Internetverbindung und versuch es nochmals.'); }, CONFIG.netz.verbindenTimeout * 1000);
+        p.on('open', () => {
+          clearTimeout(this.zeitlimit);
+          this.lobby = { code, strecke: D.strecke, runden: D.runden, bots: Math.min(D.bots, 6), stufe: D.stufe, spieler: [] };
+          this.zeigeLobby();
+          this.takte.push(setInterval(() => this.sendeLobby(), 2000));
+        });
+        p.on('connection', (c) => this.neuerGast(c));
+        p.on('error', (e) => {
+          if (this.peer !== p) return;
+          if (e.type === 'unavailable-id' && versuche++ < 5) { this.peer = null; try { p.destroy(); } catch (x) { /* egal */ } neu(); }     // Code schon vergeben: neuen würfeln
+          else if (!p.open || e.type === 'browser-incompatible') this.fehler(this.fehlerText(e));
+        });
+        // Fällt nur der Vermittler aus, bleiben die Spieler trotzdem direkt verbunden
+        p.on('disconnected', () => { if (this.peer === p && !p.destroyed) { try { p.reconnect(); } catch (e) { /* egal */ } } });
+      };
+      neu();
+    });
+  },
+  neuerGast(c) {
+    c.on('open', () => {
+      if (c.label === 'z') { const g = this.gaeste[c.peer]; if (g) { g.z = c; c.on('data', (d) => this.vomGast(c.peer, d)); } return; }
+      const nein = (text) => { try { c.send(['nein', text]); } catch (e) { /* egal */ } setTimeout(() => { try { c.close(); } catch (e) { /* egal */ } }, 800); };
+      if (this.imRennen) { nein('In diesem Raum läuft gerade ein Rennen. Versuch es in ein paar Minuten nochmals.'); return; }
+      if (Object.keys(this.gaeste).length >= CONFIG.rennen.maxFahrer - 1) { nein('Der Raum ist voll (höchstens ' + CONFIG.rennen.maxFahrer + ' Fahrer).'); return; }
+      this.gaeste[c.peer] = { id: c.peer, k: c, z: null, name: 'Gast', fahrzeug: 0, farbe: 1, bereit: false, ping: 0, kart: -1, zuletzt: performance.now() };
+      c.on('data', (d) => this.vomGast(c.peer, d));
+      c.on('close', () => this.gastWeg(c.peer));
+      c.on('error', () => this.gastWeg(c.peer));
+    });
+  },
+  gastWeg(id) {
+    const g = this.gaeste[id];
+    if (!g) return;
+    delete this.gaeste[id];
+    try { g.k.close(); } catch (e) { /* egal */ }
+    const R = Spiel.R;
+    if (this.imRennen && g.kart >= 0 && R && !R.fertig && Spiel.netz === this) {
+      // Verbindung weg: ein Bot übernimmt das Fahrzeug
+      const k = R.karts[g.kart];
+      k.typ = 'bot'; k.stufe = 'mittel'; k.bot = new Bot(R, k, 'mittel');
+      App.toast(g.name + ' hat die Verbindung verloren. Ein Bot fährt weiter.');
+    }
+    this.sendeLobby();
+  },
+  vomGast(id, d) {
+    const g = this.gaeste[id];
+    if (!g || !Array.isArray(d)) return;
+    g.zuletzt = performance.now();
+    const R = Spiel.R, imRennen = this.imRennen && g.kart >= 0 && R && Spiel.netz === this && !R.fertig;
+    switch (d[0]) {
+      case 'hallo': case 'profil':
+        g.name = String((d[1] && d[1].name) || 'Gast').slice(0, 14); g.fahrzeug = clamp(d[1].fahrzeug | 0, 0, FAHRZEUGE.length - 1); g.farbe = clamp(d[1].farbe | 0, 0, FARBEN.length - 1);
+        this.sendeLobby(); break;
+      case 'bereit': g.bereit = !!d[1]; this.sendeLobby(); break;
+      case 'p': g.ping = d[2] | 0; try { g.k.send(['q', d[1], performance.now()]); } catch (e) { /* egal */ } break;
+      case 'z': if (imRennen && R.karts[g.kart].typ === 'fern') this.merkeZustand(g.kart, d.slice(1)); break;
+      case 'bau': if (imRennen) R.bauen(R.karts[g.kart], String(d[1]), d[2] | 0); break;                    // der Host prüft die Anfrage wie bei jedem anderen
+      case 'treffer': if (imRennen) R.registriereTreffer(g.kart, d[1] | 0, d[2] | 0); break;
+      case 'benutzt': if (imRennen) { const bw = R.bauwerke.find((b) => b.id === d[1]); if (bw && bw.besitzer === g.kart) { bw.benutzt = true; bw.tEnde = Math.min(bw.tEnde, R.zeit + 1.2); } } break;
+    }
+  },
+  sendeAlle(d, schnell) {
+    for (const id in this.gaeste) {
+      const g = this.gaeste[id], c = schnell && g.z && g.z.open ? g.z : g.k;
+      try { if (c.open) c.send(d); } catch (e) { /* Verbindung gerade weg */ }
+    }
+  },
+  spielerListe() {
+    const P = this.profil();
+    const l = [{ id: 'host', name: P.name, fahrzeug: P.fahrzeug, farbe: P.farbe, bereit: true, ping: 0, host: true }];
+    for (const id in this.gaeste) { const g = this.gaeste[id]; l.push({ id, name: g.name, fahrzeug: g.fahrzeug, farbe: g.farbe, bereit: g.bereit, ping: g.ping, host: false }); }
+    return l;
+  },
+  sendeLobby() {
+    if (!this.host || !this.lobby) return;
+    this.lobby.spieler = this.spielerListe();
+    this.sendeAlle(['lobby', this.lobby]);
+    this.aktualisiereLobby();
+  },
+  hostStart() {
+    const L = this.lobby, gaeste = Object.keys(this.gaeste).map((id) => this.gaeste[id]), P = this.profil();
+    if (gaeste.some((g) => !g.bereit)) { App.toast('Es sind noch nicht alle bereit.'); return; }
+    Menue.nameLesen(); Speicher.sichern();
+    const fahrer = [{ peer: 'host', typ: 'mensch', name: P.name, fahrzeug: FAHRZEUGE[P.fahrzeug].id, farbe: P.farbe }];
+    for (const g of gaeste) fahrer.push({ peer: g.id, typ: 'mensch', name: g.name, fahrzeug: FAHRZEUGE[g.fahrzeug].id, farbe: g.farbe });
+    for (const b of Menue.botFahrer(Math.min(L.bots, CONFIG.rennen.maxFahrer - fahrer.length), L.stufe, fahrer.map((f) => f.farbe))) { b.peer = ''; fahrer.push(b); }
+    const p = fahrer.map((_, i) => i);
+    for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const h = p[i]; p[i] = p[j]; p[j] = h; }
+    fahrer.forEach((f, i) => { f.platz = p[i]; });
+    for (const g of gaeste) g.kart = fahrer.findIndex((f) => f.peer === g.id);
+    const daten = { strecke: L.strecke, runden: L.runden, fahrer, seed: (Math.random() * 1e9) | 0, t0: performance.now() + 2500 };     // t0: gemeinsamer Startzeitpunkt (Host-Uhr)
+    this.sendeAlle(['start', daten]);
+    this.starteRennen(daten);
+  },
+
+  // ── Gast: Raum beitreten ────────────────────────────────────────────────
+  beitretenDialog(code) {
+    Menue.wahlen = {}; Menue.beiProfil = null;
+    const n = CONFIG.netz.codeLaenge;
+    Menue.zeige('beitreten', '<div class="tafel"><h2>Raum beitreten</h2><p>Gib den Code ein, den dir der Host geschickt hat.</p>' +
+      '<div class="zeile"><label for="f-code">Code</label><input class="feld code" id="f-code" maxlength="' + n + '" autocomplete="off" value="' + esc(code || '') + '"></div>' + Menue.fahrerZeilen() +
+      '<div class="knoepfe" style="margin-top:14px"><button class="knopf los" data-a="los">Beitreten</button><button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>', {
+      los: () => {
+        Menue.nameLesen(); Speicher.sichern();
+        const c = $('f-code').value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (c.length !== n) { App.toast('Der Code hat ' + n + ' Zeichen.'); return; }
+        this.beitreten(c);
+      },
+      zurueck: () => { try { history.replaceState(null, '', location.href.split('?')[0]); } catch (e) { /* bei file:// nicht möglich */ } Menue.haupt(); },
+    });
+    $('f-code').onkeydown = (ev) => { if (ev.key === 'Enter') Menue.aktionen.los(); };
+  },
+  beitreten(code) {
+    Menue.laden('Verbinde mit Raum ' + code + ' …');
+    this.ladeBibliothek(() => {
+      const p = new Peer(this.peerOptionen());
+      this.peer = p; this.host = false; this.code = code; this.bereit = false; this.bestRtt = 1e9;
+      clearTimeout(this.zeitlimit);
+      this.zeitlimit = setTimeout(() => { if (this.peer === p && !this.lobby) this.fehler('Der Raum ' + code + ' antwortet nicht. Prüfe den Code. Vielleicht hat der Host das Spiel schon geschlossen.'); }, CONFIG.netz.verbindenTimeout * 1000);
+      p.on('open', () => {
+        this.meineId = p.id;
+        const c = p.connect(RAUM_VORSATZ + code, { reliable: true, label: 'k', serialization: 'json' });
+        this.zumHost = c;
+        c.on('open', () => {
+          this.letzterEmpfang = performance.now();
+          c.send(['hallo', this.profil()]);
+          // zweiter, ungeordneter Kanal für die häufigen Zustands-Pakete (ein verlorenes Paket hält dann nichts auf)
+          const z = p.connect(RAUM_VORSATZ + code, { reliable: false, label: 'z', serialization: 'json' });
+          z.on('open', () => { this.zumHostZ = z; });
+          z.on('data', (d) => this.vomHost(d));
+          this.takte.push(setInterval(() => this.zumHostSenden(['p', performance.now(), Math.round(this.rtt)]), 1500));
+          this.zumHostSenden(['p', performance.now(), 0]);
+        });
+        c.on('data', (d) => this.vomHost(d));
+        c.on('close', () => this.hostWeg());
+      });
+      p.on('error', (e) => { if (this.peer === p && !this.imRennen && (!this.lobby || e.type === 'peer-unavailable')) this.fehler(this.fehlerText(e)); });
+    });
+  },
+  zumHostSenden(d, schnell) {
+    const c = schnell && this.zumHostZ && this.zumHostZ.open ? this.zumHostZ : this.zumHost;
+    try { if (c && c.open) c.send(d); } catch (e) { /* Verbindung gerade weg */ }
+  },
+  hostWeg() {
+    if (!this.peer || this.host) return;
+    this.fehler('Die Verbindung zum Host ist abgebrochen oder der Host hat das Spiel verlassen. Das Online-Spiel ist damit beendet.');
+  },
+  vomHost(d) {
+    if (!Array.isArray(d) || !this.peer) return;
+    this.letzterEmpfang = performance.now();
+    const R = Spiel.R, imRennen = this.imRennen && Spiel.netz === this && R;
+    switch (d[0]) {
+      case 'lobby': this.lobby = d[1]; clearTimeout(this.zeitlimit); if (!this.imRennen) { if (Menue.offen === 'lobby') this.aktualisiereLobby(); else if (Menue.offen === 'laden') this.zeigeLobby(); } break;
+      case 'q': {      // Antwort auf unser Ping: Laufzeit messen und die Uhr des Hosts schätzen
+        const jetzt = performance.now(), rtt = jetzt - d[1];
+        this.rtt = rtt; this.bestRtt += 0.5;
+        if (rtt <= this.bestRtt) { this.bestRtt = rtt; this.versatz = d[2] + rtt / 2 - jetzt; }
+        break;
+      }
+      case 'nein': this.fehler(esc(d[1])); break;
+      case 'start': this.starteRennen(d[1]); break;
+      case 's': if (imRennen) this.empfangeBild(R, d); break;
+      case 'bw':
+        if (imRennen && !R.bauwerke.some((b) => b.id === d[1].id)) { const bw = R.neuesBauwerk(d[1]); R.bauwerke.push(bw); Spiel.ereignis({ typ: 'bau', k: bw.besitzer, a: bw.id, zeit: R.zeit }); }
+        break;
+      case 'bwWeg': if (imRennen) { const i = R.bauwerke.findIndex((b) => b.id === d[1]); if (i >= 0) R.bauwerke.splice(i, 1); } break;
+      case 'e':
+        if (imRennen) {
+          const e = { typ: d[1], k: d[2], a: d[3], b: d[4], zeit: R.zeit };
+          if (e.typ === 'treffer') { const bw = R.bauwerke.find((x) => x.id === e.a); if (bw && e.b >= 0 && bw.teile && bw.teile[e.b]) bw.teile[e.b].weg = true; }
+          else if (e.typ === 'runde') { const k = R.karts[e.k]; k.rundenZeiten.push(e.b); k.rundeStart += e.b; }
+          Spiel.ereignis(e);
+        }
+        break;
+      case 'ende':
+        if (imRennen) {
+          d[1].karts.forEach((q, i) => { const k = R.karts[i]; k.endZeit = q[0]; k.geschaetzt = q[1]; k.rundenZeiten = q[2]; k.bpVerdient = q[3]; k.bpAusgegeben = q[4]; k.ueberholt = q[5]; k.gebaut = q[6]; k.treffer = q[7]; k.trefferErzielt = q[8]; k.schlechtesterRang = q[9]; k.resets = q[10]; k.rang = q[11]; });
+          R.reihenfolge = d[1].reihenfolge; R.phase = 'ende'; R.fertig = true;
+        }
+        break;
+      case 'zurLobby': if (this.imRennen) this.zurLobby(); break;
+    }
+  },
+
+  // ── Lobby (für Host und Gäste) ──────────────────────────────────────────
+  zeigeLobby() {
+    const L = this.lobby, D = Speicher.daten, host = this.host;
+    if (!L) return;
+    if (host) L.spieler = this.spielerListe();
+    Menue.wahlen = {};
+    Menue.beiProfil = () => this.sendeProfil();
+    const link = location.href.split('?')[0].split('#')[0] + '?raum=' + this.code;
+    let rennen = '<p id="lobby-info"></p>';
+    if (host) rennen = Menue.wahlZeile('Strecke', 'strecke', Object.keys(STRECKEN).map((id) => ({ wert: id, text: STRECKEN[id].name })), L.strecke, (v) => { L.strecke = D.strecke = v; Spiel.starteDemo(v); this.sendeLobby(); }) +
+      Menue.wahlZeile('Runden', 'runden', zahlen(1, 7), L.runden, (v) => { L.runden = D.runden = v; this.sendeLobby(); }) +
+      Menue.wahlZeile('Bots', 'gegner', zahlen(0, CONFIG.rennen.maxFahrer - 1), L.bots, (v) => { L.bots = v; this.sendeLobby(); }) +
+      Menue.wahlZeile('Stärke', 'stufe', STUFEN_LISTE, L.stufe, (v) => { L.stufe = v; this.sendeLobby(); });
+    Menue.zeige('lobby', '<div class="tafel breit"><h2>Raum ' + this.code + '</h2>' +
+      '<div class="zeile"><input class="feld" id="f-link" readonly value="' + esc(link) + '" style="width:min(430px,100%);font-size:14px"><button class="knopf klein" data-a="kopieren">Link kopieren</button></div>' +
+      '<div class="spalten"><div><h3>Fahrer</h3><div class="spielerliste" id="lobby-liste"></div><p class="hinweis">' +
+      (host ? 'Schick den Link oder den Code an deine Mitspieler. Du bist der Host: Verlässt du das Spiel, endet es für alle.' : 'Der Host startet das Rennen, sobald alle bereit sind.') + '</p></div>' +
+      '<div><h3>Du</h3>' + Menue.fahrerZeilen() + '<h3>Rennen</h3>' + rennen + '</div></div>' +
+      '<div class="zeile" style="margin-top:12px">' + (host ? '<button class="knopf los" data-a="start">Rennen starten</button>' : '<button class="knopf los" data-a="bereit" id="k-bereit">Bereit</button>') +
+      '<button class="knopf zweit" data-a="zurueck">Verlassen</button></div></div>', {
+      kopieren: () => {
+        const fertig = () => App.toast('Link kopiert. Schick ihn deinen Mitspielern.', 2500);
+        const alt = () => { const f = $('f-link'); f.focus(); f.select(); try { document.execCommand('copy'); fertig(); } catch (e) { App.toast('Markiere den Link und kopiere ihn von Hand.'); } };
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(link).then(fertig, alt); else alt();
+      },
+      start: () => this.hostStart(),
+      bereit: () => { this.bereit = !this.bereit; this.zumHostSenden(['bereit', this.bereit]); this.aktualisiereLobby(); },
+      zurueck: () => App.zumMenue(),
+    });
+    const f = $('f-name'); if (f) f.onchange = () => this.sendeProfil();
+    this.aktualisiereLobby();
+  },
+  aktualisiereLobby() {
+    const L = this.lobby, liste = $('lobby-liste');
+    if (Menue.offen !== 'lobby' || !L || !liste) return;
+    const bots = Math.max(0, Math.min(L.bots, CONFIG.rennen.maxFahrer - L.spieler.length));
+    const stufe = (STUFEN_LISTE.find((s) => s.wert === L.stufe) || STUFEN_LISTE[1]).text;
+    liste.innerHTML = L.spieler.map((s) => '<div class="zeile"><span class="farbfeld" style="background:' + hexCss(FARBEN[s.farbe % FARBEN.length].hex) + '"></span><b>' + esc(s.name) + '</b><span class="hinweis">' + FAHRZEUGE[s.fahrzeug % FAHRZEUGE.length].name + '</span>' +
+      '<span style="margin-left:auto" class="' + (s.bereit ? 'bereit' : 'hinweis') + '">' + (s.host ? 'Host' : s.bereit ? 'bereit' : 'wartet') + '</span>' + (s.host ? '' : '<span class="hinweis">' + (s.ping | 0) + ' ms</span>') + '</div>').join('') +
+      (bots ? '<div class="zeile"><span class="hinweis">dazu ' + bots + (bots === 1 ? ' Bot' : ' Bots') + ' (' + stufe + ')</span></div>' : '');
+    const info = $('lobby-info');
+    if (info) info.innerHTML = 'Strecke: <b>' + (STRECKEN[L.strecke] ? STRECKEN[L.strecke].name : '?') + '</b><br>Runden: <b>' + L.runden + '</b><br>Bots: <b>' + bots + '</b> (' + stufe + ')';
+    const kb = $('k-bereit'); if (kb) kb.textContent = this.bereit ? 'Doch nicht bereit' : 'Bereit';
+    if (!this.host && Spiel.demo && STRECKEN[L.strecke] && Grafik.strecke && Grafik.strecke.id !== L.strecke) Spiel.starteDemo(L.strecke);
+  },
+  sendeProfil() {
+    Menue.nameLesen(); Speicher.sichern();
+    if (this.host) this.sendeLobby(); else this.zumHostSenden(['profil', this.profil()]);
+  },
+  zurLobby() {
+    if (!this.peer || !this.lobby) { App.zumMenue(); return; }
+    this.imRennen = false; Spiel.netz = null;
+    if (this.host) { this.sendeAlle(['zurLobby']); for (const id in this.gaeste) this.gaeste[id].bereit = false; }
+    else { this.bereit = false; this.zumHostSenden(['bereit', false]); }
+    Spiel.starteDemo(this.lobby.strecke);
+    this.zeigeLobby();
+    if (this.host) this.sendeLobby();
+  },
+  revanche() { if (this.host) this.hostStart(); },
+
+  // ── Im Rennen ───────────────────────────────────────────────────────────
+  starteRennen(daten) {
+    const ich = this.host ? 'host' : this.meineId;
+    const fahrer = daten.fahrer.map((f) => ({ name: f.name, fahrzeug: f.fahrzeug, farbe: f.farbe, stufe: f.stufe, platz: f.platz, geraet: 'tasten',
+      typ: f.peer === ich ? 'mensch' : this.host && f.typ === 'bot' ? 'bot' : 'fern' }));
+    this.t0 = daten.t0; this.imRennen = true; this.schrittNr = 0; this.puffer = fahrer.map(() => []); this.bekannt = {}; this.endeGesendet = false;
+    this.meinKart = daten.fahrer.findIndex((f) => f.peer === ich);
+    this.letzterEmpfang = performance.now();
+    for (const id in this.gaeste) this.gaeste[id].zuletzt = performance.now();
+    Spiel.starte({ modus: 'online', host: this.host, strecke: daten.strecke, runden: daten.runden, fahrer, seed: daten.seed, schiri: this.host, plaetzeFest: true });
+    Spiel.netz = this;
+    Spiel.R.netz = {
+      bauWunsch: (k, art, slot) => this.zumHostSenden(['bau', art, slot]),
+      treffer: (k, id, teil) => this.zumHostSenden(['treffer', id, teil]),
+      benutzt: (k, id) => this.zumHostSenden(['benutzt', id]),
+      nachOrten: this.host ? (R) => this.nachOrten(R) : null,
+    };
+  },
+  // Wie viel Rennzeit fehlt bis zur gemeinsamen Uhr? (ersetzt im Online-Spiel den normalen Zeit-Zähler)
+  takt(R) {
+    const soll = (this.jetzt() - this.t0) / 1000 - CONFIG.rennen.countdown;
+    return clamp(soll - R.zeit, 0, 0.3);
+  },
+  zustand(R, k) {
+    const f = (k.luft ? 1 : 0) | (k.drift > 0 ? 2 : k.drift < 0 ? 4 : 0) | ((k.driftStufe & 3) << 3) | (k.boostZeit > 0 ? 32 : 0) | (k.windAktiv ? 64 : 0) | (k.schutzZeit > 0 ? 128 : 0) | (k.geistZeit > 0 ? 256 : 0) | (k.schlamm ? 1024 : 0);
+    return [r3(R.zeit), r2(k.x), r2(k.z), r2(k.y), r3(k.richtung), r3(k.blick), r2(k.v), r2(k.lenk), f, r2(k.strecke)];
+  },
+  merkeZustand(kart, z) {
+    if (!Array.isArray(z) || z.length < 10 || z.some((x) => typeof x !== 'number' || !isFinite(x))) return;
+    const P = this.puffer[kart];
+    if (P.length && z[0] <= P[P.length - 1][0]) return;            // veraltet (Pakete können sich überholen)
+    P.push(z); if (P.length > 14) P.shift();
+  },
+  // Fremde Fahrzeuge zwischen zwei empfangenen Zuständen weich bewegen (100 ms in der Vergangenheit)
+  vorSchritt(R) {
+    const tr = R.zeit + SCHRITT - CONFIG.netz.puffer;
+    for (const k of R.karts) {
+      if (k.typ !== 'fern') continue;
+      const P = this.puffer[k.idx];
+      if (!P || !P.length) continue;
+      while (P.length > 2 && P[1][0] <= tr) P.shift();
+      const a = P[0], b = P[1] || a, dt = b[0] - a[0];
+      const u = dt > 0.001 ? clamp((tr - a[0]) / dt, 0, 1 + 0.25 / dt) : 0;      // höchstens 0.25 s über das letzte Paket hinaus weiterrechnen
+      const w = Math.min(u, 1);
+      k.x = a[1] + (b[1] - a[1]) * u; k.z = a[2] + (b[2] - a[2]) * u; k.y = a[3] + (b[3] - a[3]) * w;
+      k.richtung = a[4] + winkelDiff(b[4], a[4]) * w; k.blick = a[5] + winkelDiff(b[5], a[5]) * w;
+      k.v = b[6]; k.lenk = b[7];
+      const f = b[8];
+      k.luft = !!(f & 1); k.drift = f & 2 ? 1 : f & 4 ? -1 : 0; k.driftStufe = (f >> 3) & 3; k.boostZeit = f & 32 ? 0.2 : 0; k.windAktiv = !!(f & 64);
+      k.schutzZeit = f & 128 ? 0.2 : 0; k.geistZeit = f & 256 ? 0.2 : 0; k.schlamm = f & 1024 ? 1 : 0;
+    }
+  },
+  // Host: Für Platzierung und Zieleinlauf zählt der frischeste gemeldete Stand (gleicht die Verzögerung aus)
+  nachOrten(R) {
+    for (const k of R.karts) {
+      if (k.typ !== 'fern') continue;
+      const P = this.puffer[k.idx], n = P && P[P.length - 1];
+      if (n) k.strecke = n[9] + n[6] * clamp(R.zeit - n[0], 0, 0.25);
+    }
+  },
+  ereignisVomSchiri(e) {
+    if (e.typ === 'ueberholt' || e.typ === 'bp' || e.typ === 'runde' || e.typ === 'ziel' || e.typ === 'treffer') this.sendeAlle(['e', e.typ, e.k, e.a, e.b]);
+  },
+  nachSchritt(R) {
+    this.schrittNr++;
+    const senden = this.schrittNr % Math.max(1, Math.round(60 / CONFIG.netz.sendeRate)) === 0;
+    if (this.host) {
+      // neue und abgebaute Bauwerke melden
+      for (const bw of R.bauwerke) if (!this.bekannt[bw.id]) { this.bekannt[bw.id] = true; this.sendeAlle(['bw', { id: bw.id, art: bw.art, slot: bw.slot, besitzer: bw.besitzer, t0: bw.t0, betroffen: bw.betroffen }]); }
+      for (const id in this.bekannt) if (!R.bauwerke.some((b) => b.id === +id)) { delete this.bekannt[id]; this.sendeAlle(['bwWeg', +id]); }
+      if (senden) {
+        const karts = R.karts.map((k) => { const P = this.puffer[k.idx]; return k.typ === 'fern' && P.length ? P[P.length - 1] : this.zustand(R, k); });
+        const ref = R.karts.map((k) => [k.rang, Math.round(k.bp * 10) / 10, k.runde, k.zielZeit, Math.round(Math.max(0, k.bauSperre) * 10) / 10]);
+        this.sendeAlle(['s', r3(R.zeit), karts, ref], true);
+      }
+      if (this.schrittNr % 60 === 0) {       // wer zu lange schweigt, gilt als ausgefallen
+        const jetzt = performance.now();
+        for (const id in this.gaeste) if (jetzt - this.gaeste[id].zuletzt > CONFIG.netz.ausfallTimeout * 1000) this.gastWeg(id);
+      }
+      if (R.fertig && !this.endeGesendet) {
+        this.endeGesendet = true;
+        this.sendeAlle(['ende', { reihenfolge: R.reihenfolge, karts: R.karts.map((k) => [k.endZeit, k.geschaetzt, k.rundenZeiten, k.bpVerdient, k.bpAusgegeben, k.ueberholt, k.gebaut, k.treffer, k.trefferErzielt, k.schlechtesterRang, k.resets, k.rang]) }]);
+      }
+    } else {
+      for (const bw of R.bauwerke) if (!bw.fertig && R.zeit >= bw.tFest) { bw.fertig = true; Spiel.ereignis({ typ: 'fertig', k: bw.besitzer, a: bw.id, zeit: R.zeit }); }
+      if (senden) this.zumHostSenden(['z'].concat(this.zustand(R, R.karts[this.meinKart])), true);
+      if (performance.now() - this.letzterEmpfang > CONFIG.netz.ausfallTimeout * 1000) this.hostWeg();
+    }
+  },
+  // Gast: Bild vom Host übernehmen (fremde Fahrzeuge + Schiedsrichter-Daten für alle)
+  empfangeBild(R, d) {
+    const karts = d[2], ref = d[3];
+    if (!Array.isArray(karts) || !Array.isArray(ref)) return;
+    for (let i = 0; i < R.n; i++) {
+      const k = R.karts[i], q = ref[i];
+      if (k.typ === 'fern' && karts[i]) this.merkeZustand(i, karts[i]);
+      if (!q) continue;
+      k.rang = q[0]; k.bp = q[1]; k.runde = q[2];
+      if (q[3] != null && k.zielZeit == null) k.zielZeit = q[3];
+      if (i === this.meinKart) k.bauSperre = Math.max(k.bauSperre, q[4]);
+    }
+    R.reihenfolge = R.karts.map((k) => k.idx).sort((a, b) => R.karts[a].rang - R.karts[b].rang);
+  },
+  debugText() {
+    return 'Netz: Raum ' + this.code + ' · ' + (this.host ? 'Host mit ' + Object.keys(this.gaeste).length + ' Gästen' : 'Gast · Ping ' + Math.round(this.rtt) + ' ms · Uhr ' + Math.round(this.versatz) + ' ms') +
+      ' · Puffer ' + this.puffer.map((p) => p.length).join('/');
+  },
+};
+/* ══════════════════════════════════════════════════════════════════════════
    TEIL 11: Einstellungen, Anzeige im Rennen (HUD) und Spielablauf
    ══════════════════════════════════════════════════════════════════════════ */
 const $ = (id) => document.getElementById(id);
@@ -3348,7 +3830,7 @@ const Touch = {
 
 // ── Spielablauf: ein Rennen starten, pro Bild weiterrechnen, Ereignisse verteilen ──
 const Spiel = {
-  R: null, demo: true, pause: false, akk: 0, spieler: [], eingaben: [], konfig: null, zielSeit: -1, cdZahl: 0, ergebnisGezeigt: false,
+  R: null, netz: null, demo: true, pause: false, akk: 0, spieler: [], eingaben: [], konfig: null, zielSeit: -1, cdZahl: 0, ergebnisGezeigt: false,
 
   // Hintergrund für das Menü: ein paar Bots drehen ihre Runden
   starteDemo(streckenId) {
@@ -3359,7 +3841,7 @@ const Spiel = {
     for (let i = 0; i < 6; i++) fahrer.push({ name: BOT_NAMEN[i], typ: 'bot', stufe: 'mittel', fahrzeug: FAHRZEUGE[i % FAHRZEUGE.length].id, farbe: i });
     this.R = new Rennen(S, fahrer, { runden: 99, meldungen: false });
     this.R.zeit = -0.4;
-    this.demo = true; this.pause = false; this.spieler = []; this.akk = 0; this.konfig = null; this.ergebnisGezeigt = false;
+    this.demo = true; this.pause = false; this.spieler = []; this.akk = 0; this.konfig = null; this.ergebnisGezeigt = false; this.netz = null;
     Grafik.neuesRennen(this.R); Grafik.setzeAnsichten([-1]);
     $('hud').innerHTML = ''; $('hud').classList.remove('versteckt'); Hud.teile = [];
     Ton.motorAus();
@@ -3377,7 +3859,7 @@ const Spiel = {
       konfig.fahrer.forEach((f, i) => { f.platz = p[i]; });
     }
     const R = new Rennen(S, konfig.fahrer, { runden: konfig.runden, seed: konfig.seed, schiri: konfig.schiri !== false });
-    this.R = R; this.konfig = konfig; this.demo = false; this.pause = false; this.akk = 0; this.zielSeit = -1; this.cdZahl = 0; this.ergebnisGezeigt = false;
+    this.R = R; this.konfig = konfig; this.demo = false; this.pause = false; this.akk = 0; this.zielSeit = -1; this.cdZahl = 0; this.ergebnisGezeigt = false; this.netz = null;
     this.spieler = [];
     R.karts.forEach((k, i) => {
       if (k.typ !== 'mensch') return;
@@ -3412,7 +3894,7 @@ const Spiel = {
     if (!this.pause) {
       // Sind alle lokalen Fahrer im Ziel, läuft der Rest im Zeitraffer, bis auch die Bots fertig sind
       const raffer = !this.demo && !this.netz && this.zielSeit >= 0 && R.zeit - this.zielSeit > 2.5 && !R.fertig;
-      this.akk += dt * (raffer ? 6 : 1);
+      if (this.netz) this.akk = this.netz.takt(R); else this.akk += dt * (raffer ? 6 : 1);     // online gibt die gemeinsame Uhr den Takt vor
       let erster = true, max = 12;
       while (this.akk >= SCHRITT && max-- > 0 && !R.fertig) { this.schritt(erster); erster = false; this.akk -= SCHRITT; }
       if (this.akk >= SCHRITT) this.akk = 0;
@@ -3441,6 +3923,7 @@ const Spiel = {
   // Ereignisse aus der Spiellogik → Effekte, Töne, Meldungen
   ereignis(e) {
     const R = this.R;
+    if (this.netz && this.netz.host) this.netz.ereignisVomSchiri(e);
     Grafik.ereignis(e, R);
     const lokal = (idx) => Hud.teile.find((q) => q.sp.kart === idx);
     const t = e.k >= 0 ? lokal(e.k) : null;
@@ -3495,7 +3978,7 @@ const FAHRZEUG_LISTE = FAHRZEUGE.map((f, i) => ({ wert: i, text: f.name }));
 function zahlen(von, bis) { const l = []; for (let i = von; i <= bis; i++) l.push({ wert: i, text: String(i) }); return l; }
 
 const Menue = {
-  el: null, offen: null, aktionen: {}, wahlen: {},
+  el: null, offen: null, aktionen: {}, wahlen: {}, beiProfil: null,
 
   zeige(name, html, aktionen, klasse) {
     this.offen = name; this.aktionen = aktionen || {};
@@ -3534,8 +4017,8 @@ const Menue = {
   fahrerZeilen() {
     const D = Speicher.daten;
     return '<div class="zeile"><label for="f-name">Name</label><input class="feld" id="f-name" maxlength="14" autocomplete="off" value="' + esc(D.name) + '"></div>' +
-      this.wahlZeile('Fahrzeug', 'fahrzeug', FAHRZEUG_LISTE, D.fahrzeug, (v) => { D.fahrzeug = v; }) +
-      this.wahlZeile('Farbe', 'farbe', FARB_LISTE, D.farbe, (v) => { D.farbe = v; });
+      this.wahlZeile('Fahrzeug', 'fahrzeug', FAHRZEUG_LISTE, D.fahrzeug, (v) => { D.fahrzeug = v; if (this.beiProfil) this.beiProfil(); }) +
+      this.wahlZeile('Farbe', 'farbe', FARB_LISTE, D.farbe, (v) => { D.farbe = v; if (this.beiProfil) this.beiProfil(); });
   },
   nameLesen() { const f = $('f-name'); if (f) Speicher.daten.name = (f.value.trim() || 'Spieler').slice(0, 14); },
 
@@ -3557,7 +4040,7 @@ const Menue = {
   },
 
   haupt() {
-    this.wahlen = {};
+    this.wahlen = {}; this.beiProfil = null;
     const D = Speicher.daten;
     let html = '<div class="tafel"><h1 class="logo">Baustellen-<small>Rennen</small></h1><div class="band"></div>';
     if (!D.erklaert) {        // erster Start: zuerst die Bau-Regel in drei Sätzen
