@@ -200,7 +200,7 @@ const CONFIG = {
     zeit: 1.5,             // so lange muss man dicht hinter jemandem bleiben
     distanz: 14,           // maximaler Abstand nach vorn (m)
     breite: 2.0,           // maximaler seitlicher Versatz (m)
-    bonus: 0.05,          // + so viel Höchsttempo (Anteil)
+    bonus: 0.02,          // + so viel Höchsttempo (Anteil)
     nachlauf: 0.7,         // so lange hält der Bonus nach dem Ausscheren noch an (s)
     minTempo: 17,          // nur oberhalb dieses Tempos
   },
@@ -216,6 +216,11 @@ const CONFIG = {
     ueberholAbstand: 2.5,  // man muss so viele Meter vorbei sein, damit es als Überholen zählt
     ueberholPause: 8,      // dasselbe Paar zählt frühestens nach so vielen Sekunden wieder
     geschenktZeit: 6,           // s: Wer in eine Baustelle gefahren ist, bringt so lange keine BP fürs Überholen/Aufholen (das wäre geschenkt)
+    startPause: 8,         // s: in den ersten Sekunden nach dem Start gibt es keine BP (das Startgedränge zählt nicht als Aufholen)
+    naheFaktor: 0.25,       // Lohn-Anteil direkt hinter dem Führenden (wer an der Spitze klebt, liegt nicht «hinten»)
+    vollerRueckstand: 110, // m: ab so viel Rückstand auf den Führenden gibt es den vollen Lohn (0 = Rückstand egal)
+    rangVerfall: 15,       // s: so lange dauert es, bis ein verlorener Platz wieder als «neu gewonnen» zählt (0 = jedes Überholen zählt voll)
+    erkauftZeit: 4,        // s: nach eigener Rampe oder Abkürzung gibt es so lange keine BP (gekaufte Plätze zahlen sich nicht selbst zurück; 0 = aus)
     fuehrenderVerdient: false, // true = auch der Führende sammelt BP (nicht empfohlen)
   },
 
@@ -231,6 +236,7 @@ const CONFIG = {
     schutzZeit: 3.0,       // nach einem Treffer so lange Schutz vor weiteren Hindernissen
     maxProSpieler: 2,      // aktive Hindernisse pro Spieler
     maxGesamt: 6,          // aktive Hindernisse insgesamt
+    maxSchlenker: 4,       // m: Sperren stehen so, dass die Ideallinie höchstens so weit im gesperrten Teil liegt (sonst bleibt sie frei)
     minAbstand: 55,        // Mindestabstand zwischen zwei Hindernissen (m)
     wartezeit: 4.0,        // Pause zwischen zwei Bauaktionen desselben Spielers
     lebensdauer: 30,       // Hindernisse verschwinden spätestens nach so vielen Sekunden
@@ -242,7 +248,7 @@ const CONFIG = {
   // ── Wirkung der Bauwerke ────────────────────────────────────────────────
   wirkung: {
     rampe: { laenge: 7, breite: 5.5, hoehe: 1.5, boostDauer: 1.5, boostStaerke: 1.30 },
-    pylonen: { tempoFaktor: 0.72, radius: 0.4, reihenAbstand: 13 },
+    pylonen: { tempoFaktor: 0.72, radius: 0.4, treffer: 1.0, reihenAbstand: 24 },
     schlamm: { laenge: 15, tempoFaktor: 0.5, lenkFaktor: 0.55, anteil: 0.5 },
     absperrung: { anteil: 0.6, tempoFaktor: 0.42, lahmZeit: 0.6, lahmFaktor: 0.55 },
     minTempoNachTreffer: 8,   // langsamer wird man durch einen Treffer nie (man bleibt nie stehen)
@@ -269,11 +275,14 @@ const CONFIG = {
       //            linie: seitliche Ungenauigkeit in m      drift: Anteil der Kurven, in denen sie driften
       //            sehen: Wahrscheinlichkeit, ein Hindernis rechtzeitig zu sehen
       //            bauen: Bau-Freude (0–1)                  fehler: Fahrfehler pro Minute
-      leicht: { mut: 0.80, linie: 1.5, drift: 0.25, sehen: 0.60, bauen: 0.45, fehler: 1.6 },
-      mittel: { mut: 0.89, linie: 0.9, drift: 0.65, sehen: 0.80, bauen: 0.75, fehler: 0.8 },
-      schwer: { mut: 0.96, linie: 0.45, drift: 0.95, sehen: 0.93, bauen: 1.0, fehler: 0.25 },
+      leicht: { mut: 0.76, linie: 1.5, drift: 0.50, sehen: 0.75, bauen: 0.45, fehler: 1.6 },
+      mittel: { mut: 0.83, linie: 0.9, drift: 0.90, sehen: 0.92, bauen: 0.75, fehler: 0.8 },
+      schwer: { mut: 0.96, linie: 0.45, drift: 1.00, sehen: 0.98, bauen: 1.0, fehler: 0.25 },
     },
+    zielVordermann: 0.8,   // Anteil der Hindernisse, die Bots ihrem direkten Gegner statt dem Führenden in den Weg bauen
     streuung: 0.02,        // zufällige Tagesform: ± so viel Unterschied im Mut zwischen gleich starken Bots
+    ausweichWeg: 45,       // m: so weit vor einem Hindernis beginnen Bots, zur Lücke zu ziehen
+    vorausHindernis: 0.8,  // vor einem Hindernis zielen Bots kürzer voraus (Anteil), damit sie die Lücke genau treffen
     vorausZeit: 0.42,      // Bots zielen auf einen Punkt, der so viele Sekunden voraus liegt
     sichtweite: 75,        // so weit voraus beachten Bots Hindernisse (m)
   },
@@ -466,15 +475,15 @@ const STRECKEN = {
     boden: { gras: 0x7d9a55, kies: 0xa9a08c, fels: 0x8a8580 },
     punkte: [
       [-60, 0, 0], [0, 0, 0], [50, 0, 0.5],                                 // Start/Ziel-Gerade im Tal
-      [90, 0, 1.2], [107, 7, 2], [114, 24, 3], [107, 41, 4], [90, 48, 5],   // Serpentine 1 (links)
+      [130,0,1.2], [147,7,2], [154,24,3], [147,41,4], [130,48,5],   // Serpentine 1 (links)
       [50, 48, 7],
-      [10, 48, 9.2], [-7, 55, 10], [-14, 72, 11], [-7, 89, 12], [10, 96, 13],   // Serpentine 2 (rechts)
+      [-10,48,9.2], [-27,55,10], [-34,72,11], [-27,89,12], [-10,96,13],   // Serpentine 2 (rechts)
       [50, 96, 15],
-      [90, 96, 17], [107, 103, 17.8], [114, 120, 18.8], [107, 137, 19.8], [90, 144, 20.8],   // Serpentine 3 (links)
+      [130,96,17], [147,103,17.8], [154,120,18.8], [147,137,19.8], [130,144,20.8],   // Serpentine 3 (links)
       [40, 144, 23], [-20, 144, 25],                                        // Passhöhe
       [-60, 144, 25.5], [-110, 144, 25],                                    // Brücke über die Schlucht
       [-140, 144, 24.5], [-170, 136, 23.5], [-186, 114, 22],                // weite Linkskurve
-      [-190, 100, 20.5], [-216, 84, 18], [-228, 60, 15.5], [-216, 36, 13], [-190, 20, 10.5],   // Abfahrt um den Felskopf
+      [-190, 100, 20.5], [-216,84,18,17], [-228,60,15.5,18], [-216,36,13,18], [-190,20,10.5,17],   // Abfahrt um den Felskopf
       [-172, 6, 8.5], [-150, 0, 7], [-110, 0, 4],                           // Schlusskurve und Zielhang
     ],
     bruecken: [{ von: [-52, 144], bis: [-118, 144] }],
@@ -491,18 +500,18 @@ const STRECKEN = {
       { id: 'R3', art: 'rampe', pos: [25, 96] },
       { id: 'A1', art: 'abkuerzung', weg: 'steilhang' },
       { id: 'H1', art: 'hindernis', pos: [60, 0] },
-      { id: 'H2', art: 'hindernis', pos: [114, 24] },
+      { id: 'H2', art: 'hindernis', pos: [112, 0] },
       { id: 'H3', art: 'hindernis', pos: [30, 48] },
-      { id: 'H4', art: 'hindernis', pos: [-14, 72] },
+      { id: 'H4', art: 'hindernis', pos: [100, 48] },
       { id: 'H5', art: 'hindernis', pos: [72, 96] },
-      { id: 'H6', art: 'hindernis', pos: [114, 120] },
+      { id: 'H6', art: 'hindernis', pos: [108, 96] },
       { id: 'H7', art: 'hindernis', pos: [-85, 144] },
       { id: 'H8', art: 'hindernis', pos: [-175, 130] },
       { id: 'H9', art: 'hindernis', pos: [-228, 60] },
       { id: 'H10', art: 'hindernis', pos: [-165, 3] },
       { id: 'U1', art: 'umleitung', weg: 'alpweg' },
     ],
-    gelaende: [[-85, 152, -15, 24], [-85, 110, -12, 26], [-85, 190, -12, 26], [50, 72, 3, 26], [0, 240, 38, 70], [-130, 235, 30, 60], [150, 210, 30, 60], [-300, 70, 26, 60], [170, 60, 14, 50], [-100, 60, 10, 45]],
+    gelaende: [[-85, 152, -15, 24], [-85, 110, -12, 26], [-85, 190, -12, 26], [50, 72, 3, 26], [0, 240, 38, 70], [-130, 235, 30, 60], [150, 210, 30, 60], [-300, 70, 26, 60], [215,60,14,50], [-100, 60, 10, 45]],
     wasser: [{ x: -85, z: 150, r: 22, y: 12.5 }],
     deko: [
       { art: 'tribuene', x: -15, z: -22, dreh: 0 },
@@ -921,7 +930,7 @@ class Rennen {
       falschZeit: 0, stehZeit: 0, resetSperre: 0, sicher: { pfad: 0, s: sp.s }, resets: 0, maxStehZeit: 0,
       // Baupunkte und Bauen
       bp: CONFIG.bp.start, bpVerdient: 0, bpAusgegeben: 0, ueberholt: 0, treffer: 0, trefferErzielt: 0, gebaut: 0,
-      trefferZeit: -99, vordermann: -1, bestAbstand: Infinity, bauWahl: 0, slotWahl: 0, bauSperre: 0,
+      trefferZeit: -99, erkauftBis: -99, bestRang: 99, vordermann: -1, bestAbstand: Infinity, bauWahl: 0, slotWahl: 0, bauSperre: 0,
       eingabe: LEERE_EINGABE,
     };
   }
@@ -1180,6 +1189,7 @@ class Rennen {
         k.rampeBereit = 0;
         if (bw && !bw.benutzt && k.v > 6) {
           this.gibBoost(k, RA.boostDauer, RA.boostStaerke);
+          k.erkauftBis = this.zeit + RA.boostDauer + CONFIG.bp.erkauftZeit;
           this.melde('rampe', k.idx, bw.id);
           this.benutzt(k, bw);
         }
@@ -1341,7 +1351,7 @@ class Rennen {
           const p = bw.teile[q];
           if (p.weg) continue;
           const dx = k.x - p.x, dz = k.z - p.z;
-          if (dx * dx + dz * dz < (r + W.pylonen.radius) * (r + W.pylonen.radius)) { this.treffer(k, bw, q); break; }
+          if (dx * dx + dz * dz < W.pylonen.treffer * W.pylonen.treffer) { this.treffer(k, bw, q); break; }
         }
       } else if (bw.art === 'absperrung') {
         if (Math.abs(rel) > 1.0) continue;
@@ -1451,6 +1461,13 @@ class Rennen {
 
     // Überholen: +BP, sobald man klar vorbei ist (mit Abstand und Pause gegen Hin-und-her-Zählen)
     if (this.phase === 'rennen') {
+      // Wer gerade seine Abkürzung fährt, hat sich die Plätze erkauft: dafür gibt es keine BP
+      for (const k of K) if (k.pfad > 0 && this.S.wege[k.pfad - 1].art === 'abkuerzung') k.erkauftBis = this.zeit + B.erkauftZeit;
+      // Bestwert des Rangs: Lohn gibt es nur für neu gewonnene Plätze, nicht fürs Zurückholen eben verlorener. Der Bestwert «verjährt» langsam.
+      for (const k of K) {
+        if (k.bestRang > 90) k.bestRang = k.rang;
+        else if (k.rang > k.bestRang && B.rangVerfall > 0) k.bestRang = Math.min(k.rang, k.bestRang + dt / B.rangVerfall);
+      }
       for (let a = 0; a < n; a++) {
         const ka = K[a];
         if (ka.zielZeit != null) continue;
@@ -1460,11 +1477,13 @@ class Rennen {
           const q = a * n + b;
           if (this.vorne[q] === 0 && diff > B.ueberholAbstand) {
             this.vorne[q] = 1; this.vorne[b * n + a] = 0;
+            const lohn = B.rangVerfall > 0 ? Math.max(0, Math.min(1, ka.bestRang - ka.rang)) : 1;
+            if (B.rangVerfall > 0 && lohn > 0) ka.bestRang = Math.max(ka.rang, ka.bestRang - 1);
             if (this.zeit - this.ueberholZeit[q] > B.ueberholPause && this.zeit > 1) {
               this.ueberholZeit[q] = this.zeit;
               ka.ueberholt++;
               // Kein Lohn, wenn der Überholte gerade in eine Baustelle gefahren ist (sonst füttert jeder Treffer neue Baustellen)
-              if (this.zeit - K[b].trefferZeit > B.geschenktZeit) this.gibBP(ka, B.ueberholen, rangVorher[a], 'ueberholt');
+              if (lohn > 0 && this.zeit - K[b].trefferZeit > B.geschenktZeit) this.gibBP(ka, B.ueberholen * lohn, rangVorher[a], 'ueberholt');
               this.melde('ueberholt', a, b);
             }
           }
@@ -1531,9 +1550,17 @@ class Rennen {
   gibBP(k, menge, rang, grund) {
     const B = CONFIG.bp;
     if (!this.bauenAn) return;
+    if (this.zeit < B.startPause) return;                          // das Startgedränge zählt nicht als Aufholen
+    if (B.erkauftZeit > 0 && this.zeit < k.erkauftBis) return;   // gekaufte Plätze (Rampe, Abkürzung) zahlen sich nicht selbst zurück
     if (grund === 'aufholen' && k.rang === 1 && !B.fuehrenderVerdient) return;
     const faktor = this.n > 1 ? 1 + (B.letzterFaktor - 1) * (rang - 1) / (this.n - 1) : 1;
-    const neu = Math.min(B.max, k.bp + menge * faktor);
+    // Rückstandsfaktor: Wer dicht an der Spitze klebt, sammelt nur wenig; ab «vollerRueckstand» Metern hinter dem Führenden gibt es den vollen Lohn
+    let nah = 1;
+    if (B.vollerRueckstand > 0 && this.n > 1) {
+      const f = this.karts[this.reihenfolge[0]];
+      nah = B.naheFaktor + (1 - B.naheFaktor) * Math.max(0, Math.min(1, (f.strecke - k.strecke) / B.vollerRueckstand));
+    }
+    const neu = Math.min(B.max, k.bp + menge * faktor * nah);
     k.bpVerdient += neu - k.bp;
     if (Math.floor(neu) > Math.floor(k.bp)) this.melde('bp', k.idx, Math.floor(neu), grund);
     k.bp = neu;
@@ -1653,11 +1680,21 @@ class Rennen {
     };
     bw.tEnde = eigen ? g.t0 + B.eigenLebensdauer : bw.tFest + (g.art === 'umleitung' ? B.umleitungDauer : B.lebensdauer);
     const hb = sl.hb;
+    // Seite der Sperre: so, dass ein aufmerksamer Fahrer nur einen kleinen Schlenker braucht (Ideallinie knapp im gesperrten Teil)
+    const waehleSeite = (b) => {
+      const id = S.ideal[Math.floor(sl.s / H.ds) % H.n] || 0;
+      const sR = Math.max(0, (-hb + b) - id), sL = Math.max(0, id - (hb - b));   // nötiger Schlenker, wenn rechts bzw. links gesperrt wird
+      const grenz = B.maxSchlenker;
+      if (sR > 0 && sL > 0) return sR < sL ? -1 : 1;
+      if (sR > 0) return sR <= grenz ? -1 : 1;
+      if (sL > 0) return sL <= grenz ? 1 : -1;
+      return sl.seite;
+    };
     if (g.art === 'pylonen') {
       // zwei versetzte Reihen; dazwischen bleibt immer eine Lücke
       const w = hb - 1.0;
       bw.teile = [];
-      const reihen = [[-0.75, -0.25, 0.25, 0.75], [-0.5, 0, 0.5]];
+      const reihen = [[-0.66, 0, 0.66], [-0.4, 0.4]];   // Lücken von gut 3 m: mit Schlenker fahrbar
       for (let r = 0; r < 2; r++) for (const a of reihen[r]) {
         const s = (sl.s + r * W.pylonen.reihenAbstand) % this.L;
         const o = H.ort(s, a * w, {});
@@ -1665,12 +1702,14 @@ class Rennen {
       }
       bw.laenge = W.pylonen.reihenAbstand;
     } else if (g.art === 'schlamm') {
-      const b = 2 * hb * W.schlamm.anteil;
-      bw.d0 = sl.seite > 0 ? hb - b : -hb; bw.d1 = sl.seite > 0 ? hb : -hb + b;
+      const b = 2 * hb * W.schlamm.anteil, seite = waehleSeite(b);
+      bw.seite = seite;
+      bw.d0 = seite > 0 ? hb - b : -hb; bw.d1 = seite > 0 ? hb : -hb + b;
       bw.laenge = W.schlamm.laenge;
     } else if (g.art === 'absperrung') {
-      const b = 2 * hb * W.absperrung.anteil;
-      bw.d0 = sl.seite > 0 ? hb - b : -hb; bw.d1 = sl.seite > 0 ? hb : -hb + b;
+      const b = 2 * hb * W.absperrung.anteil, seite = waehleSeite(b);
+      bw.seite = seite;
+      bw.d0 = seite > 0 ? hb - b : -hb; bw.d1 = seite > 0 ? hb : -hb + b;
       bw.teile = [];
       for (let q = 0; q < 3; q++) bw.teile.push({ d0: bw.d0 + (b * q) / 3, d1: bw.d0 + (b * (q + 1)) / 3, weg: false });
     } else if (g.art === 'umleitung') {
@@ -1745,7 +1784,13 @@ class Bot {
     const i = Math.floor(sm / H.ds) % H.n;
     const lim = H.hb[i] - 1.3;
     let d = clamp(S.ideal[i] + versatz, -lim, lim);
-    if (this.frei) d = clamp(d, this.frei.a, this.frei.b);
+    if (this.frei) {
+      // erst kurz vor dem Hindernis zur Lücke ziehen (weich eingeblendet), nicht schon 75 m vorher die Ideallinie verlassen
+      const f = this.frei;
+      let vor = wegVor(sm, f.s, L); if (vor > L / 2) vor -= L;
+      const w = vor > 0 ? clamp((CONFIG.bots.ausweichWeg - vor) / (CONFIG.bots.ausweichWeg * 0.65), 0, 1) : (vor > -(f.l + 6) ? 1 : 0);
+      if (w > 0) { const zweite = f.a2 !== undefined && vor < -2; d += (clamp(d, zweite ? f.a2 : f.a, zweite ? f.b2 : f.b) - d) * w; }
+    }
     H.ort(sm, d, aus);
     return S.idealKr[i];
   }
@@ -1785,6 +1830,29 @@ class Bot {
     if (!best) return;
     const i = Math.floor(best.s / H.ds) % H.n;
     const lim = H.hb[i] - 1.2;
+    if (best.art === 'pylonen') {
+      // Slalom: beide Reihen zusammen planen – die Lücke der ersten Reihe so wählen, dass der Schlenker zur zweiten klein bleibt
+      const freiIn = (reihe) => {
+        const sp = [];
+        for (const p of best.teile) if (!p.weg && p.reihe === reihe) sp.push([p.d - 1.5, p.d + 1.5]);
+        sp.sort((a, b) => a[0] - b[0]);
+        const lu = []; let ab = -lim;
+        for (const z of sp) { if (z[0] > ab) lu.push([ab, Math.min(z[0], lim)]); ab = Math.max(ab, z[1]); }
+        if (ab < lim) lu.push([ab, lim]);
+        return lu;
+      };
+      const F0 = freiIn(0), F1 = freiIn(1), wunsch = clamp(S.ideal[i] + this.versatz, -lim, lim);
+      const rein = (l, x) => { const m = Math.min(0.45, (l[1] - l[0]) / 2); return clamp(x, l[0] + m, l[1] - m); };
+      let bestK = Infinity, p0 = null, p1 = null;
+      for (const a of F0) for (const b of F1) {
+        const x0 = rein(a, clamp(wunsch, b[0], b[1])), x1 = rein(b, x0);
+        const kosten = Math.abs(x1 - x0) * 2 + Math.abs(x0 - wunsch) * 0.5 + Math.abs(x0 - k.d) * 0.1;
+        if (kosten < bestK) { bestK = kosten; p0 = x0; p1 = x1; }
+      }
+      if (p0 === null) return;
+      this.frei = { a: p0 - 0.15, b: p0 + 0.15, a2: p1 - 0.15, b2: p1 + 0.15, s: best.s, l: best.laenge };
+      return;
+    }
     // gesperrte Bereiche (seitlich), jeweils mit Sicherheitsabstand
     const zu = [];
     if (best.art === 'schlamm') zu.push([best.d0 - 1.1, best.d1 + 1.1]);
@@ -1808,7 +1876,7 @@ class Bot {
       const wert = dist + Math.abs(k.d - (l[0] + l[1]) / 2) * 0.15 - Math.min(l[1] - l[0], 3) * 0.3;
       if (wert < wahlD) { wahlD = wert; wahl = l; }
     }
-    if (wahl) this.frei = { a: wahl[0], b: wahl[1] };
+    if (wahl) this.frei = { a: wahl[0], b: wahl[1], s: best.s, l: best.laenge };
   }
 
   // Wird pro Zeitschritt aufgerufen und liefert die «gedrückten Tasten»
@@ -1849,7 +1917,7 @@ class Bot {
     const versatz = this.versatz + this.rausch + this.ausweich;
 
     // Lenken: auf einen Punkt voraus zielen
-    const Lh = clamp(k.v * CONFIG.bots.vorausZeit, 8, 20);
+    const Lh = clamp(k.v * CONFIG.bots.vorausZeit, 8, 20) * (this.frei ? CONFIG.bots.vorausHindernis : 1);
     this.routenPunkt(R, k, Lh, versatz, this.o);
     const fehler = winkelDiff(Math.atan2(this.o.z - k.z, this.o.x - k.x), k.richtung);
     const omegaSoll = ((2 * Math.sin(fehler)) / Lh) * Math.max(k.v, 5);
@@ -1903,13 +1971,20 @@ class Bot {
     if (R.zufall() > this.p.bauen) return;
     const P = CONFIG.bau.preise, L = R.L, z = R.zufall;
     let best = null, bestWert = 0;
+    const vm = k.vordermann >= 0 ? R.karts[k.vordermann] : null;
     const pruefe = (art, wert, maxVor) => {
       if (k.bp < P[art]) return;
       const slots = R.gueltigeSlots(k, art);
       if (!slots.length) return;
-      if (maxVor && wegVor(k.sHaupt, R.S.slots[slots[0]].s, L) > maxVor) return;
+      let slot = slots[0];
+      // Hindernisse: meist dem direkten Gegner in den Weg bauen, nicht immer dem Führenden
+      if (vm && !BAUWERKE[BAUWERK_INDEX[art]].eigen && z() < CONFIG.bots.zielVordermann) {
+        let nah = 1e9;
+        for (const i of slots) { const d = wegVor(vm.sHaupt, R.S.slots[i].s, L); if (d < nah) { nah = d; slot = i; } }
+      }
+      if (maxVor && wegVor(k.sHaupt, R.S.slots[slot].s, L) > maxVor) return;
       const w = wert + z() * 1.5;
-      if (w > bestWert) { bestWert = w; best = { art, slot: slots[0] }; }
+      if (w > bestWert) { bestWert = w; best = { art, slot }; }
     };
     let vorne = 0;
     for (const o of R.karts) if (o.strecke > k.strecke && o.zielZeit == null) vorne++;
