@@ -119,6 +119,15 @@ kbd { display: inline-block; min-width: 26px; text-align: center; background: va
 /* Touch-Steuerung */
 .touch { position: absolute; pointer-events: auto; border-radius: 50%; background: rgba(255,255,255,.14); border: 3px solid rgba(0,0,0,.5); color: #fff; font: 400 22px var(--titel); display: flex; align-items: center; justify-content: center; text-shadow: 2px 2px 0 #000; }
 @media (max-height: 520px) { .logo { font-size: 44px; } .knopf { font-size: 19px; padding: 6px 14px 5px; } .band { margin: 8px 0 10px; } }
+.schau{display:grid;grid-template-columns:1.25fr 1fr;gap:6px;align-items:center;margin:8px 0;background:linear-gradient(#232931,#0e1114);border-radius:12px;overflow:hidden}
+.schau canvas{width:100%;height:168px;display:block}
+.schau-text{padding:10px 14px 10px 0;display:flex;flex-direction:column;gap:4px;font-size:.84rem;color:#e9edf2;text-align:left}
+.schau-text b{font-size:1.15rem;line-height:1.15}
+.schau-text small,.h-los small{opacity:.7;text-transform:uppercase;letter-spacing:.08em;font-size:.68rem}
+.plus{color:#7fe08a}.minus{color:#ff9d8f}
+@media(max-width:560px){.schau{grid-template-columns:1fr}.schau canvas{height:140px}.schau-text{padding:0 12px 10px}}
+.h-los{position:absolute;left:50%;top:20%;transform:translateX(-50%);background:rgba(14,17,21,.88);color:#fff;border-radius:14px;padding:14px 22px;text-align:center;min-width:250px;max-width:88%;border:1px solid rgba(255,255,255,.16)}
+.h-los small{display:block}.h-los b{display:block;font-size:1.7rem;margin:2px 0}.h-los span{display:block;font-size:.9rem;margin-top:4px}
 </style>
 </head>
 <body>
@@ -255,6 +264,26 @@ const CONFIG = {
     umleitungLaenge: 34,      // Länge der schrägen Leitwand (m)
   },
 
+  // ── Die 8 Autos: jedes hat eine Stärke und eine Schwäche ────────────────
+  // Alle Werte sind Faktoren zum Normalwert (1 = wie oben eingestellt). Nicht genannte Werte sind normal.
+  //   vmax: Höchsttempo            beschl: Beschleunigung         lenk: Drehrate
+  //   ansprechen: wie direkt die Lenkung reagiert                 kurve: Tempoverlust beim Lenken (0 = keiner)
+  //   offroad: Tempo neben der Fahrbahn    schlamm: Tempo im Schlammloch    abkuerzung: Tempo auf Abkürzungen (Kies)
+  //   treffer: wie stark Baustellen-Treffer bremsen               wind: Stärke des Windschattens
+  //   masse: Gewicht beim Rempeln  driftLaden: Zeit bis zum Mini-Turbo      turbo: Stärke des Mini-Turbos
+  //   rampe: Dauer des Rampen-Schubs       baurabatt: so viele BP kosten Bauwerke weniger (kein Faktor)
+  fahrzeuge: {
+    // «vmax» und «lenk» sind zusätzlich fein abgestimmt (tools/tune.js), damit alle 8 Autos auf beiden Strecken etwa gleich oft gewinnen.
+    sport:       { vmax: 1.012, beschl: 0.86, lenk: 0.99, offroad: 0.7, schlamm: 0.75, abkuerzung: 0.93 },   // Stärke: Höchsttempo · Schwäche: Kies und Schlamm
+    limo:        { wind: 2.5, ansprechen: 0.6, vmax: 1.001 },                                                // Stärke: Windschatten · Schwäche: träge Lenkung
+    panzer:      { treffer: 0.3, schlamm: 1.5, beschl: 0.92, vmax: 1.011, lenk: 0.958 },                     // Stärke: Treffer bremsen kaum · Schwäche: Beschleunigung
+    transporter: { masse: 3, kurve: 1.35, lenk: 0.992, vmax: 1.005 },                                        // Stärke: schiebt andere weg · Schwäche: enge Kurven
+    gelaende:    { offroad: 1.65, abkuerzung: 1.08, schlamm: 1.3, vmax: 0.998, lenk: 0.99 },                 // Stärke: neben der Strecke und auf Abkürzungen · Schwäche: Höchsttempo
+    pickup:      { baurabatt: 1, vmax: 0.997, lenk: 0.99 },                                                  // Stärke: Bauwerke 1 BP günstiger · Schwäche: etwas langsamer
+    renn:        { kurve: 0.5, lenk: 1.02, turbo: 1.15, treffer: 1.5, vmax: 0.982 },                         // Stärke: Kurvenlage, Drift-Schub · Schwäche: Treffer bremsen stärker
+    rallye:      { driftLaden: 0.7, rampe: 1.5, vmax: 0.973, lenk: 1.078 },                                  // Stärke: Drift lädt schneller, Rampen · Schwäche: Höchsttempo
+  },
+
   // ── Rennen ──────────────────────────────────────────────────────────────
   rennen: {
     runden: 3,             // Standard-Rundenzahl
@@ -365,14 +394,37 @@ BAUWERKE.forEach((b, i) => { BAUWERK_INDEX[b.art] = i; });
 // Welche Slot-Art braucht welches Bauwerk?
 const SLOT_ART = { rampe: 'rampe', abkuerzung: 'abkuerzung', pylonen: 'hindernis', schlamm: 'hindernis', absperrung: 'hindernis', umleitung: 'umleitung' };
 
+// Die 8 Autos in vier Klassen. Die Zahlen dazu stehen in CONFIG.fahrzeuge. Alle Namen und Formen sind eigene Entwürfe.
 const FAHRZEUGE = [
-  { id: 'bagger',  name: 'Bagger' },
-  { id: 'walze',   name: 'Walze' },
-  { id: 'dumper',  name: 'Dumper' },
-  { id: 'stapler', name: 'Gabelstapler' },
-  { id: 'mischer', name: 'Betonmischer' },
-  { id: 'lader',   name: 'Radlader' },
+  { id: 'sport',       name: 'Sportwagen',   klasse: 'Luxus',     plus: 'Höchstes Tempo auf der Geraden',               minus: 'Verliert auf Kies und im Schlamm viel Tempo' },
+  { id: 'limo',        name: 'Limousine',    klasse: 'Luxus',     plus: 'Starker Windschatten, holt hinter anderen auf', minus: 'Träge Lenkung' },
+  { id: 'panzer',      name: 'Panzerwagen',  klasse: 'Militär',   plus: 'Treffer an Baustellen bremsen kaum',            minus: 'Langsame Beschleunigung' },
+  { id: 'transporter', name: 'Transporter',  klasse: 'Militär',   plus: 'Schiebt andere beim Rempeln weg',               minus: 'Langsam in engen Kurven' },
+  { id: 'gelaende',    name: 'Geländewagen', klasse: 'Gelände',   plus: 'Kaum Tempoverlust neben der Strecke und auf Abkürzungen', minus: 'Tieferes Höchsttempo' },
+  { id: 'pickup',      name: 'Pick-up',      klasse: 'Gelände',   plus: 'Bauwerke kosten 1 Baupunkt weniger',            minus: 'Etwas langsamer als alle anderen' },
+  { id: 'renn',        name: 'Rennwagen',    klasse: 'Rennsport', plus: 'Beste Kurvenlage, stärkerer Drift-Schub',       minus: 'Treffer bremsen ihn stärker' },
+  { id: 'rallye',      name: 'Rallye-Auto',  klasse: 'Rennsport', plus: 'Drift lädt schneller, Rampen geben mehr Schub', minus: 'Tieferes Höchsttempo' },
 ];
+const FAHRZEUG_INDEX = {};
+FAHRZEUGE.forEach((f, i) => { FAHRZEUG_INDEX[f.id] = i; });
+const FAHRZEUG_NORMAL = { vmax: 1, beschl: 1, lenk: 1, ansprechen: 1, kurve: 1, offroad: 1, schlamm: 1, abkuerzung: 1, treffer: 1, wind: 1, masse: 1, driftLaden: 1, turbo: 1, rampe: 1, baurabatt: 0 };
+// Werte eines Autos (Normalwerte, überschrieben durch CONFIG.fahrzeuge). Unbekannte Autos fahren normal.
+function fahrzeugWerte(id) {
+  return Object.assign({}, FAHRZEUG_NORMAL, CONFIG.fahrzeuge[id] || {});
+}
+// Zufalls-Auto: mischt die 8 Autos und teilt sie der Reihe nach zu. «vorher» (Liste der Autos im Rennen davor)
+// sorgt dafür, dass möglichst niemand zweimal hintereinander dasselbe bekommt.
+function loseFahrzeuge(n, zufall, vorher) {
+  let wahl = [];
+  for (let versuch = 0; versuch < 20; versuch++) {
+    const l = FAHRZEUGE.map((f) => f.id);
+    for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(zufall() * (i + 1)); const t = l[i]; l[i] = l[j]; l[j] = t; }
+    wahl = [];
+    for (let i = 0; i < n; i++) wahl.push(l[i % l.length]);
+    if (!vorher || !wahl.some((id, i) => id === vorher[i])) break;
+  }
+  return wahl;
+}
 
 const FARBEN = [
   { name: 'Orange',  hex: 0xff7a1a },
@@ -385,6 +437,13 @@ const FARBEN = [
   { name: 'Pink',    hex: 0xf06cb5 },
   { name: 'Weiss',   hex: 0xf2f0e6 },
   { name: 'Anthrazit', hex: 0x4a4f57 },
+  // Speziallacke: matt, metallic und Tarnmuster
+  { name: 'Olivgold matt', hex: 0x8a7f4a, lack: 'matt' },
+  { name: 'Schwarz matt', hex: 0x26282c, lack: 'matt' },
+  { name: 'Silber metallic', hex: 0xb9c0c8, lack: 'metallic' },
+  { name: 'Nachtblau metallic', hex: 0x1d3a6e, lack: 'metallic' },
+  { name: 'Weinrot metallic', hex: 0x7a1f2b, lack: 'metallic' },
+  { name: 'Tarnmuster', hex: 0x66704a, lack: 'tarn' },
 ];
 
 const BOT_NAMEN = ['Kies-Kurt', 'Beton-Berta', 'Mörtel-Max', 'Schaufel-Susi', 'Walzen-Willi', 'Kran-Karla', 'Dübel-Dani',
@@ -923,8 +982,8 @@ class Rennen {
     const i = Math.floor(sp.s / H.ds) % H.n;
     const w = Math.atan2(H.tz[i], H.tx[i]);
     return {
-      idx, name: f.name || 'Fahrer ' + (idx + 1), fahrzeug: f.fahrzeug || 'bagger', farbe: f.farbe || 0, typ: f.typ || 'bot', stufe: f.stufe || 'mittel',
-      bot: null,
+      idx, name: f.name || 'Fahrer ' + (idx + 1), fahrzeug: f.fahrzeug || 'sport', farbe: f.farbe || 0, typ: f.typ || 'bot', stufe: f.stufe || 'mittel',
+      bot: null, w: fahrzeugWerte(f.fahrzeug),      // w: Stärken und Schwächen dieses Autos (siehe CONFIG.fahrzeuge)
       // Bewegung
       x: o.x, z: o.z, y: o.y, vy: 0, luft: false, luftZeit: 0,
       richtung: w, blick: w, v: 0, lenk: 0, schubX: 0, schubZ: 0,
@@ -994,26 +1053,28 @@ class Rennen {
 
     // Die Lenkung folgt der Eingabe mit kleiner Verzögerung (fühlt sich direkt, aber nicht zappelig an)
     const lenkZiel = clamp(e.lenk, -1, 1);
-    const lenkTempo = F.lenkAnsprechen * dt;
+    const w = k.w;                             // Stärken und Schwächen des Autos
+    const lenkTempo = F.lenkAnsprechen * w.ansprechen * dt;
     k.lenk += clamp(lenkZiel - k.lenk, -lenkTempo, lenkTempo);
 
     const boost = k.boostZeit > 0;
     const amBoden = !k.luft;
 
-    // erlaubtes Höchsttempo je nach Untergrund und Zustand
-    let vmax = F.vmax;
+    // erlaubtes Höchsttempo je nach Auto, Untergrund und Zustand
+    let vmax = F.vmax * w.vmax;
     if (boost) vmax *= k.boostStaerke;
-    if (k.windAktiv) vmax *= 1 + W.bonus;
-    if (!k.aufStrasse) vmax *= boost ? CONFIG.boost.offroadFaktor : F.offroadFaktor;
-    if (k.schlamm) vmax *= CONFIG.wirkung.schlamm.tempoFaktor;
+    if (k.windAktiv) vmax *= 1 + W.bonus * w.wind;
+    if (!k.aufStrasse) vmax *= boost ? CONFIG.boost.offroadFaktor : Math.min(1, F.offroadFaktor * w.offroad);
+    else if (w.abkuerzung !== 1 && k.pfad > 0 && this.S.wege[k.pfad - 1].art === 'abkuerzung') vmax *= w.abkuerzung;
+    if (k.schlamm) vmax *= Math.min(1, CONFIG.wirkung.schlamm.tempoFaktor * w.schlamm);
     if (k.lahmZeit > 0) vmax *= CONFIG.wirkung.absperrung.lahmFaktor;
-    if (!k.drift) vmax *= 1 - F.kurvenVerlust * Math.abs(k.lenk) * clamp(k.v / F.vmax, 0, 1);
+    if (!k.drift) vmax *= 1 - F.kurvenVerlust * w.kurve * Math.abs(k.lenk) * clamp(k.v / F.vmax, 0, 1);
     if (k.zielZeit != null) vmax *= 0.6;       // nach dem Ziel ausrollen
 
     if (amBoden) {
       const gas = clamp(e.gas, 0, 1), bremse = clamp(e.bremse, 0, 1);
       if (gas > 0 && k.v < vmax) {
-        const a = F.beschleunigung * (boost ? CONFIG.boost.beschleunigung : 1) * gas * Math.max(0.07, 1 - k.v / vmax);
+        const a = F.beschleunigung * w.beschl * (boost ? CONFIG.boost.beschleunigung : 1) * gas * Math.max(0.07, 1 - k.v / vmax);
         k.v = Math.min(vmax, k.v + a * dt);
       }
       if (k.v > vmax) {
@@ -1039,7 +1100,7 @@ class Rennen {
     } else if (!e.drift) {
       if (k.driftStufe > 0) {
         const T = k.driftStufe === 2 ? D.turbo2 : D.turbo1;
-        this.gibBoost(k, T.dauer, T.staerke);
+        this.gibBoost(k, T.dauer, 1 + (T.staerke - 1) * w.turbo);
         this.melde('turbo', k.idx, k.driftStufe);
       }
       k.drift = 0; k.driftZeit = 0; k.driftStufe = 0;
@@ -1047,13 +1108,13 @@ class Rennen {
       this.driftAbbruch(k);
     } else {
       if (amBoden) k.driftZeit += dt;
-      const st = k.driftZeit >= D.stufe2 ? 2 : k.driftZeit >= D.stufe1 ? 1 : 0;
+      const st = k.driftZeit >= D.stufe2 * w.driftLaden ? 2 : k.driftZeit >= D.stufe1 * w.driftLaden ? 1 : 0;
       if (st !== k.driftStufe) { k.driftStufe = st; this.melde('driftStufe', k.idx, st); }
     }
 
     // Drehen
     const anteil = clamp(Math.abs(k.v) / F.vmax, 0, 1);
-    const omega = lerp(F.lenkrateLangsam, F.lenkrateSchnell, anteil) * clamp(Math.abs(k.v) / 5, 0, 1);
+    const omega = lerp(F.lenkrateLangsam, F.lenkrateSchnell, anteil) * w.lenk * clamp(Math.abs(k.v) / 5, 0, 1);
     let rate = k.drift ? k.drift * omega * (D.lenkMitte + D.lenkBereich * k.lenk * k.drift) : k.lenk * omega;
     if (k.luft) rate *= F.luftLenkung;
     if (k.schlamm) rate *= CONFIG.wirkung.schlamm.lenkFaktor;
@@ -1198,8 +1259,8 @@ class Rennen {
         const bw = this.bauwerke.find((b) => b.id === k.rampeBereit);
         k.rampeBereit = 0;
         if (bw && !bw.benutzt && k.v > 6) {
-          this.gibBoost(k, RA.boostDauer, RA.boostStaerke);
-          k.erkauftBis = this.zeit + RA.boostDauer + CONFIG.bp.erkauftZeit;
+          this.gibBoost(k, RA.boostDauer * k.w.rampe, RA.boostStaerke);
+          k.erkauftBis = this.zeit + RA.boostDauer * k.w.rampe + CONFIG.bp.erkauftZeit;
           this.melde('rampe', k.idx, bw.id);
           this.benutzt(k, bw);
         }
@@ -1271,15 +1332,16 @@ class Rennen {
         if (d2 >= R2 || d2 < 1e-6 || Math.abs(a.y - b.y) > 1.6) continue;
         const dist = Math.sqrt(d2), nx = dx / dist, nz = dz / dist;
         const ueber = 2 * F.kartRadius - dist;
-        const anteilA = a.typ === 'fern' ? 0 : b.typ === 'fern' ? 1 : 0.5;
+        const leicht = b.w.masse / (a.w.masse + b.w.masse);       // der Leichtere weicht stärker (gleich schwer: je zur Hälfte)
+        const anteilA = a.typ === 'fern' ? 0 : b.typ === 'fern' ? 1 : leicht;
         a.x -= nx * ueber * anteilA; a.z -= nz * ueber * anteilA;
         b.x += nx * ueber * (1 - anteilA); b.z += nz * ueber * (1 - anteilA);
         const rel = (Math.cos(a.richtung) * a.v + a.schubX - Math.cos(b.richtung) * b.v - b.schubX) * nx
                   + (Math.sin(a.richtung) * a.v + a.schubZ - Math.sin(b.richtung) * b.v - b.schubZ) * nz;
         if (rel > 0) {
           const imp = Math.min(rel * F.stoss, 5);
-          if (a.typ !== 'fern') { a.schubX -= nx * imp * 0.5; a.schubZ -= nz * imp * 0.5; }
-          if (b.typ !== 'fern') { b.schubX += nx * imp * 0.5; b.schubZ += nz * imp * 0.5; }
+          if (a.typ !== 'fern') { a.schubX -= nx * imp * leicht; a.schubZ -= nz * imp * leicht; }
+          if (b.typ !== 'fern') { b.schubX += nx * imp * (1 - leicht); b.schubZ += nz * imp * (1 - leicht); }
           if (rel > 2.5) this.melde('rempler', a.idx, b.idx, rel);
         }
       }
@@ -1378,8 +1440,9 @@ class Rennen {
   treffer(k, bw, teil) {
     const W = CONFIG.wirkung;
     const mindest = Math.min(k.v, W.minTempoNachTreffer);
-    if (bw.art === 'pylonen') k.v = Math.max(mindest, k.v * W.pylonen.tempoFaktor);
-    else if (bw.art === 'absperrung') { k.v = Math.max(mindest, k.v * W.absperrung.tempoFaktor); k.lahmZeit = W.absperrung.lahmZeit; }
+    const bremse = (faktor) => clamp(1 - (1 - faktor) * k.w.treffer, 0.1, 1);      // robuste Autos verlieren weniger, empfindliche mehr
+    if (bw.art === 'pylonen') k.v = Math.max(mindest, k.v * bremse(W.pylonen.tempoFaktor));
+    else if (bw.art === 'absperrung') { k.v = Math.max(mindest, k.v * bremse(W.absperrung.tempoFaktor)); k.lahmZeit = W.absperrung.lahmZeit * k.w.treffer; }
     if (bw.art !== 'umleitung') {
       k.schutzZeit = CONFIG.bau.schutzZeit;
       k.boostZeit = 0;
@@ -1637,10 +1700,12 @@ class Rennen {
   }
 
   // Übersicht für die Bauleiste: pro Bauwerk Preis, ob es geht und warum nicht
+  // Preis eines Bauwerks für dieses Auto (der Pick-up baut günstiger)
+  preis(k, art) { return Math.max(1, CONFIG.bau.preise[art] - k.w.baurabatt); }
+
   bauStatus(k) {
-    const B = CONFIG.bau;
     return BAUWERKE.map((b, i) => {
-      const preis = B.preise[b.art];
+      const preis = this.preis(k, b.art);
       let grund = '';
       const slots = this.gueltigeSlots(k, b.art);
       if (k.rang === 1) grund = 'Führender';
@@ -1655,7 +1720,7 @@ class Rennen {
   bauen(k, art, slotIdx) {
     if (slotIdx < 0 || this.phase !== 'rennen') return false;
     if (!this.schiri) { if (this.netz && k.bauSperre <= 0) { k.bauSperre = 0.5; this.netz.bauWunsch(k.idx, art, slotIdx); } return false; }
-    const B = CONFIG.bau, preis = B.preise[art];
+    const B = CONFIG.bau, preis = this.preis(k, art);
     if (k.rang === 1 || k.bauSperre > 0 || k.bp < preis || k.zielZeit != null) return false;
     if (this.gueltigeSlots(k, art).indexOf(slotIdx) < 0) return false;
     k.bp -= preis; k.bpAusgegeben += preis; k.bauSperre = B.wartezeit; k.gebaut++; k.slotWahl = 0;
@@ -1918,7 +1983,7 @@ class Bot {
           const hb = k.pfad > 0 ? 3.5 : R.S.haupt.hb[k.mi];
           if (Math.abs(o.d + seite * 2.9) > hb - 1.2) seite = -seite;
           seit += seite * 3.0;
-        } else if (Math.abs(krHier) < 0.006 && vor > 4 && !k.windAktiv) {
+        } else if (Math.abs(krHier) < (k.w.wind > 1 ? 0.014 : 0.006) && vor > 4 && !k.windAktiv) {      // Autos mit starkem Windschatten suchen ihn öfter
           seit += clamp(dd, -2, 2) * 0.8;      // dahinter einreihen (Windschatten)
         }
       }
@@ -1931,7 +1996,8 @@ class Bot {
     this.routenPunkt(R, k, Lh, versatz, this.o);
     const fehler = winkelDiff(Math.atan2(this.o.z - k.z, this.o.x - k.x), k.richtung);
     const omegaSoll = ((2 * Math.sin(fehler)) / Lh) * Math.max(k.v, 5);
-    const omegaMax = lerp(F.lenkrateLangsam, F.lenkrateSchnell, clamp(k.v / F.vmax, 0, 1));
+    const lr1 = F.lenkrateLangsam * k.w.lenk, lr2 = F.lenkrateSchnell * k.w.lenk;      // der Bot rechnet mit der Lenkung seines Autos
+    const omegaMax = lerp(lr1, lr2, clamp(k.v / F.vmax, 0, 1));
     const driftAnteil = (omegaSoll * k.drift) / omegaMax;
     if (k.drift) e.lenk = clamp((driftAnteil - D.lenkMitte) / D.lenkBereich, -1, 1) * k.drift;
     else e.lenk = clamp(omegaSoll / omegaMax, -1, 1);
@@ -1944,7 +2010,7 @@ class Bot {
     for (const dist of BOT_VORAUS) {
       const kr = Math.abs(this.routenPunkt(R, k, dist, versatz, this.o));
       if (kr < 1e-4) continue;
-      const vKurve = (c * F.lenkrateLangsam) / (kr + (c * (F.lenkrateLangsam - F.lenkrateSchnell)) / F.vmax);
+      const vKurve = (c * lr1) / (kr + (c * (lr1 - lr2)) / F.vmax);
       const vJetzt = Math.sqrt(vKurve * vKurve + 2 * 22 * Math.max(0, dist - 4));
       if (vJetzt < vZiel) vZiel = vJetzt;
     }
@@ -1978,8 +2044,10 @@ class Bot {
     if (this.bauUhr > 0) return;
     this.bauUhr = 0.5 + R.zufall() * 0.6;
     if (!R.bauenAn || R.phase !== 'rennen' || k.rang === 1 || k.bauSperre > 0 || k.bp < 2 || k.zielZeit != null || k.typ !== 'bot') return;
-    if (R.zufall() > this.p.bauen) return;
-    const P = CONFIG.bau.preise, L = R.L, z = R.zufall;
+    if (R.zufall() > this.p.bauen + (k.w.baurabatt ? 0.25 : 0)) return;      // wer günstiger baut, baut öfter
+    const L = R.L, z = R.zufall;
+    const P = {};
+    for (const b of BAUWERKE) P[b.art] = R.preis(k, b.art);
     let best = null, bestWert = 0;
     const vm = k.vordermann >= 0 ? R.karts[k.vordermann] : null;
     const pruefe = (art, wert, maxVor) => {
@@ -1999,8 +2067,9 @@ class Bot {
     let vorne = 0;
     for (const o of R.karts) if (o.strecke > k.strecke && o.zielZeit == null) vorne++;
     const m = Math.min(vorne, 4);
-    pruefe('abkuerzung', 9, 300);                 // lohnt sich am meisten: spart rund 2 s
-    pruefe('rampe', 4.2, 240);
+    // Die Stärke des eigenen Autos zählt mit: Geländewagen lieben Abkürzungen, Rallye-Autos Rampen, Sportwagen meiden Kies
+    pruefe('abkuerzung', 9 + (k.w.abkuerzung > 1 ? 3 : k.w.abkuerzung < 1 ? -3.5 : 0), 300);      // lohnt sich am meisten: spart rund 2 s
+    pruefe('rampe', 4.2 + (k.w.rampe > 1 ? 3.5 : 0), 240);
     pruefe('umleitung', 4.4 + m * 0.7, 0);
     pruefe('absperrung', 3.6 + m * 0.5, 0);
     pruefe('schlamm', 3.0 + m * 0.4, 0);
@@ -2025,12 +2094,12 @@ class Bot {
 const SOLL_CACHE = {};
 
 // Vergleichs-Fahrt: Wie lange braucht ein ungestörter Bot dieser Stufe von jedem Punkt der Strecke aus?
-function sollZeiten(streckenId, stufe) {
-  const key = streckenId + '/' + stufe;
+function sollZeiten(streckenId, stufe, fahrzeug) {
+  const key = streckenId + '/' + stufe + '/' + fahrzeug;
   if (SOLL_CACHE[key]) return SOLL_CACHE[key];
   const S = holeStrecke(streckenId);
   const n = S.haupt.n, ds = S.haupt.ds;
-  const R = new Rennen(S, [{ typ: 'bot', stufe, platz: 0 }], { seed: 4711, runden: 4, bauen: false, meldungen: false });
+  const R = new Rennen(S, [{ typ: 'bot', stufe, platz: 0, fahrzeug }], { seed: 4711, runden: 4, bauen: false, meldungen: false });
   const tau = new Float64Array(n).fill(-1);
   const k = R.karts[0];
   let start = null;
@@ -2068,7 +2137,8 @@ function simRennen(opt) {
   const n = opt.stufen.length;
   const plaetze = opt.stufen.map((_, i) => i);
   for (let i = n - 1; i > 0; i--) { const j = Math.floor(z() * (i + 1)); const t = plaetze[i]; plaetze[i] = plaetze[j]; plaetze[j] = t; }
-  const fahrer = opt.stufen.map((st, i) => ({ name: BOT_NAMEN[i % BOT_NAMEN.length], typ: 'bot', stufe: st, platz: plaetze[i], fahrzeug: FAHRZEUGE[i % FAHRZEUGE.length].id, farbe: i % FARBEN.length }));
+  const autos = opt.autos || loseFahrzeuge(n, z);      // wie im Spiel: jedem Fahrer wird ein Auto zugelost
+  const fahrer = opt.stufen.map((st, i) => ({ name: BOT_NAMEN[i % BOT_NAMEN.length], typ: 'bot', stufe: st, platz: plaetze[i], fahrzeug: autos[i], farbe: i % FARBEN.length }));
   const R = new Rennen(S, fahrer, { seed: opt.seed * 7919 + 3, runden: opt.runden, bauen: opt.bauen, meldungen: false });
   const messungen = [], verluste = [];
   let logPos = 0;
@@ -2084,7 +2154,7 @@ function simRennen(opt) {
       if (R.zeit >= m.t0 + FENSTER) {
         const k = R.karts[m.k];
         if (k.zielZeit == null) {
-          const soll = sollZeiten(opt.strecke, k.stufe);
+          const soll = sollZeiten(opt.strecke, k.stufe, k.fahrzeug);
           verluste.push({ art: m.art, verlust: FENSTER - sollDauer(soll, Math.max(0, m.s0), Math.max(0, k.strecke)) });
         }
         messungen.splice(q, 1);
@@ -2104,6 +2174,7 @@ function simRennen(opt) {
     fuehrerGewinnt: R.fuehrerRunde1 === sieger, streuung: alleImZiel ? letzte - erste : null, siegerZeit: erste,
     maxSteh, resets, bpVerdient: bpV / n, bpAusgegeben: bpA / n, gebaut, ueberholt, treffer, verluste,
     rundenZeit: rundenAnz ? rundenSumme / rundenAnz : 0, dauer: R.zeit, raenge: R.reihenfolge.slice(),
+    autos: R.karts.map((k) => k.fahrzeug), siegerAuto: R.karts[sieger].fahrzeug,
   };
 }
 
@@ -2111,9 +2182,11 @@ function simRennen(opt) {
 function simAuswertung(liste) {
   const N = liste.length;
   const A = { rennen: N, fuehrerGewinnt: 0, streuungMedian: 0, streuungUnter8: 0, maxSteh: 0, resets: 0, bpVerdient: 0, bpAusgegeben: 0,
-    gebaut: 0, ueberholt: 0, treffer: 0, rundenZeit: 0, verlust: {}, siegNachStufe: {}, siegNachStart: {} };
+    gebaut: 0, ueberholt: 0, treffer: 0, rundenZeit: 0, verlust: {}, siegNachStufe: {}, siegNachStart: {}, autos: {} };
   const streu = [];
+  for (const f of FAHRZEUGE) A.autos[f.id] = { rennen: 0, siege: 0, rang: 0 };      // pro Auto: Starts, Siege, mittlerer Platz
   for (const r of liste) {
+    r.raenge.forEach((kIdx, platz) => { const a = A.autos[r.autos[kIdx]]; if (a) { a.rennen++; a.rang += platz + 1; if (platz === 0) a.siege++; } });
     if (r.fuehrerGewinnt) A.fuehrerGewinnt++;
     if (r.streuung != null) { streu.push(r.streuung); if (r.streuung <= 8) A.streuungUnter8++; }
     A.maxSteh = Math.max(A.maxSteh, r.maxSteh); A.resets += r.resets;
@@ -2123,6 +2196,7 @@ function simAuswertung(liste) {
     A.siegNachStart[r.siegerStart] = (A.siegNachStart[r.siegerStart] || 0) + 1;
     for (const v of r.verluste) { (A.verlust[v.art] = A.verlust[v.art] || []).push(v.verlust); }
   }
+  for (const id in A.autos) { const a = A.autos[id]; a.siegAnteil = a.rennen ? a.siege / a.rennen : 0; a.rang = a.rennen ? a.rang / a.rennen : 0; }
   streu.sort((a, b) => a - b);
   A.streuungMedian = streu.length ? streu[streu.length >> 1] : 0;
   A.streuungUnter8 = streu.length ? A.streuungUnter8 / streu.length : 0;
@@ -2274,9 +2348,7 @@ const Grafik = {
     this.szene.add(W);
     const def = S.def, H = S.haupt, F = Geo.farbe;
     const zuf = zufallsGenerator(12345);
-    const himmel = def.himmel || [0x8fc7ea, 0xdff1f7];
-    this.renderer.setClearColor(himmel[0]);
-    this.szene.fog = new THREE.Fog(himmel[1], 140, this.qualitaet === 'niedrig' ? 520 : 760);
+    this.baueHimmel(S.id);
 
     // Alle befahrbaren Pfade mit ihren Rändern (für «liegt dieser Punkt in einem Korridor?»)
     const pfade = [{ P: H, rand: (i, d) => (d >= 0 ? S.randL[i] : S.randR[i]), weg: null }];
@@ -2556,76 +2628,302 @@ const Deko = {
     }
   },
 };
-// ── Fahrzeuge: Mini-Baumaschinen im Kart-Format (nur Optik, alle fahren gleich) ──
-function baueFahrzeug(typ, farbeHex) {
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 8b: Himmel, Licht-Stimmung und die 8 Autos
+   Alles sind eigene Entwürfe aus einfachen Flächen: keine Marken, keine Logos,
+   keine Waffen, keine Bild- oder Modell-Dateien.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+// Karosserie aus Querschnitten («Spanten»): [x, yUnten, yOben, halbe Breite unten, halbe Breite oben]
+Geo.prototype.spanten = function (st, f) {
+  const farbe = typeof f === 'function' ? f : () => f;
+  const mal = (c, h) => [c[0] * h, c[1] * h, c[2] * h];
+  for (let i = 0; i < st.length - 1; i++) {
+    const a = st[i], b = st[i + 1], c = farbe(), s = farbe();
+    this.quad([a[0], a[2], a[4]], [b[0], b[2], b[4]], [b[0], b[2], -b[4]], [a[0], a[2], -a[4]], mal(c, 1.05));      // oben
+    this.quad([a[0], a[1], -a[3]], [b[0], b[1], -b[3]], [b[0], b[1], b[3]], [a[0], a[1], a[3]], mal(c, 0.5));       // unten
+    this.quad([a[0], a[1], a[3]], [b[0], b[1], b[3]], [b[0], b[2], b[4]], [a[0], a[2], a[4]], mal(s, 0.95));        // Seite links
+    this.quad([b[0], b[1], -b[3]], [a[0], a[1], -a[3]], [a[0], a[2], -a[4]], [b[0], b[2], -b[4]], mal(s, 0.95));    // Seite rechts
+  }
+  const a = st[0], b = st[st.length - 1], c = farbe();
+  this.quad([a[0], a[1], -a[3]], [a[0], a[1], a[3]], [a[0], a[2], a[4]], [a[0], a[2], -a[4]], c);                   // Heck
+  this.quad([b[0], b[1], b[3]], [b[0], b[1], -b[3]], [b[0], b[2], -b[4]], [b[0], b[2], b[4]], c);                   // Bug
+};
+
+// ── Stimmung pro Strecke: Tageszeit, Himmel, Sonne, Dunst ─────────────────
+const STIMMUNG = {
+  kiesgrube: { zenit: 0x35629c, mitte: 0x93a9c2, horizont: 0xf6b684, dunst: 0xe6b48f, schein: 0xffa850, sonnePos: [-150, 42, 70], sonne: 0xffc48c, sonneKraft: 1.9,
+    himmelLicht: 0xffe3c8, bodenLicht: 0x6b5947, licht: 0.85, wolke: 0xffdcc0, wolken: 16, boden: 0x6e5f4c, nebel: [110, 720] },          // Abendlicht
+  bergpass: { zenit: 0x1f6fd0, mitte: 0x7fb6ea, horizont: 0xd9eefb, dunst: 0xcfe6f5, schein: 0xfff2c8, sonnePos: [90, 95, -70], sonne: 0xfff4dc, sonneKraft: 1.9,
+    himmelLicht: 0xe9f5ff, bodenLicht: 0x6f7b68, licht: 1.0, wolke: 0xffffff, wolken: 9, boden: 0x6b7a5a, nebel: [170, 860] },            // klarer Morgen
+  schauraum: { zenit: 0x0b0d10, mitte: 0x242a31, horizont: 0x9aa5b3, dunst: 0x14171b, schein: 0xffffff, sonnePos: [40, 80, 30], sonne: 0xffffff, sonneKraft: 2.2,
+    himmelLicht: 0xdfe8f2, bodenLicht: 0x2a2f36, licht: 0.9, wolke: 0xffffff, wolken: 0, boden: 0x0c0e11, nebel: [50, 200] },
+};
+
+// Malt ein Rundum-Bild des Himmels (Verlauf, Sonne mit Schein, Wolken). Es dient als Hintergrund und für die Spiegelungen auf Lack und Glas.
+function himmelBild(st) {
+  const B = 1024, H = 512, c = document.createElement('canvas'); c.width = B; c.height = H;
+  const x = c.getContext('2d'), zuf = zufallsGenerator(77);
+  let g = x.createLinearGradient(0, 0, 0, H / 2);
+  g.addColorStop(0, hexCss(st.zenit)); g.addColorStop(0.6, hexCss(st.mitte)); g.addColorStop(1, hexCss(st.horizont));
+  x.fillStyle = g; x.fillRect(0, 0, B, H / 2);
+  g = x.createLinearGradient(0, H / 2, 0, H);
+  g.addColorStop(0, hexCss(st.dunst)); g.addColorStop(0.12, hexCss(st.boden)); g.addColorStop(1, hexCss(st.boden));
+  x.fillStyle = g; x.fillRect(0, H / 2, B, H / 2);
+  const p = st.sonnePos, l = Math.hypot(p[0], p[1], p[2]);
+  const sx = (Math.atan2(p[2] / l, p[0] / l) / TAU + 0.5) * B, sy = (0.5 - Math.asin(p[1] / l) / Math.PI) * H;
+  for (const dx of [-B, 0, B]) {
+    g = x.createRadialGradient(sx + dx, sy, 0, sx + dx, sy, 190);
+    g.addColorStop(0, 'rgba(255,252,240,1)'); g.addColorStop(0.05, 'rgba(255,246,214,.96)'); g.addColorStop(0.16, hexCss(st.schein) + '77'); g.addColorStop(1, hexCss(st.schein) + '00');
+    x.fillStyle = g; x.fillRect(sx + dx - 190, sy - 190, 380, 380);
+  }
+  for (let q = 0; q < st.wolken; q++) {
+    const wx = zuf() * B, wy = 40 + zuf() * 175, gr = 26 + zuf() * 46;
+    for (let t = 0; t < 7; t++) {
+      const ox = (zuf() - 0.5) * gr * 3.4, oy = (zuf() - 0.5) * gr * 0.5, r = gr * (0.5 + zuf() * 0.7);
+      for (const dx of [-B, 0, B]) {
+        g = x.createRadialGradient(wx + ox + dx, wy + oy, 0, wx + ox + dx, wy + oy, r);
+        g.addColorStop(0, hexCss(st.wolke) + 'cc'); g.addColorStop(0.55, hexCss(st.wolke) + '55'); g.addColorStop(1, hexCss(st.wolke) + '00');
+        x.fillStyle = g; x.save(); x.translate(wx + ox + dx, wy + oy); x.scale(1.7, 0.6); x.translate(-(wx + ox + dx), -(wy + oy)); x.fillRect(wx + ox + dx - r, wy + oy - r, 2 * r, 2 * r); x.restore();
+      }
+    }
+  }
+  return c;
+}
+
+Object.assign(Grafik, {
+  // Lack: glänzend, matt, metallic oder Tarnmuster. Bei «Niedrig» gibt es den einfachen Lack ohne Spiegelung.
+  lackMat(art) {
+    const L = this._lack || (this._lack = {});
+    if (!L[art]) {
+      const w = { glanz: [0.3, 0.26], matt: [0.05, 0.82], metallic: [0.78, 0.3], tarn: [0, 0.9], glas: [0.9, 0.06], felge: [0.85, 0.3] }[art] || [0.3, 0.26];
+      L[art] = this.qualitaet === 'niedrig' ? this.mat : new THREE.MeshStandardMaterial({ vertexColors: true, metalness: w[0], roughness: w[1], side: THREE.DoubleSide });
+    }
+    return L[art];
+  },
+  matLicht() { return this._licht || (this._licht = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, fog: false })); },
+
+  // Himmel, Spiegel-Umgebung, Dunst und Licht passend zur Strecke setzen
+  baueHimmel(id) {
+    const st = (this.stimmung = STIMMUNG[id] || STIMMUNG.kiesgrube);
+    if (this.himmelTex) this.himmelTex.dispose();
+    if (this.umgebung) this.umgebung.dispose();
+    const tex = (this.himmelTex = new THREE.CanvasTexture(himmelBild(st)));
+    tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+    this.szene.background = tex;
+    const pm = new THREE.PMREMGenerator(this.renderer);
+    this.umgebung = pm.fromEquirectangular(tex); this.szene.environment = this.umgebung.texture; pm.dispose();
+    this.szene.fog = new THREE.Fog(st.dunst, st.nebel[0], st.nebel[1] * (this.qualitaet === 'niedrig' ? 0.7 : 1));
+    this.licht.color.setHex(st.himmelLicht); this.licht.groundColor.setHex(st.bodenLicht); this.licht.intensity = st.licht;
+    this.sonne.color.setHex(st.sonne); this.sonne.intensity = st.sonneKraft;
+    this.sonneVersatz = st.sonnePos;
+  },
+});
+
+// ── Die 8 Autos ────────────────────────────────────────────────────────────
+// lack: 'glanz' | 'matt' | 'metallic' | 'tarn'. Vorne ist +x, oben +y.
+function baueFahrzeug(typ, farbeHex, lack) {
   const gr = new THREE.Group();
   gr.rotation.order = 'YZX';
-  const g = new Geo(), F = Geo.farbe;
-  const farbe = F(farbeHex), hell = F(farbeHex, 1.18), dunkel = F(0x2a2d31), stahl = F(0x9a9fa6);
-  const fahrer = (x) => {       // kleiner Bauarbeiter mit Weste und Helm
-    g.box(x, 0.98, 0, 0.42, 0.56, 0.56, F(0xff7a1a)); g.box(x, 1.02, 0, 0.44, 0.1, 0.58, F(0xf5f1e6));
-    g.box(x, 1.42, 0, 0.3, 0.3, 0.32, F(0xe8b88a)); g.box(x, 1.61, 0, 0.38, 0.16, 0.4, F(0xffffff)); g.box(x + 0.16, 1.55, 0, 0.2, 0.05, 0.4, F(0xffffff));
-    g.box(x + 0.45, 0.95, 0, 0.08, 0.5, 0.08, dunkel, 0, -0.5); g.box(x + 0.58, 1.14, 0, 0.06, 0.3, 0.3, dunkel);     // Lenkrad
-  };
-  g.box(0, 0.42, 0, 2.3, 0.26, 1.0, dunkel);                         // Fahrgestell
-  g.zyl(-1.02, 1.2, 0.36, 0.06, 0.06, 0.7, 5, dunkel);               // Auspuff
-  let vorneRaeder = true, trommel = null;
-  if (typ === 'walze') {
-    g.box(-0.45, 0.85, 0, 1.3, 0.6, 1.1, farbe); g.box(-0.95, 1.2, 0, 0.3, 0.12, 1.1, hell);
-    g.zyl(0.85, 0.52, 0, 0.52, 0.52, 1.5, 10, stahl, 'z');
-    for (const s of [0.8, -0.8]) g.box(0.6, 0.9, s, 1.2, 0.12, 0.1, farbe, 0, -0.2);
-    fahrer(-0.3); vorneRaeder = false;
-  } else if (typ === 'dumper') {
-    g.box(0.72, 1.0, 0, 1.25, 0.62, 1.38, farbe, 0, 0.12); g.box(0.74, 1.3, 0, 1.05, 0.1, 1.16, F(0x9b8257), 0, 0.12);
-    g.box(-0.98, 0.8, 0, 0.6, 0.5, 0.9, hell);
-    fahrer(-0.42);
-  } else if (typ === 'stapler') {
-    g.box(-0.5, 0.82, 0, 1.2, 0.55, 1.0, farbe); g.box(-1.08, 0.75, 0, 0.3, 0.72, 1.0, dunkel);
-    for (const s of [0.32, -0.32]) { g.box(0.98, 1.3, s, 0.1, 1.95, 0.1, stahl); g.box(1.5, 0.32, s, 0.95, 0.06, 0.15, stahl); }
-    g.box(0.98, 2.22, 0, 0.1, 0.1, 0.76, stahl);
-    for (const q of [[0.42, 0.46], [0.42, -0.46], [-0.85, 0.46], [-0.85, -0.46]]) g.box(q[0], 1.5, q[1], 0.07, 1.0, 0.07, dunkel);
-    g.box(-0.21, 2.02, 0, 1.36, 0.08, 1.02, farbe);
-    fahrer(-0.25);
-  } else if (typ === 'mischer') {
-    g.box(0.9, 0.85, 0, 0.6, 0.55, 1.1, farbe); g.box(1.21, 0.95, 0, 0.03, 0.3, 0.9, F(0x9fd0e6));
-    g.box(-0.72, 0.72, 0, 1.1, 0.3, 0.9, hell);
-    const t = new Geo();
-    t.zyl(0, 0, 0, 0.64, 0.4, 1.3, 8, F(0xf5f1e6), 'z'); t.zyl(0, 0, 0.2, 0.66, 0.6, 0.22, 8, farbe, 'z'); t.zyl(0, 0, -0.3, 0.6, 0.54, 0.2, 8, farbe, 'z');
-    const halter = new THREE.Group();
-    halter.position.set(-0.72, 1.38, 0); halter.rotation.set(0, Math.PI / 2, 0); halter.rotateX(0.2);
-    trommel = t.netz(Grafik.mat, true); halter.add(trommel); gr.add(halter);
-    fahrer(0.2);
-  } else if (typ === 'lader') {
-    g.box(-0.6, 0.85, 0, 1.2, 0.6, 1.05, farbe); g.box(-1.0, 1.22, 0, 0.4, 0.14, 1.05, hell);
-    for (const s of [0.5, -0.5]) g.box(0.8, 0.82, s, 1.35, 0.14, 0.12, farbe, 0, -0.22);
-    g.box(1.52, 0.56, 0, 0.5, 0.6, 1.76, stahl); g.box(1.76, 0.3, 0, 0.3, 0.08, 1.76, dunkel);
-    fahrer(-0.3);
-  } else {                                                           // Bagger
-    g.box(-0.78, 0.82, 0, 0.9, 0.52, 1.0, farbe); g.box(0.1, 0.6, 0, 1.3, 0.12, 1.1, farbe); g.box(-1.15, 0.7, 0, 0.2, 0.5, 0.9, dunkel);
-    g.box(0.72, 1.18, 0.4, 1.25, 0.17, 0.17, hell, 0, 0.78); g.box(1.34, 1.32, 0.4, 0.95, 0.14, 0.14, hell, 0, -0.62);
-    g.box(1.64, 0.92, 0.4, 0.34, 0.42, 0.5, stahl);
-    fahrer(-0.15);
+  const F = Geo.farbe, k = new Geo(), d = new Geo(), gl = new Geo(), li = new Geo();
+  const militaer = typ === 'panzer' || typ === 'transporter';
+  const muster = lack === 'tarn' ? [F(0x66704a), F(0x47503a), F(0x7b6848)] : militaer ? [F(farbeHex), F(farbeHex, 0.66), F(farbeHex, 0.42)] : null;
+  const basis = F(farbeHex);
+  let nr = 0;
+  const P = (h) => { const c = muster ? muster[(nr = (nr * 5 + 3) % 7) % 3] : basis; return h && h !== 1 ? [c[0] * h, c[1] * h, c[2] * h] : c; };
+  const DK = F(0x1a1c20), ST = F(0x8f969e), CHROM = F(0xd9dee4), GLAS = F(0x0d1319), WEISS = F(0xfff2d0), LED = F(0xe4f5ff), ROT = F(0xff2a1c), ORANGE = F(0xff9a1a);
+  const beide = (f) => { f(1); f(-1); };
+  let raeder = [], felge = 0xc9ced4, laenge = 2.7, radBreit = 0.32;
+  const achsen = (liste, r, z) => { for (const x of liste) beide((s) => raeder.push([x, s * z, r, x > 0])); };
+
+  if (typ === 'sport') {                                            // flach, breit, kantig
+    k.spanten([[-1.36, 0.3, 0.64, 0.6, 0.55], [-1.05, 0.21, 0.72, 0.68, 0.62], [-0.2, 0.19, 0.66, 0.68, 0.64], [0.5, 0.19, 0.56, 0.68, 0.62], [1.08, 0.2, 0.42, 0.66, 0.56], [1.4, 0.25, 0.33, 0.54, 0.46]], P);
+    gl.spanten([[-0.82, 0.66, 0.7, 0.5, 0.44], [-0.42, 0.66, 0.92, 0.52, 0.4], [0.02, 0.64, 0.92, 0.52, 0.4], [0.66, 0.57, 0.59, 0.5, 0.46]], GLAS);
+    k.spanten([[-0.44, 0.92, 0.945, 0.4, 0.39], [0.03, 0.92, 0.945, 0.4, 0.39]], P);
+    k.box(-1.2, 0.9, 0, 0.3, 0.035, 1.26, P());                                                          // Heckflügel
+    d.box(1.38, 0.2, 0, 0.14, 0.04, 1.2, DK); d.box(-1.34, 0.26, 0, 0.12, 0.14, 0.92, DK);               // Splitter, Diffusor
+    li.box(-1.375, 0.6, 0, 0.03, 0.045, 1.02, ROT);                                                      // Leuchtband hinten
+    beide((s) => {
+      d.box(-1.18, 0.8, s * 0.42, 0.06, 0.2, 0.05, DK); d.box(-0.42, 0.44, s * 0.675, 0.42, 0.2, 0.04, DK);            // Flügelstützen, Lufteinlass
+      d.box(0.78, 0.515, s * 0.26, 0.3, 0.02, 0.12, DK, 0, -0.2); k.box(0.4, 0.71, s * 0.61, 0.1, 0.07, 0.16, P());   // Haubenschlitz, Spiegel
+      li.box(1.18, 0.43, s * 0.47, 0.32, 0.03, 0.045, LED, s * 0.42); li.box(1.03, 0.47, s * 0.55, 0.2, 0.03, 0.045, LED, -s * 0.7); li.box(1.3, 0.37, s * 0.4, 0.13, 0.03, 0.045, LED);   // Y-Scheinwerfer
+      d.box(-1.4, 0.33, s * 0.17, 0.08, 0.08, 0.13, ST);                                                              // Auspuff
+    });
+    achsen([0.88, -0.88], 0.36, 0.64); felge = 0x1b1c1f; laenge = 2.8;
+  } else if (typ === 'limo') {                                      // lang, elegant, Chromleisten
+    k.spanten([[-1.47, 0.32, 0.66, 0.56, 0.5], [-1.2, 0.24, 0.75, 0.62, 0.58], [0.5, 0.24, 0.73, 0.62, 0.58], [1.2, 0.24, 0.67, 0.62, 0.56], [1.47, 0.29, 0.55, 0.55, 0.48]], P);
+    gl.spanten([[-0.9, 0.73, 0.77, 0.52, 0.48], [-0.52, 0.73, 1.06, 0.53, 0.42], [0.3, 0.73, 1.06, 0.53, 0.42], [0.74, 0.71, 0.74, 0.52, 0.48]], GLAS);
+    k.spanten([[-0.54, 1.06, 1.085, 0.42, 0.41], [0.31, 1.06, 1.085, 0.42, 0.41]], P);
+    d.box(1.475, 0.44, 0, 0.03, 0.2, 0.62, DK); d.box(1.485, 0.44, 0, 0.02, 0.03, 0.66, CHROM); d.box(1.485, 0.55, 0, 0.02, 0.02, 0.66, CHROM);     // Kühlergrill
+    li.box(-1.475, 0.58, 0, 0.03, 0.04, 0.5, ROT);
+    beide((s) => {
+      d.box(0, 0.5, s * 0.626, 2.3, 0.025, 0.02, CHROM); d.box(-0.1, 0.735, s * 0.56, 1.5, 0.02, 0.02, CHROM);           // Chromleisten
+      k.box(0.62, 0.8, s * 0.6, 0.1, 0.07, 0.15, P()); d.box(-1.48, 0.3, s * 0.36, 0.06, 0.07, 0.16, CHROM);            // Spiegel, Auspuff
+      li.box(1.44, 0.56, s * 0.43, 0.06, 0.07, 0.24, LED); li.box(-1.465, 0.58, s * 0.42, 0.04, 0.09, 0.22, ROT);       // Lichter
+      d.box(-0.12, 0.9, s * 0.535, 0.05, 0.3, 0.02, DK);                                                                 // B-Säule
+    });
+    achsen([0.96, -0.96], 0.36, 0.6); felge = 0xd3d8de; laenge = 3.0;
+  } else if (typ === 'panzer') {                                    // gepanzertes Geländefahrzeug mit acht Rädern
+    k.spanten([[-1.46, 0.52, 1.0, 0.6, 0.6], [-1.3, 0.42, 1.12, 0.66, 0.6], [0.72, 0.42, 1.12, 0.66, 0.6], [1.26, 0.46, 0.94, 0.66, 0.56], [1.5, 0.62, 0.78, 0.56, 0.48]], P);
+    k.spanten([[-1.1, 1.12, 1.36, 0.56, 0.45], [0.36, 1.12, 1.36, 0.56, 0.45], [0.82, 1.1, 1.14, 0.56, 0.5]], P);
+    gl.box(0.63, 1.26, 0, 0.03, 0.12, 0.6, GLAS, 0, -0.45);                                                              // Sehschlitz vorn
+    d.zyl(-0.3, 1.38, 0.2, 0.2, 0.2, 0.05, 8, DK); d.zyl(-0.75, 1.38, -0.2, 0.17, 0.17, 0.05, 8, DK);                    // Luken
+    d.box(-1.2, 1.9, 0.44, 0.025, 1.1, 0.025, DK); d.box(-1.25, 1.75, -0.44, 0.025, 0.8, 0.025, DK);                     // Antennen
+    d.box(-1.48, 0.86, 0, 0.06, 0.5, 0.7, P(0.7)); d.box(1.5, 0.52, 0, 0.1, 0.1, 1.0, DK);                               // Hecktür, Stossstange
+    beide((s) => {
+      gl.box(0.1, 1.24, s * 0.515, 0.34, 0.1, 0.03, GLAS); gl.box(-0.5, 1.24, s * 0.515, 0.34, 0.1, 0.03, GLAS);         // Sehschlitze seitlich
+      d.box(0.95, 1.2, s * 0.68, 0.04, 0.3, 0.04, DK); d.box(0.97, 1.36, s * 0.72, 0.04, 0.2, 0.12, DK);                 // Spiegel an Armen
+      li.zyl(1.4, 0.82, s * 0.44, 0.07, 0.07, 0.06, 8, WEISS, 'z', Math.PI / 2); li.box(-1.49, 0.62, s * 0.5, 0.03, 0.1, 0.1, ROT);
+      d.box(-0.2, 0.74, s * 0.67, 1.9, 0.06, 0.06, DK); d.box(0.2, 0.95, s * 0.64, 0.5, 0.22, 0.05, P(0.8));             // Trittleiste, Staukiste
+    });
+    achsen([1.0, 0.33, -0.36, -1.03], 0.4, 0.66); felge = 0x4a4f44; laenge = 3.0; radBreit = 0.3;
+  } else if (typ === 'transporter') {                               // Lastwagen mit sechs Rädern und Plane
+    d.box(-0.1, 0.52, 0, 2.9, 0.16, 0.9, DK);                                                                            // Rahmen
+    k.spanten([[0.44, 0.5, 1.34, 0.62, 0.6], [1.08, 0.5, 1.34, 0.62, 0.58], [1.4, 0.5, 0.98, 0.62, 0.58], [1.5, 0.56, 0.8, 0.58, 0.54]], P);
+    gl.box(1.26, 1.16, 0, 0.03, 0.34, 1.02, GLAS, 0, -0.72);                                                             // Frontscheibe
+    k.spanten([[-1.5, 0.62, 0.84, 0.64, 0.64], [0.36, 0.62, 0.84, 0.64, 0.64]], P);                                      // Ladefläche
+    d.spanten([[-1.47, 0.84, 1.38, 0.62, 0.58], [-1.3, 0.84, 1.52, 0.62, 0.52], [0.18, 0.84, 1.52, 0.62, 0.52], [0.33, 0.84, 1.38, 0.62, 0.58]], () => P(0.6));   // Plane
+    d.box(1.53, 0.5, 0, 0.08, 0.14, 1.26, DK); d.box(0.4, 1.3, 0.5, 0.07, 0.9, 0.07, ST);                                // Stossstange, Auspuffrohr
+    beide((s) => {
+      gl.box(0.82, 1.14, s * 0.605, 0.44, 0.28, 0.03, GLAS); d.box(1.2, 1.2, s * 0.72, 0.04, 0.3, 0.14, DK);             // Seitenfenster, Spiegel
+      li.box(1.5, 0.72, s * 0.44, 0.04, 0.1, 0.16, WEISS); li.box(-1.51, 0.72, s * 0.52, 0.03, 0.08, 0.14, ROT); li.box(1.1, 1.37, s * 0.3, 0.06, 0.04, 0.08, ORANGE);
+      d.box(-0.75, 1.2, s * 0.6, 1.5, 0.03, 0.03, P(0.4));                                                               // Spannriemen
+    });
+    achsen([1.0, -0.38, -1.08], 0.42, 0.66); felge = 0x50554a; laenge = 3.1;
+  } else if (typ === 'gelaende') {                                  // kantiger Geländewagen, hoch gelegt
+    k.spanten([[-1.3, 0.52, 0.98, 0.62, 0.6], [0.55, 0.52, 0.98, 0.62, 0.6], [1.14, 0.52, 0.92, 0.62, 0.58], [1.32, 0.56, 0.8, 0.58, 0.54]], P);
+    gl.spanten([[-1.22, 0.98, 1.34, 0.58, 0.53], [0.24, 0.98, 1.34, 0.58, 0.53], [0.56, 0.98, 1.0, 0.58, 0.56]], GLAS);
+    k.spanten([[-1.24, 1.34, 1.37, 0.54, 0.54], [0.26, 1.34, 1.37, 0.54, 0.54]], P);
+    d.box(-0.4, 1.42, 0, 1.2, 0.04, 0.9, DK); li.box(0.2, 1.43, 0, 0.06, 0.07, 0.7, WEISS);                              // Dachträger, Lichtbalken
+    d.zyl(-1.38, 0.86, 0, 0.3, 0.3, 0.16, 10, DK, 'z', Math.PI / 2); d.box(1.38, 0.62, 0, 0.06, 0.34, 0.8, DK);          // Ersatzrad, Rammschutz
+    d.box(0.5, 1.15, 0.6, 0.06, 0.6, 0.06, DK);                                                                          // Schnorchel
+    beide((s) => {
+      d.box(0.86, 0.9, s * 0.66, 0.74, 0.07, 0.12, DK); d.box(-0.86, 0.9, s * 0.66, 0.74, 0.07, 0.12, DK);               // Kotflügel
+      d.box(0, 0.5, s * 0.66, 0.9, 0.05, 0.12, DK); k.box(0.52, 1.02, s * 0.64, 0.08, 0.1, 0.14, P());                   // Trittbrett, Spiegel
+      li.zyl(1.33, 0.8, s * 0.42, 0.085, 0.085, 0.05, 8, WEISS, 'z', Math.PI / 2); li.box(-1.31, 0.82, s * 0.5, 0.03, 0.14, 0.08, ROT);
+      d.box(-0.6, 1.16, s * 0.585, 0.04, 0.34, 0.02, P()); d.box(-0.02, 1.16, s * 0.585, 0.04, 0.34, 0.02, P());        // Fensterstege
+    });
+    achsen([0.86, -0.86], 0.44, 0.66); felge = 0x2c2f33; laenge = 2.7; radBreit = 0.34;
+  } else if (typ === 'pickup') {                                    // Kabine vorn, offene Ladefläche mit Baumaterial
+    k.spanten([[-1.46, 0.46, 0.88, 0.62, 0.6], [0.6, 0.46, 0.88, 0.62, 0.6], [1.25, 0.46, 0.83, 0.62, 0.58], [1.46, 0.5, 0.7, 0.58, 0.54]], P);
+    gl.spanten([[-0.3, 0.88, 1.2, 0.57, 0.5], [0.4, 0.88, 1.2, 0.57, 0.5], [0.76, 0.88, 0.9, 0.57, 0.54]], GLAS);
+    k.spanten([[-0.32, 1.2, 1.23, 0.5, 0.5], [0.42, 1.2, 1.23, 0.5, 0.5]], P);
+    d.box(-0.9, 0.885, 0, 1.02, 0.02, 1.04, DK);                                                                         // Ladefläche innen
+    d.box(-0.95, 0.95, 0.18, 0.95, 0.06, 0.2, F(0xb98a52)); d.box(-0.9, 1.01, 0.2, 0.9, 0.06, 0.2, F(0xa87a44)); d.box(-1.1, 1.0, -0.26, 0.4, 0.22, 0.34, F(0xff7a1a));   // Bretter, Werkzeugkiste
+    d.zyl(-0.6, 1.02, -0.28, 0.12, 0.03, 0.3, 6, F(0xff7a1a));                                                           // Pylone
+    d.box(-0.36, 1.3, 0, 0.06, 0.06, 1.1, DK); li.box(-0.33, 1.35, 0, 0.05, 0.06, 0.6, ORANGE);                          // Überrollbügel mit Warnlicht
+    d.box(1.48, 0.56, 0, 0.06, 0.2, 0.9, DK);
+    beide((s) => {
+      d.box(-0.36, 1.08, s * 0.55, 0.06, 0.44, 0.06, DK); k.box(0.66, 0.93, s * 0.63, 0.08, 0.09, 0.14, P());
+      li.box(1.44, 0.72, s * 0.43, 0.05, 0.09, 0.22, WEISS); li.box(-1.47, 0.7, s * 0.52, 0.03, 0.2, 0.08, ROT);
+      d.box(0.9, 0.84, s * 0.655, 0.72, 0.06, 0.1, DK); d.box(-0.9, 0.84, s * 0.655, 0.72, 0.06, 0.1, DK);
+    });
+    achsen([0.9, -0.9], 0.42, 0.66); felge = 0x9aa1a9; laenge = 3.0;
+  } else if (typ === 'renn') {                                      // Einsitzer mit freistehenden Rädern und Flügeln
+    k.spanten([[-1.22, 0.2, 0.5, 0.3, 0.24], [-0.6, 0.17, 0.62, 0.36, 0.28], [0.1, 0.17, 0.55, 0.3, 0.25], [0.8, 0.2, 0.4, 0.16, 0.13], [1.42, 0.24, 0.31, 0.08, 0.06]], P);
+    k.box(-0.62, 0.8, 0, 0.5, 0.26, 0.2, P()); d.box(-0.35, 0.8, 0, 0.05, 0.2, 0.16, DK);                                // Airbox
+    d.box(-0.05, 0.6, 0, 0.5, 0.04, 0.34, DK); k.box(-0.02, 0.68, 0, 0.2, 0.18, 0.2, F(0xf5f1e6));                       // Cockpit, Helm
+    d.box(0.2, 0.74, 0, 0.5, 0.035, 0.035, DK, 0, -0.25);                                                                // Schutzbügel
+    k.box(1.42, 0.2, 0, 0.34, 0.03, 1.36, P()); k.box(1.3, 0.26, 0, 0.2, 0.025, 1.3, P(0.75));                           // Frontflügel
+    k.box(-1.32, 0.88, 0, 0.3, 0.035, 1.08, P()); k.box(-1.3, 0.76, 0, 0.22, 0.03, 1.04, P(0.75));                       // Heckflügel
+    d.box(-1.25, 0.28, 0, 0.3, 0.14, 0.7, DK); li.box(-1.41, 0.34, 0, 0.03, 0.12, 0.08, ROT);                            // Diffusor, Regenlicht
+    beide((s) => {
+      k.box(-0.3, 0.33, s * 0.5, 1.0, 0.26, 0.3, P()); k.box(-0.9, 0.3, s * 0.44, 0.3, 0.2, 0.2, P(), s * 0.5);              // Seitenkasten
+      d.box(0.27, 0.32, s * 0.5, 0.03, 0.18, 0.24, DK);
+      d.box(1.42, 0.3, s * 0.68, 0.36, 0.2, 0.02, P(0.6)); d.box(-1.32, 0.76, s * 0.55, 0.36, 0.34, 0.025, P(0.6));      // Endplatten
+      d.box(0.92, 0.36, s * 0.42, 0.04, 0.03, 0.44, DK); d.box(-0.95, 0.38, s * 0.44, 0.04, 0.03, 0.4, DK);              // Radaufhängung
+      li.box(0.6, 0.47, s * 0.13, 0.12, 0.02, 0.03, LED);
+    });
+    achsen([0.92, -0.95], 0.38, 0.6); felge = 0x1b1c1f; laenge = 2.9; radBreit = 0.38;
+  } else {                                                          // Rallye-Auto: kompakt, grosser Heckflügel, Zusatzscheinwerfer
+    k.spanten([[-1.25, 0.36, 0.8, 0.6, 0.57], [-1.0, 0.3, 0.85, 0.65, 0.6], [0.5, 0.3, 0.81, 0.65, 0.6], [1.05, 0.3, 0.7, 0.65, 0.58], [1.28, 0.35, 0.55, 0.58, 0.5]], P);
+    gl.spanten([[-1.02, 0.85, 1.1, 0.56, 0.48], [-0.8, 0.85, 1.14, 0.56, 0.47], [0.2, 0.85, 1.14, 0.56, 0.47], [0.62, 0.8, 0.83, 0.56, 0.52]], GLAS);
+    k.spanten([[-0.82, 1.14, 1.17, 0.47, 0.47], [0.22, 1.14, 1.17, 0.47, 0.47]], P);
+    k.box(-1.08, 1.3, 0, 0.36, 0.035, 1.24, P()); d.box(-0.2, 1.21, 0, 0.36, 0.09, 0.3, DK);                             // Heckflügel, Dachhutze
+    d.box(0.3, 0.83, 0, 1.5, 0.012, 0.16, F(0xf5f1e6)); d.box(-0.3, 1.175, 0, 1.0, 0.012, 0.16, F(0xf5f1e6));           // Rallye-Streifen
+    d.box(1.3, 0.34, 0, 0.08, 0.1, 1.1, DK); d.box(-1.27, 0.34, 0.2, 0.08, 0.09, 0.14, ST);
+    for (const z of [-0.33, -0.11, 0.11, 0.33]) li.zyl(1.2, 0.72, z, 0.09, 0.09, 0.07, 8, WEISS, 'z', Math.PI / 2);      // vier Zusatzscheinwerfer
+    beide((s) => {
+      d.box(-1.1, 1.2, s * 0.56, 0.3, 0.2, 0.03, P(0.7)); d.box(-0.5, 0.26, s * 0.63, 0.04, 0.2, 0.26, F(0xb3261e)); d.box(-1.2, 0.26, s * 0.63, 0.04, 0.2, 0.26, F(0xb3261e));   // Flügelwangen, Schmutzfänger
+      k.box(0.56, 0.9, s * 0.62, 0.08, 0.08, 0.14, P()); d.box(0.84, 0.72, s * 0.66, 0.66, 0.07, 0.1, P(0.8)); d.box(-0.84, 0.74, s * 0.66, 0.66, 0.07, 0.1, P(0.8));
+      li.box(1.24, 0.5, s * 0.44, 0.06, 0.08, 0.2, LED); li.box(-1.255, 0.66, s * 0.46, 0.03, 0.08, 0.2, ROT);
+    });
+    achsen([0.84, -0.84], 0.38, 0.65); felge = 0xf5f1e6; laenge = 2.6;
   }
-  const koerper = g.netz(Grafik.mat, true);
+  const lackArt = lack && lack !== 'glanz' ? lack : militaer ? 'matt' : 'glanz';
+  const koerper = k.netz(Grafik.lackMat(lackArt), true);
   gr.add(koerper);
-  // Räder
-  const raeder = [];
-  const radGeo = new Geo();
-  radGeo.zyl(0, 0, 0, 0.4, 0.4, 0.32, 9, F(0x1c1d1f), 'z'); radGeo.zyl(0, 0, 0, 0.2, 0.2, 0.34, 6, F(0xffc61a), 'z');
-  const radNetz = radGeo.netz(Grafik.mat, true);
-  for (const q of [[0.84, 0.72], [0.84, -0.72], [-0.84, 0.72], [-0.84, -0.72]]) {
-    if (!vorneRaeder && q[0] > 0) continue;
-    const r = radNetz.clone(); r.position.set(q[0], 0.4, q[1]); r.rotation.order = 'YZX'; r.userData.vorn = q[0] > 0;
-    gr.add(r); raeder.push(r);
+  if (d.p.length) gr.add(d.netz(Grafik.mat, true));
+  if (gl.p.length) gr.add(gl.netz(Grafik.lackMat('glas'), false));
+  if (li.p.length) gr.add(li.netz(Grafik.matLicht(), false));
+  // Räder mit Felgen
+  const radNetze = {}, liste = [];
+  for (const q of raeder) {
+    const r = q[2], key = r + '/' + (q[3] && typ === 'renn' ? 0.32 : radBreit);
+    if (!radNetze[key]) {
+      const w = new Geo(), b = q[3] && typ === 'renn' ? 0.32 : radBreit;
+      w.zyl(0, 0, 0, r, r, b, 12, F(0x151618), 'z'); w.zyl(0, 0, 0, r * 0.64, r * 0.64, b + 0.03, 10, F(felge), 'z'); w.zyl(0, 0, 0, r * 0.2, r * 0.2, b + 0.06, 6, F(felge, 0.55), 'z');
+      radNetze[key] = w.netz(Grafik.mat, true);
+    }
+    const m = radNetze[key].clone(); m.position.set(q[0], r, q[1]); m.rotation.order = 'YZX'; m.userData.vorn = q[3];
+    gr.add(m); liste.push(m);
   }
   // Boost-Flamme und Schutzblase
   const flamme = new THREE.Mesh(new THREE.ConeGeometry(0.34, 1.5, 6), new THREE.MeshBasicMaterial({ color: 0xffa21a }));
-  flamme.rotation.z = Math.PI / 2; flamme.position.set(-1.85, 0.62, 0); flamme.visible = false; gr.add(flamme);
-  const schutz = new THREE.Mesh(new THREE.IcosahedronGeometry(1.75, 1), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.28, wireframe: true }));
+  flamme.rotation.z = Math.PI / 2; flamme.position.set(-laenge / 2 - 0.55, 0.55, 0); flamme.visible = false; gr.add(flamme);
+  const schutz = new THREE.Mesh(new THREE.IcosahedronGeometry(1.9, 1), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.28, wireframe: true }));
   schutz.position.y = 0.8; schutz.visible = false; gr.add(schutz);
-  return { gruppe: gr, raeder, flamme, schutz, trommel, radWinkel: 0, koerper };
+  return { gruppe: gr, raeder: liste, flamme, schutz, trommel: null, radWinkel: 0, koerper };
 }
 
+// ── Showroom: das gewählte Auto gross und langsam drehend ─────────────────
+const Schauraum = {
+  r: null, szene: null, kam: null, teller: null, auto: null, lauf: 0, canvas: null,
+  oeffne(canvas) {
+    this.schliesse();
+    if (!window.THREE || !canvas) return;
+    let R;
+    try { R = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { return; }
+    this.r = R; this.canvas = canvas;
+    R.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); R.setClearColor(0x000000, 0);
+    const S = (this.szene = new THREE.Scene()), st = STIMMUNG.schauraum;
+    const tex = new THREE.CanvasTexture(himmelBild(st)); tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+    const pm = new THREE.PMREMGenerator(R); S.environment = pm.fromEquirectangular(tex).texture; pm.dispose(); tex.dispose();
+    S.add(new THREE.HemisphereLight(st.himmelLicht, st.bodenLicht, st.licht));
+    const sonne = new THREE.DirectionalLight(0xffffff, st.sonneKraft); sonne.position.set(4, 7, 3); S.add(sonne);
+    const kante = new THREE.DirectionalLight(0x9fc4ff, 1.1); kante.position.set(-5, 3, -4); S.add(kante);
+    this.teller = new THREE.Group(); S.add(this.teller);
+    const boden = new THREE.Mesh(new THREE.CylinderGeometry(2.5, 2.6, 0.08, 40), new THREE.MeshStandardMaterial({ color: 0x15181c, metalness: 0.7, roughness: 0.28 }));
+    boden.position.y = -0.04; this.teller.add(boden);
+    this.kam = new THREE.PerspectiveCamera(30, 2, 0.1, 60);
+    let zuletzt = performance.now();
+    const bild = (jetzt) => {
+      if (!this.r) return;
+      this.lauf = requestAnimationFrame(bild);
+      const b = canvas.clientWidth, h = canvas.clientHeight;
+      if (!b || !h) return;
+      if (canvas.width !== Math.round(b * R.getPixelRatio()) || canvas.height !== Math.round(h * R.getPixelRatio())) { R.setSize(b, h, false); this.kam.aspect = b / h; this.kam.updateProjectionMatrix(); }
+      const ab = b / h < 1.2 ? 9.2 : 7.2;
+      this.kam.position.set(ab * 0.72, ab * 0.3, ab * 0.62); this.kam.lookAt(0, 0.55, 0);
+      this.teller.rotation.y += Math.min(0.05, (jetzt - zuletzt) / 1000) * 0.45; zuletzt = jetzt;
+      R.render(S, this.kam);
+    };
+    this.lauf = requestAnimationFrame(bild);
+  },
+  zeige(typ, farbe) {
+    if (!this.r) return;
+    if (this.auto) { this.teller.remove(this.auto.gruppe); this.auto.gruppe.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
+    const f = FARBEN[farbe % FARBEN.length];
+    this.auto = baueFahrzeug(typ, f.hex, f.lack);
+    this.teller.add(this.auto.gruppe);
+  },
+  schliesse() {
+    if (!this.r) return;
+    cancelAnimationFrame(this.lauf);
+    try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { /* egal */ }
+    this.r = null; this.auto = null; this.canvas = null;
+  },
+};
 // Namensschild über fremden Fahrzeugen
 function baueSchildchen(text, farbeHex) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 64;
@@ -2704,7 +3002,7 @@ Object.assign(Grafik, {
     for (const t of this.truemmer) this.szene.remove(t.netz);
     this.truemmer = [];
     this.kartObjekte = R.karts.map((k) => {
-      const o = baueFahrzeug(k.fahrzeug, FARBEN[k.farbe % FARBEN.length].hex);
+      const o = baueFahrzeug(k.fahrzeug, FARBEN[k.farbe % FARBEN.length].hex, FARBEN[k.farbe % FARBEN.length].lack);
       o.schatten = new THREE.Mesh(new THREE.CircleGeometry(1.35, 12), this.matSchatten);
       o.schatten.rotation.x = -Math.PI / 2;
       o.schild = baueSchildchen(k.name, FARBEN[k.farbe % FARBEN.length].hex);
@@ -2957,7 +3255,7 @@ Object.assign(Grafik, {
     if (this.sonne) {
       const q = k || R.karts[R.reihenfolge[0]];
       this.sonne.target.position.set(q.x, q.y, -q.z);
-      this.sonne.position.set(q.x + 55, q.y + 110, -q.z + 35);
+      const sv = this.sonneVersatz || [55, 110, 35]; this.sonne.position.set(q.x + sv[0], q.y + sv[1], -q.z + sv[2]);
     }
   },
 
@@ -3420,11 +3718,13 @@ const Online = {
     const fahrer = [{ peer: 'host', typ: 'mensch', name: P.name, fahrzeug: FAHRZEUGE[P.fahrzeug].id, farbe: P.farbe }];
     for (const g of gaeste) fahrer.push({ peer: g.id, typ: 'mensch', name: g.name, fahrzeug: FAHRZEUGE[g.fahrzeug].id, farbe: g.farbe });
     for (const b of Menue.botFahrer(Math.min(L.bots, CONFIG.rennen.maxFahrer - fahrer.length), L.stufe, fahrer.map((f) => f.farbe))) { b.peer = ''; fahrer.push(b); }
+    const zufall = L.zufall == null ? Speicher.daten.zufallsAuto !== false : !!L.zufall;
+    if (zufall) Spiel.loseAutos(fahrer);                 // der Host lost für alle im Raum
     const p = fahrer.map((_, i) => i);
     for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const h = p[i]; p[i] = p[j]; p[j] = h; }
     fahrer.forEach((f, i) => { f.platz = p[i]; });
     for (const g of gaeste) g.kart = fahrer.findIndex((f) => f.peer === g.id);
-    const daten = { strecke: L.strecke, runden: L.runden, fahrer, seed: (Math.random() * 1e9) | 0, t0: performance.now() + 2500 };     // t0: gemeinsamer Startzeitpunkt (Host-Uhr)
+    const daten = { strecke: L.strecke, runden: L.runden, fahrer, zufall, seed: (Math.random() * 1e9) | 0, t0: performance.now() + 2500 + (zufall ? 3400 : 0) };     // t0: gemeinsamer Startzeitpunkt (Host-Uhr)
     this.sendeAlle(['start', daten]);
     this.starteRennen(daten);
   },
@@ -3434,7 +3734,7 @@ const Online = {
     Menue.wahlen = {}; Menue.beiProfil = null;
     const n = CONFIG.netz.codeLaenge;
     Menue.zeige('beitreten', '<div class="tafel"><h2>Raum beitreten</h2><p>Gib den Code ein, den dir der Host geschickt hat.</p>' +
-      '<div class="zeile"><label for="f-code">Code</label><input class="feld code" id="f-code" maxlength="' + n + '" autocomplete="off" value="' + esc(code || '') + '"></div>' + Menue.fahrerZeilen() +
+      '<div class="zeile"><label for="f-code">Code</label><input class="feld code" id="f-code" maxlength="' + n + '" autocomplete="off" value="' + esc(code || '') + '"></div>' + Menue.fahrerZeilen(true) +
       '<div class="knoepfe" style="margin-top:14px"><button class="knopf los" data-a="los">Beitreten</button><button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>', {
       los: () => {
         Menue.nameLesen(); Speicher.sichern();
@@ -3575,7 +3875,7 @@ const Online = {
       '<div class="zeile"><input class="feld" id="f-link" readonly value="' + esc(link) + '" style="width:min(430px,100%);font-size:14px"><button class="knopf klein" data-a="kopieren">Link kopieren</button></div>' +
       '<div class="spalten"><div><h3>Fahrer</h3><div class="spielerliste" id="lobby-liste"></div><p class="hinweis">' +
       (host ? 'Schick den Link oder den Code an deine Mitspieler und komm gleich wieder hierher zurück: Ist dieses Fenster im Hintergrund, kann auf Handys und Tablets niemand beitreten. Du bist der Host: Verlässt du das Spiel, endet es für alle.' :'Der Host startet das Rennen, sobald alle bereit sind.') + '</p></div>' +
-      '<div><h3>Du</h3>' + Menue.fahrerZeilen() + '<h3>Rennen</h3>' + rennen + '</div></div>' +
+      '<div><h3>Du</h3>' + Menue.fahrerZeilen(true) + '<h3>Rennen</h3>' + rennen + '</div></div>' +
       '<div class="zeile" style="margin-top:12px">' + (host ? '<button class="knopf los" data-a="start">Rennen starten</button>' : '<button class="knopf los" data-a="bereit" id="k-bereit">Bereit</button>') +
       '<button class="knopf zweit" data-a="zurueck">Verlassen</button></div></div>', {
       kopieren: () => {
@@ -3593,13 +3893,15 @@ const Online = {
   aktualisiereLobby() {
     const L = this.lobby, liste = $('lobby-liste');
     if (Menue.offen !== 'lobby' || !L || !liste) return;
+    if (this.host && L.zufall == null) L.zufall = Speicher.daten.zufallsAuto !== false;
     const bots = Math.max(0, Math.min(L.bots, CONFIG.rennen.maxFahrer - L.spieler.length));
     const stufe = (STUFEN_LISTE.find((s) => s.wert === L.stufe) || STUFEN_LISTE[1]).text;
-    liste.innerHTML = L.spieler.map((s) => '<div class="zeile"><span class="farbfeld" style="background:' + hexCss(FARBEN[s.farbe % FARBEN.length].hex) + '"></span><b>' + esc(s.name) + '</b><span class="hinweis">' + FAHRZEUGE[s.fahrzeug % FAHRZEUGE.length].name + '</span>' +
+    liste.innerHTML = L.spieler.map((s) => '<div class="zeile"><span class="farbfeld" style="background:' + hexCss(FARBEN[s.farbe % FARBEN.length].hex) + '"></span><b>' + esc(s.name) + '</b><span class="hinweis">' + (L.zufall ? 'Zufalls-Auto' : FAHRZEUGE[s.fahrzeug % FAHRZEUGE.length].name) + '</span>' +
       '<span style="margin-left:auto" class="' + (s.bereit ? 'bereit' : 'hinweis') + '">' + (s.host ? 'Host' : s.bereit ? 'bereit' : 'wartet') + '</span>' + (s.host ? '' : '<span class="hinweis">' + (s.ping | 0) + ' ms</span>') + '</div>').join('') +
       (bots ? '<div class="zeile"><span class="hinweis">dazu ' + bots + (bots === 1 ? ' Bot' : ' Bots') + ' (' + stufe + ')</span></div>' : '');
     const info = $('lobby-info');
-    if (info) info.innerHTML = 'Strecke: <b>' + (STRECKEN[L.strecke] ? STRECKEN[L.strecke].name : '?') + '</b><br>Runden: <b>' + L.runden + '</b><br>Bots: <b>' + bots + '</b> (' + stufe + ')';
+    if (info) info.innerHTML = 'Strecke: <b>' + (STRECKEN[L.strecke] ? STRECKEN[L.strecke].name : '?') + '</b><br>Runden: <b>' + L.runden + '</b><br>Bots: <b>' + bots + '</b> (' + stufe + ')<br>Zufalls-Auto: <b>' + (L.zufall ? 'Ein' : 'Aus') + '</b>' + (this.host ? ' <button class="pfeil" id="k-zufall" aria-label="Zufalls-Auto umschalten">⇄</button>' : ' (legt der Host fest)');
+    const kz = $('k-zufall'); if (kz) kz.onclick = () => { L.zufall = !L.zufall; Speicher.daten.zufallsAuto = L.zufall; Speicher.sichern(); this.sendeLobby(); };
     const kb = $('k-bereit'); if (kb) kb.textContent = this.bereit ? 'Doch nicht bereit' : 'Bereit';
     if (!this.host && Spiel.demo && STRECKEN[L.strecke] && Grafik.strecke && Grafik.strecke.id !== L.strecke) Spiel.starteDemo(L.strecke);
   },
@@ -3627,7 +3929,7 @@ const Online = {
     this.meinKart = daten.fahrer.findIndex((f) => f.peer === ich);
     this.letzterEmpfang = performance.now();
     for (const id in this.gaeste) this.gaeste[id].zuletzt = performance.now();
-    Spiel.starte({ modus: 'online', host: this.host, strecke: daten.strecke, runden: daten.runden, fahrer, seed: daten.seed, schiri: this.host, plaetzeFest: true });
+    Spiel.starte({ modus: 'online', zufall: !!daten.zufall, host: this.host, strecke: daten.strecke, runden: daten.runden, fahrer, seed: daten.seed, schiri: this.host, plaetzeFest: true });
     Spiel.netz = this;
     Spiel.R.netz = {
       bauWunsch: (k, art, slot) => this.zumHostSenden(['bau', art, slot]),
@@ -3749,7 +4051,7 @@ function tastenText(g) {
 // ── Einstellungen (bleiben im Browser gespeichert; ohne Speicher läuft das Spiel trotzdem) ──
 const Speicher = {
   daten: {
-    name: 'Spieler', fahrzeug: 0, farbe: 0, lautstaerke: 0.7, musik: 0.4, stumm: false, grafik: 'mittel', erklaert: false,
+    name: 'Spieler', fahrzeug: 0, farbe: 0, zufallsAuto: true, lautstaerke: 0.7, musik: 0.4, stumm: false, grafik: 'mittel', erklaert: false,
     strecke: 'kiesgrube', runden: CONFIG.rennen.runden, bots: 7, stufe: 'mittel', lokalAnzahl: 2,
     lokal: [{ name: 'Spieler 1', geraet: 'tasten1', fahrzeug: 0, farbe: 0 }, { name: 'Spieler 2', geraet: 'tasten2', fahrzeug: 1, farbe: 3 },
       { name: 'Spieler 3', geraet: 'pad0', fahrzeug: 2, farbe: 5 }, { name: 'Spieler 4', geraet: 'pad1', fahrzeug: 3, farbe: 7 }],
@@ -3784,6 +4086,17 @@ const SYMBOLE = {
 const Hud = {
   teile: [], grund: null, kf: 1, kx: 0, ky: 0, bild: 0,
 
+  // Auslosung: zeigt jedem lokalen Spieler vor dem Countdown sein Auto mit Stärke und Schwäche
+  auslosung(R) {
+    for (const t of this.teile) {
+      const f = FAHRZEUGE[FAHRZEUG_INDEX[R.karts[t.sp.kart].fahrzeug]], d = document.createElement('div');
+      d.className = 'h-los';
+      d.innerHTML = '<small>Dein Auto für dieses Rennen</small><b>' + f.name + '</b><small>' + f.klasse + '</small><span class="plus">▲ ' + f.plus + '</span><span class="minus">▼ ' + f.minus + '</span>';
+      t.el.appendChild(d); t.los = d;
+    }
+  },
+  auslosungWeg() { for (const t of this.teile) if (t.los) { t.los.remove(); t.los = null; } },
+
   baue(R, spieler) {
     const wurzel = $('hud');
     wurzel.innerHTML = ''; wurzel.classList.remove('versteckt'); this.teile = [];
@@ -3796,7 +4109,7 @@ const Hud = {
         '<div class="h-mitte"><div class="h-warnung versteckt"></div><div class="h-meldung"></div></div>' +
         '<div class="h-gross versteckt"></div><div class="h-abstand"></div><div class="h-bauinfo"></div>' +
         '<div class="h-bau"><div class="h-bp"><b>0</b><span>BP</span><div class="lade"><i></i></div></div>' +
-        BAUWERKE.map((b, q) => '<div class="bw ' + (b.eigen ? 'selbst' : 'gegen') + '" title="' + b.name + ': ' + b.text + '"><span class="t">' + (sp.geraet === 'tasten' ? q + 1 : '') + '</span><svg viewBox="0 0 24 24" fill="currentColor">' + SYMBOLE[b.art] + '</svg><span class="n">' + b.kurz + '</span><span class="p">' + CONFIG.bau.preise[b.art] + '</span></div>').join('') +
+        BAUWERKE.map((b, q) => '<div class="bw ' + (b.eigen ? 'selbst' : 'gegen') + '" title="' + b.name + ': ' + b.text + '"><span class="t">' + (sp.geraet === 'tasten' ? q + 1 : '') + '</span><svg viewBox="0 0 24 24" fill="currentColor">' + SYMBOLE[b.art] + '</svg><span class="n">' + b.kurz + '</span><span class="p">' + R.preis(R.karts[sp.kart], b.art) + '</span></div>').join('') +
         '</div><div class="h-falsch versteckt">Falsche Richtung!</div>';
       wurzel.appendChild(d);
       const q = (s) => d.querySelector(s);
@@ -3894,7 +4207,7 @@ const Hud = {
       setze(t.tempo, 'tempo', String(Math.round(Math.abs(k.v) * 3.6)));
       // Ladebalken: Drift-Aufladung (gelb → blau → orange) oder laufender Boost
       let lade = 0, farbe = '#ffc61a';
-      if (k.drift) { lade = clamp(k.driftZeit / CONFIG.drift.stufe2, 0, 1); farbe = k.driftStufe === 2 ? '#ff7a1a' : k.driftStufe === 1 ? '#4db8ff' : '#fff0a8'; }
+      if (k.drift) { lade = clamp(k.driftZeit / (CONFIG.drift.stufe2 * k.w.driftLaden), 0, 1); farbe = k.driftStufe === 2 ? '#ff7a1a' : k.driftStufe === 1 ? '#4db8ff' : '#fff0a8'; }
       else if (k.boostZeit > 0) { lade = clamp(k.boostZeit / 1.5, 0, 1); farbe = '#ff7a1a'; }
       const lk = Math.round(lade * 50) + farbe;
       if (a.lade !== lk) { a.lade = lk; t.lade.style.width = Math.round(lade * 100) + '%'; t.lade.style.background = farbe; }
@@ -3984,6 +4297,7 @@ const Touch = {
 
 // ── Spielablauf: ein Rennen starten, pro Bild weiterrechnen, Ereignisse verteilen ──
 const Spiel = {
+  letzteAutos: {}, losAn: false,
   R: null, netz: null, demo: true, pause: false, akk: 0, spieler: [], eingaben: [], konfig: null, zielSeit: -1, cdZahl: 0, ergebnisGezeigt: false,
 
   // Hintergrund für das Menü: ein paar Bots drehen ihre Runden
@@ -4002,11 +4316,19 @@ const Spiel = {
     const pk = $('pauseknopf'); if (pk) pk.classList.add('versteckt');
   },
 
-  // konfig: { modus, strecke, runden, fahrer: [{ name, typ: 'mensch'|'bot'|'fern', stufe, fahrzeug, farbe, geraet }], seed, schiri, plaetzeFest }
+  // Zufalls-Auto: jedem Fahrer eines der 8 Autos zulosen (nie dasselbe wie im Rennen davor)
+  loseAutos(fahrer) {
+    const autos = loseFahrzeuge(fahrer.length, Math.random, fahrer.map((f) => this.letzteAutos[f.name]));
+    fahrer.forEach((f, i) => { f.fahrzeug = autos[i]; });
+  },
+
+  // konfig: { modus, zufall, strecke, runden, fahrer: [{ name, typ: 'mensch'|'bot'|'fern', stufe, fahrzeug, farbe, geraet }], seed, schiri, plaetzeFest }
   starte(konfig) {
     const S = holeStrecke(konfig.strecke);
     if (Grafik.strecke !== S) Grafik.baueWelt(S);
     const n = konfig.fahrer.length;
+    if (konfig.zufall && !konfig.plaetzeFest) this.loseAutos(konfig.fahrer);
+    konfig.fahrer.forEach((f) => { this.letzteAutos[f.name] = f.fahrzeug; });
     if (!konfig.plaetzeFest) {                      // Startaufstellung auslosen
       const p = konfig.fahrer.map((_, i) => i);
       for (let i = n - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const h = p[i]; p[i] = p[j]; p[j] = h; }
@@ -4024,6 +4346,8 @@ const Spiel = {
     this.eingaben = new Array(n).fill(null);
     Grafik.neuesRennen(R); Grafik.setzeAnsichten(this.spieler.length ? this.spieler.map((s) => s.kart) : [-1]);
     Hud.baue(R, this.spieler);
+    this.losAn = !!konfig.zufall && this.spieler.length > 0;
+    if (this.losAn) { if (konfig.modus !== 'online') R.zeit = -(CONFIG.rennen.countdown + 3.4); Hud.auslosung(R); }     // kurze Auslosung vor dem Countdown
     Menue.schliesse();
     Ton.start(); Ton.motorAn(this.spieler.length); Ton.musik(true);
     Eingabe.fertig();
@@ -4066,6 +4390,7 @@ const Spiel = {
     Grafik.aktualisiere(this.R, this.pause ? 1 : clamp(this.akk / SCHRITT, 0, 1), this.pause ? 0 : dt);
     if (!this.demo && this.R === R) {
       Hud.aktualisiere(R, dt);
+      if (this.losAn && R.zeit > -2.3) { this.losAn = false; Hud.auslosungWeg(); }
       const still = this.pause || this.ergebnisGezeigt;
       this.spieler.forEach((sp, i) => {
         const k = R.karts[sp.kart];
@@ -4098,7 +4423,7 @@ const Spiel = {
         const bw = R.bauwerke.find((b) => b.id === e.a); if (!bw) break;
         const b = BAUWERKE[BAUWERK_INDEX[bw.art]];
         for (const q of Hud.teile) {
-          if (q.sp.kart === e.k) { Ton.spiele('bau'); Hud.meldung(q, b.name + ' wird gebaut (−' + CONFIG.bau.preise[bw.art] + ' BP)', true); }
+          if (q.sp.kart === e.k) { Ton.spiele('bau'); Hud.meldung(q, b.name + ' wird gebaut (−' + R.preis(R.karts[e.k], bw.art) + ' BP)', true); }
           else if (!bw.eigen && ((bw.betroffen >> q.sp.kart) & 1)) { Ton.spiele('warnung'); Hud.meldung(q, name + ' baut gegen dich: ' + b.name + '!'); }
         }
         break;
@@ -4128,7 +4453,8 @@ const Spiel = {
 const STUFEN_LISTE = [{ wert: 'leicht', text: 'Leicht' }, { wert: 'mittel', text: 'Mittel' }, { wert: 'schwer', text: 'Schwer' }];
 const GERAETE_LISTE = [{ wert: 'tasten1', text: 'Tastatur W A S D' }, { wert: 'tasten2', text: 'Tastatur Pfeile' }, { wert: 'pad0', text: 'Gamepad 1' }, { wert: 'pad1', text: 'Gamepad 2' }, { wert: 'pad2', text: 'Gamepad 3' }, { wert: 'pad3', text: 'Gamepad 4' }];
 const FARB_LISTE = FARBEN.map((f, i) => ({ wert: i, text: '<span class="farbfeld" style="background:' + hexCss(f.hex) + '"></span> ' + f.name }));
-const FAHRZEUG_LISTE = FAHRZEUGE.map((f, i) => ({ wert: i, text: f.name }));
+const FAHRZEUG_LISTE = FAHRZEUGE.map((f, i) => ({ wert: i, text: f.klasse + ' · ' + f.name }));
+const EIN_AUS = [{ wert: true, text: 'Ein' }, { wert: false, text: 'Aus' }];
 function zahlen(von, bis) { const l = []; for (let i = von; i <= bis; i++) l.push({ wert: i, text: String(i) }); return l; }
 
 const Menue = {
@@ -4151,10 +4477,12 @@ const Menue = {
         if (f) f(b, ev);
       };
     });
+    Schauraum.schliesse(); clearInterval(this.schauTakt);
+    if ($('schau')) { Schauraum.oeffne($('schau')); this.schau(); }
     const erster = this.el.querySelector('.knopf');
     if (erster && !('ontouchstart' in window)) erster.focus();
   },
-  schliesse() { this.offen = null; this.aktionen = {}; this.el.innerHTML = ''; },
+  schliesse() { this.offen = null; this.aktionen = {}; this.el.innerHTML = ''; Schauraum.schliesse(); clearInterval(this.schauTakt); },
 
   // Auswahlzeile mit ◀ ▶
   wahlZeile(titel, id, liste, wert, beiWechsel) {
@@ -4168,11 +4496,26 @@ const Menue = {
     return this.wahlZeile('Strecke', 'strecke', Object.keys(STRECKEN).map((id) => ({ wert: id, text: STRECKEN[id].name })), D.strecke, (v) => { D.strecke = v; Spiel.starteDemo(v); }) +
       this.wahlZeile('Runden', 'runden', zahlen(1, 7), D.runden, (v) => { D.runden = v; });
   },
-  fahrerZeilen() {
-    const D = Speicher.daten;
+  fahrerZeilen(immerWahl) {
+    const D = Speicher.daten, neu = () => { if (this.beiProfil) this.beiProfil(); this.schau(); };
+    this.schauZufall = D.zufallsAuto && !immerWahl;
     return '<div class="zeile"><label for="f-name">Name</label><input class="feld" id="f-name" maxlength="14" autocomplete="off" value="' + esc(D.name) + '"></div>' +
-      this.wahlZeile('Fahrzeug', 'fahrzeug', FAHRZEUG_LISTE, D.fahrzeug, (v) => { D.fahrzeug = v; if (this.beiProfil) this.beiProfil(); }) +
-      this.wahlZeile('Farbe', 'farbe', FARB_LISTE, D.farbe, (v) => { D.farbe = v; if (this.beiProfil) this.beiProfil(); });
+      '<div class="schau"><canvas id="schau"></canvas><div class="schau-text" id="schau-text"></div></div>' +
+      (this.schauZufall ? '' : this.wahlZeile('Auto', 'fahrzeug', FAHRZEUG_LISTE, D.fahrzeug, (v) => { D.fahrzeug = v; neu(); })) +
+      this.wahlZeile('Lack', 'farbe', FARB_LISTE, D.farbe, (v) => { D.farbe = v; neu(); });
+  },
+  // Showroom: gewähltes Auto mit Stärke und Schwäche. Bei Zufalls-Auto wechseln die 8 Autos durch, man wählt nur den Lack.
+  schau() {
+    const D = Speicher.daten, t = $('schau-text');
+    if (!$('schau')) return;
+    clearInterval(this.schauTakt);
+    const zeig = (i, zufall) => {
+      const f = FAHRZEUGE[i]; Schauraum.zeige(f.id, D.farbe);
+      if (t) t.innerHTML = zufall ? '<small>Zufalls-Auto</small><b>' + f.name + '?</b><span>Vor jedem Rennen wird dir eines der 8 Autos zugelost. Hier wählst du nur den Lack.</span>'
+        : '<small>' + f.klasse + '</small><b>' + f.name + '</b><span class="plus">▲ ' + f.plus + '</span><span class="minus">▼ ' + f.minus + '</span>';
+    };
+    if (this.schauZufall) { let i = Math.floor(Math.random() * FAHRZEUGE.length); zeig(i, true); this.schauTakt = setInterval(() => { i = (i + 1) % FAHRZEUGE.length; zeig(i, true); }, 2600); }
+    else zeig(D.fahrzeug, false);
   },
   nameLesen() { const f = $('f-name'); if (f) Speicher.daten.name = (f.value.trim() || 'Spieler').slice(0, 14); },
 
@@ -4219,12 +4562,12 @@ const Menue = {
     const D = Speicher.daten;
     this.zeige('bots', '<div class="tafel"><h2>Gegen Bots</h2>' + this.streckenZeilen() +
       this.wahlZeile('Gegner', 'gegner', zahlen(0, CONFIG.rennen.maxFahrer - 1), D.bots, (v) => { D.bots = v; }) +
-      this.wahlZeile('Stärke', 'stufe', STUFEN_LISTE, D.stufe, (v) => { D.stufe = v; }) + '<h3>Dein Fahrzeug</h3>' + this.fahrerZeilen() +
+      this.wahlZeile('Stärke', 'stufe', STUFEN_LISTE, D.stufe, (v) => { D.stufe = v; }) + this.wahlZeile('Zufalls-Auto', 'zufall', EIN_AUS, D.zufallsAuto, (v) => { this.nameLesen(); D.zufallsAuto = v; this.bots(); }) + '<h3>Dein Auto</h3>' + this.fahrerZeilen() +
       '<div class="knoepfe" style="margin-top:16px"><button class="knopf los" data-a="start">Rennen starten</button><button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>', {
       start: () => {
         this.nameLesen(); Speicher.sichern();
         const ich = { name: D.name, typ: 'mensch', fahrzeug: FAHRZEUGE[D.fahrzeug].id, farbe: D.farbe, geraet: 'tasten' };
-        Spiel.starte({ modus: 'bots', strecke: D.strecke, runden: D.runden, fahrer: [ich].concat(this.botFahrer(D.bots, D.stufe, [D.farbe])) });
+        Spiel.starte({ modus: 'bots', zufall: D.zufallsAuto, strecke: D.strecke, runden: D.runden, fahrer: [ich].concat(this.botFahrer(D.bots, D.stufe, [D.farbe])) });
       },
       zurueck: () => { this.nameLesen(); Speicher.sichern(); this.haupt(); },
     });
@@ -4238,13 +4581,14 @@ const Menue = {
     this.wahlen = {};
     const D = Speicher.daten;
     let html = '<div class="tafel breit"><h2>Lokal am selben Gerät</h2><p class="hinweis">Zwei Spieler teilen sich die Tastatur (W A S D und Pfeiltasten), der Bildschirm wird geteilt. Mit Gamepads fahren bis zu vier.</p>' +
-      this.wahlZeile('Spieler', 'anzahl', zahlen(2, 4), D.lokalAnzahl, (v) => { this.lokalLesen(); D.lokalAnzahl = v; this.lokal(); }) + '<div class="spalten">';
+      this.wahlZeile('Spieler', 'anzahl', zahlen(2, 4), D.lokalAnzahl, (v) => { this.lokalLesen(); D.lokalAnzahl = v; this.lokal(); }) +
+      this.wahlZeile('Zufalls-Auto', 'zufall', EIN_AUS, D.zufallsAuto, (v) => { this.lokalLesen(); D.zufallsAuto = v; this.lokal(); }) + '<div class="spalten">';
     for (let i = 0; i < D.lokalAnzahl; i++) {
       const p = D.lokal[i];
       html += '<div class="karte"><div class="zeile"><label for="f-name' + i + '">Spieler ' + (i + 1) + '</label><input class="feld" id="f-name' + i + '" maxlength="14" autocomplete="off" value="' + esc(p.name) + '"></div>' +
         this.wahlZeile('Steuerung', 'g' + i, GERAETE_LISTE, p.geraet, (v) => { p.geraet = v; }) +
-        this.wahlZeile('Fahrzeug', 'fz' + i, FAHRZEUG_LISTE, p.fahrzeug, (v) => { p.fahrzeug = v; }) +
-        this.wahlZeile('Farbe', 'fb' + i, FARB_LISTE, p.farbe, (v) => { p.farbe = v; }) + '</div>';
+        (D.zufallsAuto ? '' : this.wahlZeile('Auto', 'fz' + i, FAHRZEUG_LISTE, p.fahrzeug, (v) => { p.fahrzeug = v; })) +
+        this.wahlZeile('Lack', 'fb' + i, FARB_LISTE, p.farbe, (v) => { p.farbe = v; }) + '</div>';
     }
     html += '</div><div class="spalten"><div>' + this.streckenZeilen() + '</div><div>' +
       this.wahlZeile('Bots dazu', 'gegner', zahlen(0, CONFIG.rennen.maxFahrer - D.lokalAnzahl), Math.min(D.bots, CONFIG.rennen.maxFahrer - D.lokalAnzahl), (v) => { D.bots = v; }) +
@@ -4260,7 +4604,7 @@ const Menue = {
         }
         const fahrer = sp.map((p) => ({ name: p.name, typ: 'mensch', fahrzeug: FAHRZEUGE[p.fahrzeug].id, farbe: p.farbe, geraet: p.geraet }));
         const bots = Math.min(D.bots, CONFIG.rennen.maxFahrer - fahrer.length);
-        Spiel.starte({ modus: 'lokal', strecke: D.strecke, runden: D.runden, fahrer: fahrer.concat(this.botFahrer(bots, D.stufe, sp.map((p) => p.farbe))) });
+        Spiel.starte({ modus: 'lokal', zufall: D.zufallsAuto, strecke: D.strecke, runden: D.runden, fahrer: fahrer.concat(this.botFahrer(bots, D.stufe, sp.map((p) => p.farbe))) });
       },
       zurueck: () => { this.lokalLesen(); Speicher.sichern(); this.haupt(); },
     });
@@ -4287,7 +4631,7 @@ const Menue = {
   einstellungen() {
     this.wahlen = {};
     const D = Speicher.daten;
-    this.zeige('einstellungen', '<div class="tafel"><h2>Einstellungen</h2>' + this.fahrerZeilen() +
+    this.zeige('einstellungen', '<div class="tafel"><h2>Einstellungen</h2>' + this.fahrerZeilen(true) +
       '<div class="zeile"><label for="f-laut">Lautstärke</label><input type="range" id="f-laut" min="0" max="100" value="' + Math.round(D.lautstaerke * 100) + '"></div>' +
       '<div class="zeile"><label for="f-musik">Musik</label><input type="range" id="f-musik" min="0" max="100" value="' + Math.round(D.musik * 100) + '"></div>' +
       this.wahlZeile('Ton', 'stumm', [{ wert: false, text: 'An' }, { wert: true, text: 'Stumm' }], D.stumm, (v) => { D.stumm = v; App.tonSetzen(); }) +
