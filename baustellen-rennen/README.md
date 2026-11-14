@@ -12,6 +12,38 @@ Das ganze Spiel steckt in einer einzigen Datei: `index.html`.
 - **Lokal am selben Gerät:** 2 Spieler an einer Tastatur, mit Gamepads bis 4, dazu Bots. Der Bildschirm wird geteilt.
 - **Online:** bis 8 Fahrer, ohne eigenen Server (siehe unten).
 
+## Die 8 Autos
+
+Es gibt acht Autos in vier Klassen. Jedes hat eine eigene Form, einen eigenen Motorklang, genau eine klare Stärke und eine klare Schwäche. Alle Modelle sind eigene Entwürfe aus einfachen Flächen, ohne Marken, Logos oder Waffen.
+
+| Klasse | Auto | Stärke | Schwäche |
+|---|---|---|---|
+| Luxus | Sportwagen | Höchstes Tempo auf der Geraden | Verliert auf Kies und im Schlamm viel Tempo |
+| Luxus | Limousine | Starker Windschatten, holt hinter anderen auf | Träge Lenkung |
+| Militär | Panzerwagen (acht Räder) | Treffer an Baustellen bremsen kaum | Langsame Beschleunigung |
+| Militär | Transporter (sechs Räder) | Schiebt andere beim Rempeln weg | Langsam in engen Kurven |
+| Gelände | Geländewagen | Kaum Tempoverlust neben der Strecke und auf Abkürzungen | Tieferes Höchsttempo |
+| Gelände | Pick-up | Bauwerke kosten 1 Baupunkt weniger | Etwas langsamer als alle anderen |
+| Rennsport | Rennwagen | Beste Kurvenlage, stärkerer Drift-Schub | Treffer bremsen ihn stärker |
+| Rennsport | Rallye-Auto | Drift lädt schneller, Rampen geben mehr Schub | Tieferes Höchsttempo |
+
+**Lack:** 16 Farben, darunter matte («Olivgold matt», «Schwarz matt»), metallische («Silber metallic», «Nachtblau metallic», «Weinrot metallic») und ein Tarnmuster. Die Militärfahrzeuge tragen immer ein Tarnmuster im Ton der gewählten Farbe.
+
+**Zufalls-Auto:** Vor jedem Rennen bekommt jeder Fahrer, auch jeder Bot, eines der 8 Autos zugelost. Vor dem Countdown zeigt eine kurze Auslosung das Auto mit Stärke und Schwäche. Niemand bekommt zweimal hintereinander dasselbe Auto. In den Renn-Einstellungen steht der Schalter «Zufalls-Auto: Ein / Aus». Ist er aus, wählt jeder sein Auto im Showroom selbst. Online legt der Host den Schalter für den ganzen Raum fest. Ist das Zufalls-Auto eingeschaltet, wählt man nur den Lack.
+
+**Die Bots kennen ihr Auto:** Der Geländewagen baut eher Abkürzungen, das Rallye-Auto eher Rampen, der Pick-up baut öfter, die Limousine sucht den Windschatten.
+
+## Ton und Bild
+
+- **Motor:** Jedes Auto hat einen eigenen, mehrschichtigen Motor, der auf Drehzahl, Gas und Gangwechsel reagiert, vom tiefen Diesel des Transporters bis zum kreischenden Rennwagen. Das Rallye-Auto pfeift mit dem Turbo.
+- **Fahrgeräusche:** Reifenquietschen im Drift, Abrollen auf Asphalt und auf Kies, Fahrtwind, Landung, Rempler, Wandkontakt, Treffer.
+- **Umgebung:** Hämmern und Bohren beim Bauen, Publikum beim Start, bei jeder Zieldurchfahrt und im Ziel, Hall auf Brücken.
+- **Andere Autos** hört man aus der richtigen Richtung, leiser mit dem Abstand und mit veränderter Tonhöhe beim Vorbeifahren (wenn ein Spieler allein am Gerät fährt).
+- **Musik:** eigene, im Code erzeugte Stücke fürs Menü und fürs Rennen. In der letzten Runde wird die Musik schneller und dichter. Dazu Signale für Countdown, Überholen, Baupunkte, letzte Runde und Ziel.
+- **Regler:** In den Einstellungen gibt es getrennte Regler für Effekte und Musik und das Stummschalten (auch mit <kbd>M</kbd>). Alles entsteht mit Web Audio, es gibt keine Sound-Dateien.
+- **Bild:** Himmel mit Wolken und Sonne, Dunst, weiche Schatten, Spiegelungen auf Lack und Glas. Jede Strecke hat ihre Stimmung: die Kiesgrube liegt im Abendlicht, der Bergpass im klaren Morgen. Am Streckenrand stehen Tannen, Laubbäume, Büsche, Felsen, Häuser, Laternen, Tafeln, Kräne, Bagger und eine Tribüne mit Zuschauern. In den Kurven liegen Reifenspuren.
+- **Grafik-Einstellung:** «Hoch», «Mittel» oder «Niedrig». «Niedrig» verzichtet auf Schatten und Spiegelungen und zeigt weniger Dekoration.
+
 ## Steuerung
 
 | Aktion | Tastatur links | Tastatur rechts | Gamepad |
@@ -76,19 +108,33 @@ Unter der Meldung steht klein eine Zeile «Diagnose: …» mit der Stufe, der An
 
 ## Balancing: gemessene Werte
 
-Stand 13.11.2026, pro Strecke 200 Rennen mit 8 gleich starken Bots und 100 Rennen mit einem starken gegen 7 mittlere Bots.
+Stand 14.11.2026 mit den 8 Autos, pro Strecke 400 Rennen mit 8 gleich starken Bots und 200 Rennen mit einem starken gegen 7 mittlere Bots. Jedes Rennen lost die Autos neu zu.
 
 | Zielwert | Kiesgrube | Bergpass |
 |---|---|---|
-| Führender nach Runde 1 gewinnt (Ziel 35–60 %) | 51 % | 40 % |
-| Feld kommt innerhalb von 8 s ins Ziel | 100 % (Median 1,9 s) | 100 % (Median 2,4 s) |
-| Stärkerer Bot gewinnt gegen 7 schwächere (Ziel ab 50 %) | 73 % | 52 % |
-| Grösster Zeitverlust durch ein Hindernis (Ziel höchstens rund 2 s) | 1,58 s | 1,43 s |
-| Längster Stillstand eines Bots (Ziel unter 3 s) | 0,0 s | 0,1 s |
-| Rundenzeit im Schnitt | 45,2 s | 44,6 s |
-| Überholmanöver, Bauwerke, Treffer pro Rennen | 31, 20, 3 | 62, 26, 7 |
+| Führender nach Runde 1 gewinnt (Ziel 35–60 %) | 47,8 % | 38,0 % |
+| Feld kommt innerhalb von 8 s ins Ziel | 100 % (Median 2,0 s) | 100 % (Median 2,5 s) |
+| Stärkerer Bot gewinnt gegen 7 schwächere (Ziel ab 50 %) | 66,5 % | 45,0 % (knapp darunter) |
+| Grösster Zeitverlust durch ein Hindernis (Ziel höchstens rund 2 s) | 1,52 s | 1,82 s |
+| Längster Stillstand eines Bots (Ziel unter 3 s) | 0,1 s | 0,2 s |
+| Bauwerke und Treffer pro Rennen | 22, 4 | 26, 8 |
 
-Selbst nachmessen: `index.html?sim=200` öffnen (dauert einige Minuten).
+**Siegquote pro Auto** (Ziel rund 8 % bis 17 %, ideal 12,5 %):
+
+| Auto | Kiesgrube | Bergpass |
+|---|---|---|
+| Sportwagen | 12,0 % | 10,8 % |
+| Limousine | 14,8 % | 10,8 % |
+| Panzerwagen | 13,3 % | 14,0 % |
+| Transporter | 12,3 % | 14,5 % |
+| Geländewagen | 12,8 % | 13,0 % |
+| Pick-up | 11,3 % | 12,5 % |
+| Rennwagen | 13,0 % | 15,0 % |
+| Rallye-Auto | 10,8 % | 9,5 % |
+
+Damit die Autos trotz ihrer Eigenheiten gleich stark sind, sind Höchsttempo und Lenkung jedes Autos zusätzlich um wenige Prozent fein abgestimmt (`CONFIG.fahrzeuge`). Die Limousine hat einen 2,5-fachen statt 4-fachen Windschatten, weil sie sonst zu oft führte und dann doch verlor. Am Bergpass gewinnt der starke Bot mit 45 % etwas seltener als das Ziel von 50 %, weil das zugeloste Auto dort mehr ausmacht.
+
+Selbst nachmessen: `index.html?sim=200` öffnen (dauert einige Minuten). Die Siegquote pro Auto zeigt diese Seite noch nicht an, sie stammt aus meiner Mess-Reihe.
 
 ## Wichtigste CONFIG-Werte
 
@@ -120,6 +166,10 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Wer an die Spitze überholt, bekommt die Punkte noch, kann sie aber erst wieder ausgeben, wenn er nicht mehr führt.
 
 ## Bekannte Grenzen
+
+- **Stand der grossen Überarbeitung (14.11.2026):** Autos, Zufalls-Auto, Showroom, Ton, Himmel, Licht und das neue Aussehen der Menüs sind eingebaut. Noch nicht gebaut sind Tunnels und zusätzliche Brücken, ein eigenes Abrollgeräusch für Schlamm und ein neues Aussehen der Anzeigen im Rennen (dort sind nur Schrift und Farben angepasst).
+- Die Autos bestehen aus einfachen Flächen. Sie sind klar unterscheidbar und haben Felgen, leuchtende Lichter, getönte Scheiben, Spoiler, Spiegel und Auspuff, sehen aber nicht fotorealistisch aus.
+- Ton lässt sich in der Test-Umgebung nicht anhören. Geprüft ist, dass alle Klänge ohne Fehler laufen, abgehört hat sie noch niemand.
 
 - Der Online-Modus ist mit zwei Browsern gegen einen lokalen Vermittlungsserver getestet (Lobby, Rennen, Ergebnis, Revanche, Bot-Übernahme), ebenso die Fehlerfälle beim Beitritt (falscher Code, Host antwortet nicht, Netz blockiert, Vermittler nicht erreichbar). Über den öffentlichen PeerJS-Server im echten Internet konnte ich ihn in meiner Testumgebung nicht ausprobieren. Ein erster Versuch mit zwei Geräten scheiterte am 13.11.2026 beim Beitritt. Die Ursache ist noch offen, die Diagnose-Zeile unter der Fehlermeldung soll sie zeigen. Zwischen Geräten in verschiedenen Netzen braucht es manchmal einen TURN-Server, und die mitgelieferten von PeerJS sind nicht immer erreichbar.
 - Die Bildrate ist nur mit Software-Grafik geprüft. Ruckelt es auf einem Gerät, hilft die Grafikstufe «Niedrig».

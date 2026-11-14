@@ -128,6 +128,36 @@ kbd { display: inline-block; min-width: 26px; text-align: center; background: va
 @media(max-width:560px){.schau{grid-template-columns:1fr}.schau canvas{height:140px}.schau-text{padding:0 12px 10px}}
 .h-los{position:absolute;left:50%;top:20%;transform:translateX(-50%);background:rgba(14,17,21,.88);color:#fff;border-radius:14px;padding:14px 22px;text-align:center;min-width:250px;max-width:88%;border:1px solid rgba(255,255,255,.16)}
 .h-los small{display:block}.h-los b{display:block;font-size:1.7rem;margin:2px 0}.h-los span{display:block;font-size:.9rem;margin-top:4px}
+/* ── Neues, ruhigeres Erscheinungsbild (überschreibt die älteren Regeln weiter oben) ── */
+:root{--gold:#d8b46a;--tinte:#0f1216;--glas:rgba(16,19,24,.78);--linie:rgba(255,255,255,.12);--text:#eef1f4;--leise:#9aa3ad}
+.schirm{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text);background:linear-gradient(90deg,rgba(8,10,13,.8),rgba(8,10,13,.3) 55%,rgba(8,10,13,0))}
+.tafel{background:var(--glas);border:1px solid var(--linie);border-radius:18px;box-shadow:0 24px 60px rgba(0,0,0,.45);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:22px 24px}
+.logo,.tafel h1,.tafel h2{font-style:normal;text-transform:none;letter-spacing:-.01em;font-weight:650;color:var(--text);text-shadow:none}
+.logo small{color:var(--gold);font-weight:500}
+.tafel h3{font-style:normal;text-transform:uppercase;letter-spacing:.12em;font-size:.72rem;font-weight:600;color:var(--gold)}
+.band{height:2px;background:linear-gradient(90deg,var(--gold),transparent);border:0;opacity:.8}
+.zeile label{text-transform:none;letter-spacing:0;color:var(--leise);font-size:.9rem}
+.wahl b,.feld{background:rgba(255,255,255,.06);border:1px solid var(--linie);border-radius:10px;color:var(--text);box-shadow:none;font-weight:500}
+.feld:focus{outline:2px solid var(--gold);outline-offset:1px}
+.pfeil{background:rgba(255,255,255,.08);color:var(--text);border:1px solid var(--linie);border-radius:10px;box-shadow:none}
+.pfeil:hover{background:var(--gold);color:var(--tinte)}
+.knopf{font-style:normal;text-transform:none;letter-spacing:.01em;font-weight:600;background:rgba(255,255,255,.07);color:var(--text);border:1px solid var(--linie);border-radius:12px;box-shadow:none;transition:background .15s,transform .15s}
+.knopf:hover,.knopf:focus-visible{background:rgba(255,255,255,.14);transform:translateY(-1px)}
+.knopf.los{background:linear-gradient(180deg,#e6c47c,#c79f52);color:#1a1408;border-color:transparent}
+.knopf.los:hover,.knopf.los:focus-visible{background:linear-gradient(180deg,#f0d08c,#d2aa5c)}
+.knopf.zweit{background:transparent;color:var(--leise)}
+.karte{background:rgba(255,255,255,.05);border:1px solid var(--linie);border-left:3px solid var(--gold);border-radius:12px;box-shadow:none;color:var(--text)}
+.hinweis{color:var(--leise)}
+kbd{background:rgba(255,255,255,.1);border:1px solid var(--linie);border-radius:6px;color:var(--text);box-shadow:none}
+.tafel table th{color:var(--gold);font-weight:600;text-transform:none}
+input[type=range]{accent-color:var(--gold)}
+.schirm{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.schirm h1,.schirm h2{font-style:normal!important;text-transform:none!important}
+.h-gross{font-style:normal;font-weight:800;letter-spacing:.02em;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.6)}
+@media(max-height:780px){.schau canvas{height:118px}.tafel{padding:14px 18px}}
+.h-platz{font-style:normal;font-weight:700;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55)}
+.h-bau .bw{background:rgba(16,19,24,.72);border:1px solid var(--linie);border-radius:12px;box-shadow:none}
+.h-bp b{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -2445,6 +2475,13 @@ const Grafik = {
         else if (q.weg.art === 'abkuerzung') wandStueck(sperrGeo[q.weg.idx], H, i, j, s * (hb + r + WV), s * (hb2 + r2 + WV), 1.25, i & 1 ? F(0xe0362c) : F(0xf5f1e6), 0.2);
       }
     }
+    // Reifenspuren in den Kurven
+    for (let i = 4; i < H.n - 8; i++) {
+      const kr = Math.abs(Math.atan2(H.tz[i + 4] * H.tx[i] - H.tx[i + 4] * H.tz[i], H.tx[i + 4] * H.tx[i] + H.tz[i + 4] * H.tz[i]));
+      if (kr < 0.12 || zuf() > 0.5) continue;
+      const d0 = (zuf() - 0.5) * H.hb[i] * 1.1, fs = F(0x25272b);
+      for (const o of [-0.45, 0.45]) for (let q = 0; q < 3; q++) bahn.quad(pt(H, i + q, d0 + o - 0.09, 0.012), pt(H, i + q + 1, d0 + o - 0.09, 0.012), pt(H, i + q + 1, d0 + o + 0.09, 0.012), pt(H, i + q, d0 + o + 0.09, 0.012), fs);
+    }
     // Start/Ziel-Linie (Schachbrett)
     for (let r = 0; r < 2; r++) for (let q = 0; q < 12; q++) {
       const hb = H.hb[0] - 0.9, d0 = -hb + (q * 2 * hb) / 12, d1 = -hb + ((q + 1) * 2 * hb) / 12;
@@ -2488,7 +2525,7 @@ const Grafik = {
 
     // 4. Wasser
     for (const ws of def.wasser || []) {
-      const m = new THREE.Mesh(new THREE.CircleGeometry(ws.r, 18), new THREE.MeshLambertMaterial({ color: 0x3f8fc4, transparent: true, opacity: 0.82 }));
+      const m = new THREE.Mesh(new THREE.CircleGeometry(ws.r, 18), new THREE.MeshStandardMaterial({ color: 0x2f6f9a, transparent: true, opacity: 0.86, roughness: 0.08, metalness: 0.6 }));
       m.rotation.x = -Math.PI / 2; m.position.set(ws.x, ws.y, -ws.z); W.add(m);
     }
 
@@ -2513,11 +2550,17 @@ const Grafik = {
         let imWasser = false;
         for (const ws of def.wasser || []) if (hyp(x - ws.x, z - ws.z) < ws.r + 1) imWasser = true;
         if (imWasser || S.bruecke[i]) continue;
-        if (wurf < 0.5) Deko.baum(deko, x, y, -z, zuf);
-        else if (wurf < 0.68) Deko.haufen(deko, x, y, -z, zuf, B.kies || 0xb9a886);
-        else if (wurf < 0.8) Deko.fels(deko, x, y, -z, zuf);
-        else if (wurf < 0.9 && ab < H.hb[i] + r + 8) Deko.zaun(deko, x, y, -z, Math.atan2(H.tz[i], H.tx[i]));
-        else Deko.pylone(deko, x, y, -z);
+        // Abwechslung am Streckenrand: je nach Strecke mehr Wald und Fels (Bergpass) oder mehr Baustelle und Gebäude (Kiesgrube)
+        const dreh = Math.atan2(H.tz[i], H.tx[i]), nah = ab < H.hb[i] + r + 8, berg = S.id === 'bergpass';
+        if (wurf < (berg ? 0.36 : 0.2)) Deko.baum(deko, x, y, -z, zuf);
+        else if (wurf < (berg ? 0.44 : 0.34)) Deko.laubbaum(deko, x, y, -z, zuf);
+        else if (wurf < (berg ? 0.54 : 0.44)) Deko.busch(deko, x, y, -z, zuf);
+        else if (wurf < 0.58) Deko.haufen(deko, x, y, -z, zuf, B.kies || 0xb9a886);
+        else if (wurf < (berg ? 0.78 : 0.68)) Deko.fels(deko, x, y, -z, zuf);
+        else if (wurf < 0.84) { if (nah) Deko.zaun(deko, x, y, -z, dreh); else if (!imKorridor(x, z, null, 8)) Deko.haus(deko, x, y, -z, dreh + (s > 0 ? 0 : Math.PI), zuf); else Deko.busch(deko, x, y, -z, zuf); }
+        else if (wurf < 0.9) { if (nah) Deko.laterne(deko, x, y, -z, dreh + (s > 0 ? Math.PI : 0)); else Deko.tafel(deko, x, y, -z, dreh, zuf); }
+        else if (wurf < 0.95 && nah) Deko.pylone(deko, x, y, -z);
+        else Deko.busch(deko, x, y, -z, zuf);
       }
     }
     // Berge am Horizont
@@ -2924,6 +2967,44 @@ const Schauraum = {
     this.r = null; this.auto = null; this.canvas = null;
   },
 };
+
+// ── Mehr Abwechslung am Streckenrand ───────────────────────────────────────
+Object.assign(Deko, {
+  laubbaum(g, x, y, z, zuf) {
+    const h = 4 + zuf() * 3.5, f = Geo.farbe, gr = [0x5f9a3c, 0x6fa646, 0x4f8a3a][Math.floor(zuf() * 3)];
+    g.zyl(x, y + h * 0.25, z, 0.3, 0.22, h * 0.5, 5, f(0x5c4630));
+    g.box(x, y + h * 0.7, z, h * 0.55, h * 0.45, h * 0.55, f(gr), zuf() * 3, 0.2, 0.2); g.box(x + 0.4, y + h * 0.95, z - 0.3, h * 0.38, h * 0.32, h * 0.38, f(gr, 1.12), zuf() * 3, 0.3);
+  },
+  busch(g, x, y, z, zuf) {
+    const r = 0.7 + zuf() * 0.9, f = Geo.farbe;
+    g.box(x, y + r * 0.4, z, r * 1.6, r * 0.9, r * 1.3, f(0x4f7f3a, 0.85 + zuf() * 0.3), zuf() * 3, 0.15, 0.2); g.box(x + r * 0.5, y + r * 0.3, z + r * 0.3, r, r * 0.6, r, f(0x5f8f42), zuf() * 3);
+  },
+  laterne(g, x, y, z, dreh) {
+    const f = Geo.farbe, c = Math.cos(dreh), s = Math.sin(dreh);
+    g.box(x, y + 3, z, 0.14, 6, 0.14, f(0x4b5057)); g.box(x + s * 0.7, y + 5.95, z + c * 0.7, 0.12, 0.12, 1.5, f(0x4b5057), dreh); g.box(x + s * 1.35, y + 5.85, z + c * 1.35, 0.3, 0.1, 0.5, f(0xfff3c4), dreh);
+  },
+  tafel(g, x, y, z, dreh, zuf) {
+    const f = Geo.farbe, farben = [0x2f7fe6, 0xe0362c, 0x19b9b0, 0xffc61a];
+    for (const q of [-1.8, 1.8]) g.box(x + Math.cos(dreh) * q, y + 1.5, z - Math.sin(dreh) * q, 0.18, 3, 0.18, f(0x55595f));
+    g.box(x, y + 3.4, z, 5, 1.8, 0.14, f(farben[Math.floor(zuf() * 4)]), dreh); g.box(x, y + 3.4, z, 4.4, 0.35, 0.18, f(0xf5f1e6), dreh);
+  },
+  haus(g, x, y, z, dreh, zuf) {
+    const f = Geo.farbe, b = 5 + zuf() * 4, t = 4 + zuf() * 3, h = 3 + zuf() * 2.5, w = [0xd9d2c0, 0xc9b79c, 0xb9c2c8][Math.floor(zuf() * 3)], c = Math.cos(dreh), s = Math.sin(dreh);
+    g.box(x, y + h / 2, z, b, h, t, f(w), dreh); g.box(x, y + h + 0.25, z, b + 0.5, 0.5, t + 0.5, f(0x7a4a3a), dreh);
+    for (let q = -1; q <= 1; q++) g.box(x + c * q * b * 0.3 + s * (t / 2 + 0.02), y + h * 0.55, z - s * q * b * 0.3 + c * (t / 2 + 0.02), 0.9, 0.9, 0.06, f(0x2b3a4a), dreh);
+  },
+});
+// Zuschauer auf der Tribüne
+const tribueneLeer = Deko.tribuene;
+Deko.tribuene = function (g, x, y, z, dreh) {
+  tribueneLeer(g, x, y, z, dreh);
+  const c = Math.cos(dreh), s = Math.sin(dreh), f = Geo.farbe, bunt = [0xe0362c, 0x2f7fe6, 0xffd21f, 0xf2f0e6, 0x3fb54a, 0xf06cb5];
+  for (let q = 0; q < 4; q++) for (let j = -12; j <= 12; j++) {
+    if ((j * 7 + q * 3 + 70) % 5 === 0) continue;
+    g.box(x + c * j, y + 1.35 + q * 0.9, z + q * 1.4 - s * j, 0.45, 0.7, 0.4, f(bunt[Math.abs(j * 3 + q * 5) % 6]));
+    g.box(x + c * j, y + 1.85 + q * 0.9, z + q * 1.4 - s * j, 0.28, 0.28, 0.28, f(0xe8b88a));
+  }
+};
 // Namensschild über fremden Fahrzeugen
 function baueSchildchen(text, farbeHex) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 64;
@@ -2935,6 +3016,7 @@ function baueSchildchen(text, farbeHex) {
   x.fillStyle = '#fff'; x.fillText(text, 128, 31);
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, transparent: true }));
   s.scale.set(4.4, 1.1, 1); s.renderOrder = 5;
+  s.onBeforeRender = (r, sz, kam) => { s.material.opacity = clamp((kam.position.distanceTo(s.position) - 6) / 5, 0, 1); };     // ganz nah an der Kamera ausblenden
   return s;
 }
 
@@ -3296,10 +3378,26 @@ Object.assign(Grafik, {
 });
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 9: Ton – alles wird mit Web Audio erzeugt, es gibt keine Sound-Dateien
+   Aufbau: Effekte (Motoren, Fahrgeräusche, Signale) und Musik haben je einen
+   eigenen Regler, dahinter sitzt ein Begrenzer. Ein künstlicher Hall-Raum
+   färbt Motor und Effekte auf Brücken und zwischen Bauwerken.
    ══════════════════════════════════════════════════════════════════════════ */
+
+// Motor-Charakter pro Auto: Grundton im Leerlauf (Hz), Drehzahl-Spanne, Wellenformen, Filter, Rauheit, Gänge, Lautstärke, Turbo-Pfeifen
+const MOTOREN = {
+  sport:       { hz: 62, spanne: 2.6, w1: 'sawtooth', w2: 'square',   f: 520, rau: 0.5,  gaenge: 6, laut: 1.0,  pfeif: 0.5 },   // hochdrehend, giftig
+  limo:        { hz: 48, spanne: 1.9, w1: 'triangle', w2: 'sawtooth', f: 380, rau: 0.25, gaenge: 6, laut: 0.8,  pfeif: 0 },     // seidig und leise
+  panzer:      { hz: 30, spanne: 1.5, w1: 'sawtooth', w2: 'square',   f: 300, rau: 0.9,  gaenge: 4, laut: 1.1,  pfeif: 0.3 },   // schwerer Diesel
+  transporter: { hz: 27, spanne: 1.4, w1: 'square',   w2: 'sawtooth', f: 260, rau: 1.0,  gaenge: 4, laut: 1.15, pfeif: 0.2 },   // Lastwagen-Brummen
+  gelaende:    { hz: 40, spanne: 1.7, w1: 'sawtooth', w2: 'triangle', f: 340, rau: 0.6,  gaenge: 5, laut: 1.0,  pfeif: 0 },
+  pickup:      { hz: 37, spanne: 1.7, w1: 'square',   w2: 'triangle', f: 330, rau: 0.6,  gaenge: 5, laut: 1.0,  pfeif: 0 },     // blubbernder Achtzylinder
+  renn:        { hz: 78, spanne: 3.0, w1: 'sawtooth', w2: 'sawtooth', f: 700, rau: 0.4,  gaenge: 7, laut: 1.0,  pfeif: 0 },     // kreischt
+  rallye:      { hz: 56, spanne: 2.3, w1: 'sawtooth', w2: 'square',   f: 480, rau: 0.7,  gaenge: 5, laut: 1.0,  pfeif: 1.0 },   // rau mit Turbo-Pfeifen
+};
+
 const Ton = {
-  ctx: null, master: null, musikGain: null, rauschen: null, motoren: [],
-  stumm: false, laut: 0.7, musikLaut: 0.4, musikGewollt: false, musikTakt: null, musikZeit: 0, musikSchritt: 0,
+  ctx: null, master: null, fx: null, musikGain: null, hallEin: null, rauschen: null, motoren: [], fremdStimmen: [], jubelGain: null,
+  stumm: false, laut: 0.7, musikLaut: 0.4, musikGewollt: false, musikTakt: null, musikZeit: 0, musikSchritt: 0, art: 'menue',
 
   // Browser erlauben Ton erst nach der ersten Eingabe – darum wird start() bei jedem Klick/Tastendruck gerufen
   start() {
@@ -3308,114 +3406,209 @@ const Ton = {
     if (!AC) return;
     try { this.ctx = new AC(); } catch (e) { this.ctx = null; return; }
     const c = this.ctx;
-    this.master = c.createGain(); this.master.connect(c.destination);
+    const grenze = c.createDynamicsCompressor(); grenze.threshold.value = -14; grenze.ratio.value = 6; grenze.connect(c.destination);
+    this.master = c.createGain(); this.master.connect(grenze);
+    this.fx = c.createGain(); this.fx.connect(this.master);
     this.musikGain = c.createGain(); this.musikGain.connect(this.master);
     const buf = c.createBuffer(1, c.sampleRate, c.sampleRate), d = buf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     this.rauschen = buf;
+    // Hall-Raum: ausklingendes Rauschen als Raum-Antwort
+    const n = Math.floor(c.sampleRate * 1.3), raum = c.createBuffer(2, n, c.sampleRate);
+    for (let k = 0; k < 2; k++) { const r = raum.getChannelData(k); for (let i = 0; i < n; i++) r[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2.6); }
+    const hall = c.createConvolver(); hall.buffer = raum;
+    this.hallEin = c.createGain(); this.hallEin.gain.value = 0.05; this.hallEin.connect(hall); hall.connect(this.fx);
+    // Publikum: Rauschen in zwei Bändern, wird bei Start, Zieldurchfahrt und Ziel laut
+    this.jubelGain = c.createGain(); this.jubelGain.gain.value = 0; this.jubelGain.connect(this.fx);
+    for (const hz of [700, 1500]) { const q = this.quelle(), f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = hz; f.Q.value = 0.7; q.connect(f); f.connect(this.jubelGain); }
     this.setze();
     if (this.musikGewollt) this.musik(true);
   },
+  quelle() { const q = this.ctx.createBufferSource(); q.buffer = this.rauschen; q.loop = true; q.start(0, Math.random()); return q; },
+  // laut = Effekte, musikLaut = Musik, stumm = alles aus
   setze() {
     if (!this.ctx) return;
-    this.master.gain.value = this.stumm ? 0 : this.laut;
-    this.musikGain.gain.value = this.musikLaut * 0.5;
+    this.master.gain.value = this.stumm ? 0 : 1;
+    this.fx.gain.value = this.laut;
+    this.musikGain.gain.value = this.musikLaut * 0.55;
   },
 
   // einzelner Ton mit Hüllkurve
-  ton(freq, dauer, typ, laut, zielFreq, wann, ziel) {
+  ton(freq, dauer, typ, laut, zielFreq, wann, ziel, anstieg) {
     const c = this.ctx; if (!c) return;
     const t = Math.max(c.currentTime, c.currentTime + (wann || 0));
     const o = c.createOscillator(), g = c.createGain();
     o.type = typ || 'square'; o.frequency.setValueAtTime(freq, t);
     if (zielFreq) o.frequency.exponentialRampToValueAtTime(zielFreq, t + dauer);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut || 0.2, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
-    o.connect(g); g.connect(ziel || this.master); o.start(t); o.stop(t + dauer + 0.03);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut || 0.2, t + (anstieg || 0.012)); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
+    o.connect(g); g.connect(ziel || this.fx); o.start(t); o.stop(t + dauer + 0.03);
   },
   // Rauschen (Krach, Zischen, Schläge)
-  krach(dauer, laut, filter, wann, ziel, zielFilter) {
+  krach(dauer, laut, filter, wann, ziel, zielFilter, guete) {
     const c = this.ctx; if (!c) return;
     const t = Math.max(c.currentTime, c.currentTime + (wann || 0));
     const q = c.createBufferSource(); q.buffer = this.rauschen; q.loop = true;
-    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(filter || 1200, t); f.Q.value = 0.8;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(filter || 1200, t); f.Q.value = guete || 0.8;
     if (zielFilter) f.frequency.exponentialRampToValueAtTime(zielFilter, t + dauer);
     const g = c.createGain(); g.gain.setValueAtTime(laut || 0.2, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
-    q.connect(f); f.connect(g); g.connect(ziel || this.master); q.start(t, Math.random() * 0.5); q.stop(t + dauer + 0.03);
+    q.connect(f); f.connect(g); g.connect(ziel || this.fx); q.start(t, Math.random() * 0.5); q.stop(t + dauer + 0.03);
+  },
+  // Publikum jubelt (staerke 0…1.2)
+  jubel(staerke) {
+    if (!this.ctx) return;
+    const g = this.jubelGain.gain, t = this.ctx.currentTime;
+    g.cancelScheduledValues(t); g.setTargetAtTime(0.16 * staerke, t, 0.15); g.setTargetAtTime(0.1 * staerke, t + 0.7, 0.3); g.setTargetAtTime(0, t + 1.6 + staerke, 0.9);
+    for (let i = 0; i < 5; i++) this.ton(700 + Math.random() * 500, 0.25, 'triangle', 0.02 * staerke, 900 + Math.random() * 700, 0.1 + i * 0.17 + Math.random() * 0.1);     // einzelne Pfiffe und Rufe
   },
 
   spiele(name) {
     if (!this.ctx) return;
     switch (name) {
-      case 'klick': this.ton(520, 0.06, 'square', 0.07); break;
-      case 'tick': this.ton(440, 0.16, 'square', 0.2); break;
-      case 'los': this.ton(880, 0.5, 'square', 0.22); this.ton(1320, 0.5, 'triangle', 0.14); break;
+      case 'klick': this.ton(620, 0.05, 'triangle', 0.09); this.ton(930, 0.04, 'sine', 0.05, 0, 0.02); break;
+      case 'tick': this.ton(440, 0.18, 'square', 0.16); this.ton(880, 0.12, 'sine', 0.1); break;
+      case 'los': this.ton(880, 0.6, 'square', 0.2); this.ton(1320, 0.6, 'triangle', 0.14); this.ton(1760, 0.5, 'sine', 0.08); break;
       case 'turbo': this.krach(0.45, 0.3, 600, 0, null, 3200); this.ton(220, 0.3, 'sawtooth', 0.12, 660); break;
       case 'boost': this.krach(0.8, 0.34, 400, 0, null, 2600); this.ton(160, 0.6, 'sawtooth', 0.14, 520); break;
-      case 'treffer': this.krach(0.35, 0.5, 900); this.ton(180, 0.3, 'square', 0.2, 60); break;
-      case 'wand': this.krach(0.16, 0.3, 500); this.ton(120, 0.12, 'square', 0.12, 70); break;
-      case 'landung': this.krach(0.18, 0.22, 300); break;
+      case 'treffer': this.krach(0.4, 0.55, 800); this.krach(0.12, 0.4, 3200); this.ton(170, 0.32, 'square', 0.2, 55); break;
+      case 'wand': this.krach(0.18, 0.34, 420); this.krach(0.06, 0.2, 2600); this.ton(110, 0.14, 'square', 0.14, 60); break;       // dumpfer Schlag und Blech
+      case 'rempler': this.krach(0.12, 0.3, 900); this.ton(150, 0.1, 'triangle', 0.14, 90); break;
+      case 'landung': this.krach(0.22, 0.3, 240); this.ton(70, 0.2, 'sine', 0.3, 40); break;
       case 'bp': this.ton(784, 0.09, 'triangle', 0.16); this.ton(1175, 0.14, 'triangle', 0.16, 0, 0.08); break;
-      case 'bau': for (let i = 0; i < 4; i++) { this.krach(0.07, 0.3, 2400, i * 0.16); this.ton(300, 0.05, 'square', 0.12, 0, i * 0.16); } break;   // Hämmern
+      case 'vorbei': this.ton(523, 0.08, 'triangle', 0.16); this.ton(784, 0.08, 'triangle', 0.16, 0, 0.07); this.ton(1047, 0.16, 'triangle', 0.16, 0, 0.14); break;     // selbst überholt
+      case 'ueberholt': this.ton(392, 0.12, 'sawtooth', 0.1, 262); this.krach(0.3, 0.12, 1800, 0, null, 500); break;                                                    // wurde überholt
+      case 'bau':       // Hämmern und Bohren
+        for (let i = 0; i < 4; i++) { this.krach(0.06, 0.3, 2400, i * 0.15); this.ton(300, 0.05, 'square', 0.12, 0, i * 0.15); }
+        this.ton(190, 0.45, 'sawtooth', 0.07, 260, 0.62); this.krach(0.45, 0.1, 3400, 0.62, null, 0, 4); break;
       case 'fertig': this.ton(392, 0.1, 'square', 0.13); this.ton(523, 0.1, 'square', 0.13, 0, 0.1); this.ton(659, 0.2, 'square', 0.13, 0, 0.2); break;
       case 'warnung': this.ton(988, 0.11, 'square', 0.15); this.ton(740, 0.11, 'square', 0.15, 0, 0.14); this.ton(988, 0.11, 'square', 0.15, 0, 0.28); break;
       case 'nein': this.ton(160, 0.14, 'sawtooth', 0.14, 110); break;
       case 'runde': this.ton(660, 0.1, 'square', 0.14); this.ton(990, 0.2, 'square', 0.14, 0, 0.1); break;
-      case 'ziel': [523, 659, 784, 1047].forEach((f, i) => this.ton(f, 0.22, 'square', 0.16, 0, i * 0.13)); break;
+      case 'letzte': [659, 784, 988, 1319].forEach((f, i) => this.ton(f, 0.16, 'square', 0.15, 0, i * 0.09)); this.ton(1319, 0.5, 'triangle', 0.14, 0, 0.4); break;      // letzte Runde
+      case 'ziel': [523, 659, 784, 1047].forEach((f, i) => this.ton(f, 0.24, 'square', 0.16, 0, i * 0.13)); this.ton(1568, 0.7, 'triangle', 0.12, 0, 0.55); break;
       case 'reset': this.ton(300, 0.3, 'sine', 0.2, 900); break;
     }
   },
 
-  // Motoren: pro lokalem Spieler ein Brummen, dessen Tonhöhe dem Tempo folgt
-  motorAn(n) {
+  // ── Motoren: pro lokalem Spieler ein mehrschichtiger Motor samt Fahrgeräuschen ──
+  // autos: Liste der Auto-Kennungen der lokalen Spieler
+  motorAn(autos) {
     this.motorAus();
     const c = this.ctx; if (!c) return;
-    for (let i = 0; i < n; i++) {
-      const o1 = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain();
-      o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 400; g.gain.value = 0;
-      o1.connect(f); o2.connect(f); f.connect(g); g.connect(this.master);
-      const q = c.createBufferSource(); q.buffer = this.rauschen; q.loop = true;
-      const qf = c.createBiquadFilter(); qf.type = 'bandpass'; qf.frequency.value = 2100; qf.Q.value = 1.4;
-      const qg = c.createGain(); qg.gain.value = 0;
-      q.connect(qf); qf.connect(qg); qg.connect(this.master);
-      o1.start(); o2.start(); q.start();
-      this.motoren.push({ o1, o2, f, g, q, qf, qg, teiler: Math.sqrt(n) });
+    if (typeof autos === 'number') autos = new Array(autos).fill('sport');
+    const kurve = new Float32Array(257); for (let i = 0; i < 257; i++) { const x = i / 128 - 1; kurve[i] = Math.tanh(x * 2.4); }      // leichte Verzerrung: macht den Motor kernig
+    const rausch = (typ, hz, q) => { const f = c.createBiquadFilter(), g = c.createGain(); f.type = typ; f.frequency.value = hz; f.Q.value = q; g.gain.value = 0; const s = this.quelle(); s.connect(f); f.connect(g); g.connect(this.fx); return { s, f, g }; };
+    for (const id of autos) {
+      const M = MOTOREN[id] || MOTOREN.sport;
+      const o1 = c.createOscillator(), o2 = c.createOscillator(), o3 = c.createOscillator(), g3 = c.createGain(), form = c.createWaveShaper(), f = c.createBiquadFilter(), g = c.createGain();
+      o1.type = M.w1; o2.type = M.w2; o3.type = 'sawtooth'; g3.gain.value = 0.35; form.curve = kurve; f.type = 'lowpass'; f.frequency.value = M.f; f.Q.value = 1.2; g.gain.value = 0;
+      o1.connect(form); o2.connect(form); o3.connect(g3); g3.connect(form); form.connect(f); f.connect(g); g.connect(this.fx); g.connect(this.hallEin);
+      const pf = c.createOscillator(), pg = c.createGain(); pf.type = 'sine'; pg.gain.value = 0; pf.connect(pg); pg.connect(this.fx);
+      o1.start(); o2.start(); o3.start(); pf.start();
+      this.motoren.push({ M, o1, o2, o3, f, g, pf, pg, ansaug: rausch('bandpass', 420, 0.9), quietsch: rausch('bandpass', 2300, 5), roll: rausch('lowpass', 320, 0.6), wind: rausch('highpass', 2600, 0.4),
+        gang: 0, schalt: 0, drehzahl: 0.2, teiler: Math.sqrt(autos.length) });
+    }
+    // Stimmen für die drei nächsten fremden Autos (nur wenn ein Spieler allein am Gerät fährt)
+    if (autos.length === 1 && c.createStereoPanner) for (let i = 0; i < 3; i++) {
+      const o1 = c.createOscillator(), o2 = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), p = c.createStereoPanner();
+      o1.type = 'sawtooth'; o2.type = 'square'; f.type = 'lowpass'; f.frequency.value = 500; g.gain.value = 0;
+      o1.connect(f); o2.connect(f); f.connect(g); g.connect(p); p.connect(this.fx); p.connect(this.hallEin); o1.start(); o2.start();
+      this.fremdStimmen.push({ o1, o2, f, g, p, abstand: 0 });
     }
   },
-  // tempo 0…1.3; aus = stumm (Pause)
-  motor(i, tempo, gas, drift, boost, gelaende, aus) {
+  // tempo 0…1.3; aus = stumm (Pause); hall 0…1 (Brücke, zwischen Bauwerken)
+  motor(i, tempo, gas, drift, boost, gelaende, aus, hall) {
     const m = this.motoren[i]; if (!m) return;
-    const t = this.ctx.currentTime, hz = 52 + tempo * 105 + (gas ? 8 : 0) + (boost ? 22 : 0);
-    m.o1.frequency.setTargetAtTime(hz, t, 0.05); m.o2.frequency.setTargetAtTime(hz * 0.5, t, 0.05);
-    m.f.frequency.setTargetAtTime(350 + tempo * 1300 + (gas ? 300 : 0), t, 0.08);
-    m.g.gain.setTargetAtTime(aus ? 0 : (0.045 + tempo * 0.05 + (gas ? 0.025 : 0)) / m.teiler, t, 0.08);
-    m.qg.gain.setTargetAtTime(aus ? 0 : (drift ? 0.11 : gelaende ? 0.06 : 0) / m.teiler, t, 0.05);
-    m.qf.frequency.setTargetAtTime(drift ? 2100 : 500, t, 0.05);
+    const t = this.ctx.currentTime, M = m.M, dt = 1 / 60;
+    // Gänge: die Drehzahl steigt in jedem Gang an und fällt beim Hochschalten zurück
+    const lage = clamp(tempo, 0, 1.25) * M.gaenge * 0.8, gang = Math.min(M.gaenge - 1, Math.floor(lage));
+    if (gang !== m.gang) { if (tempo > 0.12 && !aus) { m.schalt = 0.13; this.krach(0.03, 0.05 / m.teiler, 1700); } m.gang = gang; }
+    m.schalt = Math.max(0, m.schalt - dt);
+    const ziel = 0.22 + 0.78 * clamp(lage - gang, 0, 1) * (gang === M.gaenge - 1 ? 1 : 0.92) + (gas ? 0.06 : -0.05) + (boost ? 0.12 : 0);
+    m.drehzahl += (ziel - m.drehzahl) * (gas ? 0.2 : 0.09);
+    const hz = M.hz * (1 + m.drehzahl * M.spanne);
+    m.o1.frequency.setTargetAtTime(hz, t, 0.03); m.o2.frequency.setTargetAtTime(hz * 0.5, t, 0.03); m.o3.frequency.setTargetAtTime(hz * 1.503, t, 0.03);
+    m.f.frequency.setTargetAtTime(M.f * (0.7 + m.drehzahl * 2.2 + (gas ? 0.9 : 0)), t, 0.06);
+    const last = (gas ? 1 : 0.5) * (m.schalt > 0 ? 0.45 : 1);
+    m.g.gain.setTargetAtTime(aus ? 0 : (M.laut * (0.035 + m.drehzahl * 0.045) * last) / m.teiler, t, 0.05);
+    m.ansaug.f.frequency.setTargetAtTime(300 + m.drehzahl * 900, t, 0.05);
+    m.ansaug.g.gain.setTargetAtTime(aus ? 0 : (M.rau * (gas ? 0.05 : 0.015) * (0.4 + m.drehzahl)) / m.teiler, t, 0.05);
+    m.pf.frequency.setTargetAtTime(2400 + m.drehzahl * 5200, t, 0.08);
+    m.pg.gain.setTargetAtTime(aus || !gas ? 0 : (M.pfeif * 0.012 * m.drehzahl) / m.teiler, t, 0.1);
+    // Fahrgeräusche: Reifenquietschen, Abrollen (Asphalt oder Kies), Fahrtwind
+    m.quietsch.f.frequency.setTargetAtTime(2100 + tempo * 500 + Math.sin(t * 9) * 120, t, 0.04);
+    m.quietsch.g.gain.setTargetAtTime(aus || !drift || gelaende ? 0 : (0.05 + tempo * 0.05) / m.teiler, t, 0.05);
+    m.roll.f.type = gelaende ? 'bandpass' : 'lowpass';
+    m.roll.f.frequency.setTargetAtTime(gelaende ? 800 + Math.sin(t * 31) * 300 : 300, t, 0.04);
+    m.roll.g.gain.setTargetAtTime(aus ? 0 : ((gelaende ? 0.11 : 0.05) * Math.min(1, tempo * 1.5)) / m.teiler, t, 0.06);
+    m.wind.g.gain.setTargetAtTime(aus ? 0 : (0.03 * tempo * tempo) / m.teiler, t, 0.1);
+    if (i === 0) this.hallEin.gain.setTargetAtTime(0.05 + 0.5 * (hall || 0), t, 0.2);
+  },
+  // Andere Autos: aus der richtigen Richtung, leiser mit dem Abstand, Tonhöhe ändert sich beim Vorbeifahren
+  fremde(R, ich, dt, aus) {
+    const S = this.fremdStimmen, O = Grafik.kartObjekte;
+    if (!S.length || !O[ich]) return;
+    const t = this.ctx.currentTime, p0 = O[ich].gruppe.position, w = O[ich].gruppe.rotation.y, liste = [];
+    for (let i = 0; i < R.karts.length; i++) {
+      if (i === ich || !O[i]) continue;
+      const p = O[i].gruppe.position, dx = p.x - p0.x, dz = p.z - p0.z, d = Math.hypot(dx, dz);
+      if (d < 60) liste.push({ i, d, rechts: dx * Math.sin(w) + dz * Math.cos(w) });
+    }
+    liste.sort((a, b) => a.d - b.d);
+    for (let q = 0; q < S.length; q++) {
+      const s = S[q], l = liste[q];
+      if (!l || aus) { s.g.gain.setTargetAtTime(0, t, 0.1); s.kart = -1; continue; }
+      const k = R.karts[l.i], M = MOTOREN[k.fahrzeug] || MOTOREN.sport, tempo = clamp(Math.abs(k.v) / CONFIG.fahren.vmax, 0, 1.3);
+      const radial = s.kart === l.i && dt > 0 ? (l.d - s.abstand) / dt : 0;                // nähert sich (negativ) oder entfernt sich
+      s.kart = l.i; s.abstand = l.d;
+      const hz = M.hz * (1 + (0.25 + tempo * 0.65) * M.spanne) * clamp(1 - radial / 120, 0.82, 1.2);
+      s.o1.frequency.setTargetAtTime(hz, t, 0.06); s.o2.frequency.setTargetAtTime(hz * 0.5, t, 0.06);
+      s.f.frequency.setTargetAtTime(M.f * (0.8 + tempo * 1.6) / (1 + l.d / 25), t, 0.1);
+      s.g.gain.setTargetAtTime((0.06 * M.laut) / (1 + (l.d * l.d) / 90), t, 0.08);
+      s.p.pan.setTargetAtTime(clamp(l.rechts / (l.d + 3), -1, 1), t, 0.08);
+    }
   },
   motorAus() {
-    for (const m of this.motoren) { try { m.o1.stop(); m.o2.stop(); m.q.stop(); } catch (e) { /* schon gestoppt */ } m.g.disconnect(); m.qg.disconnect(); }
-    this.motoren = [];
+    for (const m of this.motoren) {
+      try { m.o1.stop(); m.o2.stop(); m.o3.stop(); m.pf.stop(); for (const r of [m.ansaug, m.quietsch, m.roll, m.wind]) { r.s.stop(); r.g.disconnect(); } } catch (e) { /* schon gestoppt */ }
+      m.g.disconnect(); m.pg.disconnect();
+    }
+    for (const s of this.fremdStimmen) { try { s.o1.stop(); s.o2.stop(); } catch (e) { /* schon gestoppt */ } s.p.disconnect(); }
+    this.motoren = []; this.fremdStimmen = [];
   },
 
-  // Einfache Musikschleife (eigene Tonfolge): Bass, Hi-Hat, Pauke und eine kleine Melodie
+  // ── Musik (eigene Tonfolgen): «menue» ruhig, «rennen» treibend, «final» schneller und dichter für die letzte Runde ──
+  musikArt(art) { if (this.art !== art) { this.art = art; this.musikSchritt = 0; } },
   musik(an) {
     this.musikGewollt = an;
     if (!this.ctx) return;
     if (this.musikTakt) { clearInterval(this.musikTakt); this.musikTakt = null; }
     if (!an) return;
     this.musikZeit = this.ctx.currentTime + 0.1; this.musikSchritt = 0;
-    this.musikTakt = setInterval(() => this.musikPlane(), 110);
+    this.musikTakt = setInterval(() => this.musikPlane(), 100);
   },
   musikPlane() {
-    const c = this.ctx, dauer = 60 / 132 / 2;            // Achtelnoten bei 132 Schlägen pro Minute
-    const BASS = [110, 0, 110, 165, 0, 110, 146.8, 165, 98, 0, 98, 146.8, 0, 98, 130.8, 146.8, 87.3, 0, 87.3, 130.8, 0, 87.3, 110, 130.8, 98, 0, 98, 146.8, 123.5, 0, 146.8, 196];
-    const MEL = [440, 0, 523.3, 0, 659.3, 587.3, 523.3, 0, 392, 0, 493.9, 0, 587.3, 523.3, 493.9, 0, 349.2, 0, 440, 0, 523.3, 587.3, 523.3, 440, 392, 493.9, 587.3, 0, 784, 0, 587.3, 0];
+    const c = this.ctx, A = this.art, Z = this.musikGain;
+    const dauer = 60 / (A === 'menue' ? 92 : A === 'final' ? 142 : 128) / 4;               // eine Sechzehntelnote
+    const GRUND = [110, 87.31, 130.81, 98], TERZ = [1.189, 1.26, 1.26, 1.26];              // a-Moll, F-Dur, C-Dur, G-Dur
+    const MEL = [[4, 0, 3, 0, 2, 0, 3, 4, 0, 0, 5, 0, 4, 0, 2, 0], [2, 0, 3, 0, 4, 0, 3, 2, 0, 0, 1, 0, 2, 0, 4, 0], [4, 0, 5, 0, 6, 0, 5, 4, 0, 0, 3, 0, 4, 0, 6, 0], [3, 0, 4, 0, 5, 0, 4, 3, 0, 0, 2, 0, 3, 5, 6, 0]];
     if (this.musikZeit < c.currentTime - 0.5) this.musikZeit = c.currentTime + 0.05;       // nach einer Pause (Tab im Hintergrund) neu ansetzen
     while (this.musikZeit < c.currentTime + 0.3) {
-      const i = this.musikSchritt % 32, wann = this.musikZeit - c.currentTime, zweite = Math.floor(this.musikSchritt / 32) % 2 === 1;
-      if (BASS[i]) this.ton(BASS[i], dauer * 0.9, 'square', 0.15, 0, wann, this.musikGain);
-      if (zweite && MEL[i]) this.ton(MEL[i], dauer * 1.4, 'triangle', 0.13, 0, wann, this.musikGain);
-      this.krach(0.04, i % 4 === 2 ? 0.15 : 0.06, 6000, wann, this.musikGain);
-      if (i % 8 === 0 || i % 8 === 5) this.ton(120, 0.12, 'sine', 0.3, 45, wann, this.musikGain);
+      const n = this.musikSchritt, i = n % 16, takt = Math.floor(n / 16), ak = takt % 4, g = GRUND[ak], wann = this.musikZeit - c.currentTime;
+      const dreiklang = [g * 2, g * 2 * TERZ[ak], g * 3, g * 4];
+      if (A === 'menue') {
+        if (i === 0) for (const f of dreiklang.slice(0, 3)) { this.ton(f, dauer * 15, 'sine', 0.07, 0, wann, Z, 0.5); this.ton(f * 1.003, dauer * 15, 'triangle', 0.04, 0, wann, Z, 0.7); }     // Flächen
+        if (i % 4 === 0) this.ton(dreiklang[(i / 4 + takt) % 4] * 2, dauer * 3, 'triangle', 0.07, 0, wann, Z);                                                                             // perlende Töne
+        if (i === 0 || i === 10) this.ton(g, dauer * 5, 'sine', 0.2, 0, wann, Z, 0.03);
+        if (i % 8 === 4) this.krach(0.05, 0.03, 5000, wann, Z);
+      } else {
+        const fin = A === 'final';
+        if (i % 2 === 0) this.ton(g * (i % 8 === 6 ? 2 : 1), dauer * 1.7, 'square', 0.13, 0, wann, Z);                               // Bass
+        if (i % 4 === 0) this.ton(130, 0.13, 'sine', 0.34, 42, wann, Z);                                                              // Pauke
+        if (i % 8 === 4) { this.krach(0.11, 0.16, 1800, wann, Z); this.ton(190, 0.08, 'triangle', 0.1, 120, wann, Z); }               // Schlag auf 2 und 4
+        if (fin || i % 4 === 2) this.krach(0.03, i % 4 === 2 ? 0.1 : 0.05, 7000, wann, Z);                                            // Hi-Hat
+        if ((fin || takt % 8 >= 4) && MEL[ak][i]) this.ton(g * 4 * Math.pow(2, [0, 0, 2, 3, 5, 7, 8, 10][MEL[ak][i]] / 12) * (ak === 0 ? 1 : 1), dauer * 1.8, 'triangle', 0.11, 0, wann, Z);    // Melodie
+        if (fin && i % 2 === 1) this.ton(dreiklang[((i - 1) / 2) % 4] * 2, dauer * 0.9, 'square', 0.035, 0, wann, Z);                 // schnelle Begleitung in der letzten Runde
+      }
       this.musikZeit += dauer; this.musikSchritt++;
     }
   },
@@ -4312,7 +4505,7 @@ const Spiel = {
     this.demo = true; this.pause = false; this.spieler = []; this.akk = 0; this.konfig = null; this.ergebnisGezeigt = false; this.netz = null;
     Grafik.neuesRennen(this.R); Grafik.setzeAnsichten([-1]);
     $('hud').innerHTML = ''; $('hud').classList.remove('versteckt'); Hud.teile = [];
-    Ton.motorAus();
+    Ton.motorAus(); Ton.musikArt('menue');
     const pk = $('pauseknopf'); if (pk) pk.classList.add('versteckt');
   },
 
@@ -4349,7 +4542,7 @@ const Spiel = {
     this.losAn = !!konfig.zufall && this.spieler.length > 0;
     if (this.losAn) { if (konfig.modus !== 'online') R.zeit = -(CONFIG.rennen.countdown + 3.4); Hud.auslosung(R); }     // kurze Auslosung vor dem Countdown
     Menue.schliesse();
-    Ton.start(); Ton.motorAn(this.spieler.length); Ton.musik(true);
+    Ton.start(); Ton.motorAn(this.spieler.map((s) => R.karts[s.kart].fahrzeug)); Ton.musikArt('rennen'); Ton.musik(true);
     Eingabe.fertig();
     if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     $('pauseknopf').classList.remove('versteckt');
@@ -4394,8 +4587,10 @@ const Spiel = {
       const still = this.pause || this.ergebnisGezeigt;
       this.spieler.forEach((sp, i) => {
         const k = R.karts[sp.kart];
-        Ton.motor(i, clamp(Math.abs(k.v) / CONFIG.fahren.vmax, 0, 1.3), k.eingabe.gas > 0, k.drift !== 0 && !k.luft, k.boostZeit > 0, !k.aufStrasse && Math.abs(k.v) > 5, still);
+        Ton.motor(i, clamp(Math.abs(k.v) / CONFIG.fahren.vmax, 0, 1.3), k.eingabe.gas > 0, k.drift !== 0 && !k.luft, k.boostZeit > 0, !k.aufStrasse && Math.abs(k.v) > 5, still,
+          R.S.bruecke[Math.floor(k.sHaupt / R.S.haupt.ds) % R.S.haupt.n] ? 1 : 0);
       });
+      if (this.spieler.length === 1) Ton.fremde(R, this.spieler[0].kart, dt, still);
     }
   },
 
@@ -4408,17 +4603,17 @@ const Spiel = {
     const t = e.k >= 0 ? lokal(e.k) : null;
     const name = e.k >= 0 ? R.karts[e.k].name : '';
     switch (e.typ) {
-      case 'los': Ton.spiele('los'); for (const q of Hud.teile) Hud.gross(q, 'Los!', false, 1.1); break;
+      case 'los': Ton.spiele('los'); Ton.jubel(1); for (const q of Hud.teile) Hud.gross(q, 'Los!', false, 1.1); break;
       case 'turbo': if (t) { Ton.spiele('turbo'); Hud.meldung(t, e.a === 2 ? 'Super-Turbo!' : 'Mini-Turbo!', true); } break;
       case 'rampe': if (t) { Ton.spiele('boost'); Hud.meldung(t, 'Rampe! Boost!', true); } break;
       case 'abkuerzung': if (t) { Ton.spiele('boost'); Hud.meldung(t, 'Abkürzung genommen!', true); } break;
       case 'landung': if (t && e.a > 6) Ton.spiele('landung'); break;
       case 'wand': if (t) Ton.spiele('wand'); break;
-      case 'rempler': if (t || lokal(e.a)) Ton.spiele('wand'); break;
+      case 'rempler': if (t || lokal(e.a)) Ton.spiele('rempler'); break;
       case 'reset': if (t) { Ton.spiele('reset'); Hud.meldung(t, 'Zurück auf die Strecke'); } break;
       case 'wind': if (t) Hud.meldung(t, 'Windschatten!', true); break;
-      case 'bp': if (t) { Ton.spiele('bp'); Hud.meldung(t, (e.b === 'aufholen' ? 'Aufgeholt' : 'Überholt') + ': jetzt ' + e.a + ' BP', true); } break;
-      case 'ueberholt': { const o = lokal(e.a); if (o) Hud.meldung(o, name + ' hat dich überholt'); break; }
+      case 'bp': if (t) { Ton.spiele(e.b === 'aufholen' ? 'bp' : 'vorbei'); Hud.meldung(t, (e.b === 'aufholen' ? 'Aufgeholt' : 'Überholt') + ': jetzt ' + e.a + ' BP', true); } break;
+      case 'ueberholt': { const o = lokal(e.a); if (o) { Ton.spiele('ueberholt'); Hud.meldung(o, name + ' hat dich überholt'); } break; }
       case 'bau': {
         const bw = R.bauwerke.find((b) => b.id === e.a); if (!bw) break;
         const b = BAUWERKE[BAUWERK_INDEX[bw.art]];
@@ -4436,13 +4631,13 @@ const Spiel = {
         if (o && o !== t) Hud.meldung(o, name + ' fährt in deine Baustelle!', true);
         break;
       }
-      case 'runde': if (t && e.a > 1 && e.a <= R.runden) { Ton.spiele('runde'); Hud.meldung(t, (e.a === R.runden ? 'Letzte Runde! ' : '') + 'Rundenzeit ' + zeitText(e.b), true); } break;
-      case 'ziel': if (t) { Ton.spiele('ziel'); Hud.gross(t, 'Ziel! Platz ' + R.karts[e.k].rang, true, 999); } break;
+      case 'runde': if (t && e.a > 1 && e.a <= R.runden) { Ton.jubel(0.5); if (e.a === R.runden) { Ton.spiele('letzte'); Ton.musikArt('final'); } else Ton.spiele('runde'); Hud.meldung(t, (e.a === R.runden ? 'Letzte Runde! ' : '') + 'Rundenzeit ' + zeitText(e.b), true); } break;
+      case 'ziel': if (t) { Ton.spiele('ziel'); Ton.jubel(1.2); Hud.gross(t, 'Ziel! Platz ' + R.karts[e.k].rang, true, 999); } break;
     }
   },
 
   endeRennen() {
-    Ton.motorAus();
+    Ton.motorAus(); Ton.musikArt('menue');
     $('pauseknopf').classList.add('versteckt'); $('hud').classList.add('versteckt');
     Menue.ergebnis(this.R, this.konfig);
   },
@@ -4632,7 +4827,7 @@ const Menue = {
     this.wahlen = {};
     const D = Speicher.daten;
     this.zeige('einstellungen', '<div class="tafel"><h2>Einstellungen</h2>' + this.fahrerZeilen(true) +
-      '<div class="zeile"><label for="f-laut">Lautstärke</label><input type="range" id="f-laut" min="0" max="100" value="' + Math.round(D.lautstaerke * 100) + '"></div>' +
+      '<div class="zeile"><label for="f-laut">Effekte</label><input type="range" id="f-laut" min="0" max="100" value="' + Math.round(D.lautstaerke * 100) + '"></div>' +
       '<div class="zeile"><label for="f-musik">Musik</label><input type="range" id="f-musik" min="0" max="100" value="' + Math.round(D.musik * 100) + '"></div>' +
       this.wahlZeile('Ton', 'stumm', [{ wert: false, text: 'An' }, { wert: true, text: 'Stumm' }], D.stumm, (v) => { D.stumm = v; App.tonSetzen(); }) +
       this.wahlZeile('Grafik', 'grafik', [{ wert: 'niedrig', text: 'Niedrig' }, { wert: 'mittel', text: 'Mittel' }, { wert: 'hoch', text: 'Hoch' }], D.grafik, (v) => { D.grafik = v; Grafik.setzeQualitaet(v); }) +
