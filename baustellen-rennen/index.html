@@ -2350,6 +2350,7 @@ const Grafik = {
     const schatten = q !== 'niedrig';
     R.shadowMap.enabled = schatten;
     R.shadowMap.type = THREE.PCFSoftShadowMap;
+    R.toneMapping = q === 'niedrig' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.25;     // natürlichere Helligkeit
     this.sonne.castShadow = schatten;
     if (schatten) {
       const g = q === 'hoch' ? 2048 : 1024;
@@ -2361,7 +2362,7 @@ const Grafik = {
     }
     Teilchen.grenze = q === 'niedrig' ? 120 : q === 'mittel' ? 260 : 420;
     Dunst.grenze = q === 'niedrig' ? 160 : q === 'mittel' ? 420 : 900;
-    this._stoff = {}; this._flocken = null;
+    this._stoff = {}; this._flocken = null; this._belag = null;
     this.szene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
     this.groesse();
   },
@@ -2430,100 +2431,12 @@ const Grafik = {
       const h = hoehe(x, z);
       raster.push([x, h.y, -z, h.d]);
     }
-    const boden = new Geo(), B = def.boden || {};
-    const fGras = F(B.gras || 0x8a9a4c), fKies = F(B.kies || 0xb9a886), fFels = F(B.fels || 0x8d8472);
-    const bodenTri = (a, b, c) => {
-      const d = (a[3] + b[3] + c[3]) / 3;
-      const steil = Math.max(a[1], b[1], c[1]) - Math.min(a[1], b[1], c[1]);
-      const basis = steil > zelle * 0.55 ? fFels : d < 9 ? fKies : fGras;
-      const hell = 0.86 + zuf() * 0.24;
-      boden.tri(a, b, c, [basis[0] * hell, basis[1] * hell, basis[2] * hell]);
-    };
-    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
-      const a = raster[j * (nx + 1) + i], b = raster[j * (nx + 1) + i + 1], c = raster[(j + 1) * (nx + 1) + i + 1], d = raster[(j + 1) * (nx + 1) + i];
-      if ((i + j) % 2) { bodenTri(a, b, c); bodenTri(a, c, d); } else { bodenTri(a, b, d); bodenTri(b, c, d); }
-    }
-    W.add(boden.netz(this.mat));
+    const B = def.boden || {};
+    this.baueBoden(W, raster, nx, nz, zelle, B);
 
-    // 2. Fahrbahn, Randsteine, Seitenstreifen, Wände
-    const bahn = new Geo(), wand = new Geo();
+    // 2. und 3. Fahrbahn, Randsteine, Markierungen, Leitplanken, Nebenwege (siehe Teil 8e)
     const pt = (P, i, d, dy) => [P.x[i] + P.nx[i] * d, P.y[i] + dy, -(P.z[i] + P.nz[i] * d)];
-    const fAsphalt = [F(0x3b3e44), F(0x41444a)], fRand = [F(0xff7a1a), F(0xf2efe6)], fStreifen = F(B.kies || 0xb9a886, 0.82);
-    const fWand = [F(0xc2beb2), F(0xaeaa9e), F(0xff7a1a)], fLinie = F(0xe9e4d2);
-    this.sperrNetze = S.wege.map(() => null);
-    const sperrGeo = S.wege.map(() => new Geo());
-    const wandStueck = (geo, P, i, j, d0i, d0j, hoch, f, tief) => {
-      const s = d0i > 0 ? 1 : -1;
-      const a = pt(P, i, d0i, 0), b = pt(P, j, d0j, 0), a2 = pt(P, i, d0i, hoch), b2 = pt(P, j, d0j, hoch);
-      const c2 = pt(P, i, d0i + s * 0.45, hoch), d2 = pt(P, j, d0j + s * 0.45, hoch), c = pt(P, i, d0i + s * 0.45, -tief), d = pt(P, j, d0j + s * 0.45, -tief);
-      geo.quad(a, b, b2, a2, f); geo.quad(a2, b2, d2, c2, [f[0] * 1.08, f[1] * 1.08, f[2] * 1.08]); geo.quad(c2, d2, d, c, [f[0] * 0.8, f[1] * 0.8, f[2] * 0.8]);
-    };
-    for (let i = 0; i < H.n; i++) {
-      const j = (i + 1) % H.n, hb = H.hb[i], hb2 = H.hb[j];
-      const fa = fAsphalt[(i >> 3) & 1];
-      bahn.quad(pt(H, i, -hb + 0.9, 0), pt(H, j, -hb2 + 0.9, 0), pt(H, j, hb2 - 0.9, 0), pt(H, i, hb - 0.9, 0), fa);
-      const fr = fRand[(i >> 1) & 1];
-      bahn.quad(pt(H, i, hb - 0.9, 0), pt(H, j, hb2 - 0.9, 0), pt(H, j, hb2, 0.06), pt(H, i, hb, 0.06), fr);
-      bahn.quad(pt(H, i, -hb, 0.06), pt(H, j, -hb2, 0.06), pt(H, j, -hb2 + 0.9, 0), pt(H, i, -hb + 0.9, 0), fr);
-      if ((i & 3) < 2) bahn.quad(pt(H, i, -0.14, 0.02), pt(H, j, -0.14, 0.02), pt(H, j, 0.14, 0.02), pt(H, i, 0.14, 0.02), fLinie);
-      for (const s of [1, -1]) {
-        const r = s > 0 ? S.randL[i] : S.randR[i], r2 = s > 0 ? S.randL[j] : S.randR[j];
-        const offen = s > 0 ? S.offenL[i] : S.offenR[i];
-        bahn.quad(pt(H, i, s * hb, 0.05), pt(H, j, s * hb2, 0.05), pt(H, j, s * (hb2 + r2 + WV), -0.08), pt(H, i, s * (hb + r + WV), -0.08), fStreifen);
-        const mx = (H.x[i] + H.x[j]) / 2 + H.nx[i] * s * (hb + r + 0.2), mz = (H.z[i] + H.z[j]) / 2 + H.nz[i] * s * (hb + r + 0.2);
-        const q = imKorridor(mx, mz, pfade[0], -0.4);
-        if (offen) continue;
-        if (!q) wandStueck(wand, H, i, j, s * (hb + r + WV), s * (hb2 + r2 + WV), S.bruecke[i] ? 1.1 : 0.85, fWand[i % 9 === 0 ? 2 : i & 1], S.bruecke[i] ? 0.4 : 1.6);
-        else if (q.weg.art === 'abkuerzung') wandStueck(sperrGeo[q.weg.idx], H, i, j, s * (hb + r + WV), s * (hb2 + r2 + WV), 1.25, i & 1 ? F(0xe0362c) : F(0xf5f1e6), 0.2);
-      }
-    }
-    // Reifenspuren in den Kurven
-    for (let i = 4; i < H.n - 8; i++) {
-      const kr = Math.abs(Math.atan2(H.tz[i + 4] * H.tx[i] - H.tx[i + 4] * H.tz[i], H.tx[i + 4] * H.tx[i] + H.tz[i + 4] * H.tz[i]));
-      if (kr < 0.12 || zuf() > 0.5) continue;
-      const d0 = (zuf() - 0.5) * H.hb[i] * 1.1, fs = F(0x25272b);
-      for (const o of [-0.45, 0.45]) for (let q = 0; q < 3; q++) bahn.quad(pt(H, i + q, d0 + o - 0.09, 0.012), pt(H, i + q + 1, d0 + o - 0.09, 0.012), pt(H, i + q + 1, d0 + o + 0.09, 0.012), pt(H, i + q, d0 + o + 0.09, 0.012), fs);
-    }
-    // Start/Ziel-Linie (Schachbrett)
-    for (let r = 0; r < 2; r++) for (let q = 0; q < 12; q++) {
-      const hb = H.hb[0] - 0.9, d0 = -hb + (q * 2 * hb) / 12, d1 = -hb + ((q + 1) * 2 * hb) / 12;
-      bahn.quad(pt(H, r, d0, 0.03), pt(H, r + 1, d0, 0.03), pt(H, r + 1, d1, 0.03), pt(H, r, d1, 0.03), (q + r) % 2 ? F(0x111111) : F(0xf5f1e6));
-    }
-    // feste Schanzen
-    for (const sch of S.schanzen) {
-      const o = {}, T = 4;
-      for (let q = 0; q < T; q++) {
-        const s0 = sch.s + (sch.laenge * q) / T, s1 = sch.s + (sch.laenge * (q + 1)) / T;
-        const h0 = (sch.hoehe * q) / T, h1 = (sch.hoehe * (q + 1)) / T;
-        const hb = H.bei(H.hb, s0);
-        const e = (s, d, h) => { H.ort(s, d, o); return [o.x, o.y + h + 0.04, -o.z]; };
-        bahn.quad(e(s0, -hb, h0), e(s1, -hb, h1), e(s1, hb, h1), e(s0, hb, h0), q % 2 ? F(0xffc61a) : F(0x2a2d31));
-        bahn.quad(e(s0, -hb, 0), e(s1, -hb, 0), e(s1, -hb, h1), e(s0, -hb, h0), F(0xff7a1a));
-        bahn.quad(e(s0, hb, 0), e(s1, hb, 0), e(s1, hb, h1), e(s0, hb, h0), F(0xff7a1a));
-        if (q === T - 1) bahn.quad(e(s1, -hb, 0), e(s1, hb, 0), e(s1, hb, h1), e(s1, -hb, h1), F(0x8d8472));
-      }
-    }
-    // 3. Nebenwege
-    for (const w of S.wege) {
-      const P = w.pfad, holz = w.belag === 'holz';
-      const fw = holz ? [F(0x9a6a3a), F(0x86592e)] : [F(0xb59c6c), F(0xa89062)];
-      const fg = holz ? F(0x6b4424) : F(0x8f8a7c);
-      for (let i = 0; i < P.n - 1; i++) {
-        const j = i + 1, hb = P.hb[i], hb2 = P.hb[j];
-        bahn.quad(pt(P, i, -hb - w.rand, 0.035), pt(P, j, -hb2 - w.rand, 0.035), pt(P, j, hb2 + w.rand, 0.035), pt(P, i, hb + w.rand, 0.035), fw[holz ? i & 1 : (i >> 2) & 1]);
-        for (const s of [1, -1]) {
-          const mx = (P.x[i] + P.x[j]) / 2 + P.nx[i] * s * (hb + w.rand + 0.2), mz = (P.z[i] + P.z[j]) / 2 + P.nz[i] * s * (hb + w.rand + 0.2);
-          if (imKorridor(mx, mz, pfade[w.idx + 1], -0.4)) continue;
-          wandStueck(wand, P, i, j, s * (hb + w.rand), s * (hb2 + w.rand), holz ? 1.0 : 0.8, i % 4 === 0 ? F(0xff7a1a) : fg, holz ? 0.5 : 1.4);
-        }
-        if (holz && i % 8 === 4) {       // Brückenpfeiler
-          const bo = hoehe(P.x[i], P.z[i]).y;
-          bahn.box(P.x[i], (P.y[i] + bo) / 2 - 0.3, -P.z[i], 1.0, Math.max(0.5, P.y[i] - bo), hb * 2 + 1, F(0x5a5d62), Math.atan2(P.tz[i], P.tx[i]));
-        }
-      }
-    }
-    W.add(bahn.netz(this.mat)); W.add(wand.netz(this.mat, true));
-    S.wege.forEach((w, q) => { if (sperrGeo[q].p.length) { const n = sperrGeo[q].netz(this.mat); this.sperrNetze[q] = n; W.add(n); } });
+    this.baueBahn(S, W, pfade, imKorridor, hoehe);
 
     // 4. Wasser
     for (const ws of def.wasser || []) {
@@ -2932,7 +2845,7 @@ Object.assign(Grafik, {
     this.truemmer = [];
     this.kartObjekte = R.karts.map((k) => {
       const o = baueFahrzeug(k.fahrzeug, FARBEN[k.farbe % FARBEN.length].hex, FARBEN[k.farbe % FARBEN.length].lack);
-      o.schatten = new THREE.Mesh(new THREE.CircleGeometry(1.35, 12), this.matSchatten);
+      o.schatten = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.7), this.schattenMat());
       o.schatten.rotation.x = -Math.PI / 2;
       o.schild = baueSchildchen(k.name, FARBEN[k.farbe % FARBEN.length].hex);
       this.szene.add(o.gruppe); this.szene.add(o.schatten); this.szene.add(o.schild);
@@ -2968,9 +2881,10 @@ Object.assign(Grafik, {
       const blick = k.pblick + winkelDiff(k.blick, k.pblick) * alpha;
       k.sx = x; k.sy = y; k.sz = z; k.sblick = blick;           // dargestellte Position (für Kamera und Anzeige)
       this.bewegeAuto(o, k, x, y, z, blick, dt, R);
+      this.effekte(o, k, x, y, z, blick, dt, R);
       const boost = k.boostZeit > 0;
       o.schatten.position.set(x, Math.max(k.bodenY, -50) + 0.06, -z);
-      o.schatten.visible = this.qualitaet === 'niedrig' || k.luft;
+      o.schatten.rotation.z = blick;
       o.schild.position.set(x, y + 3.1, -z);
       // Teilchen
       const cx = Math.cos(k.richtung), cz = Math.sin(k.richtung);
@@ -2982,8 +2896,6 @@ Object.assign(Grafik, {
           Teilchen.neu(hx - cz * s, y + 0.15, hz + cx * s, -cx * 3 + (Math.random() - 0.5) * 5, 2 + Math.random() * 4, -cz * 3 + (Math.random() - 0.5) * 5, 0.25 + k.driftStufe * 0.08, 0.14 + k.driftStufe * 0.05, farbe, 14);
         }
       }
-      if (!k.luft && k.v > 6 && (!k.aufStrasse || k.schlamm) && Math.random() < 0.6)
-        Teilchen.neu(hx, y + 0.2, hz, (Math.random() - 0.5) * 3, 1 + Math.random() * 2, (Math.random() - 0.5) * 3, 0.6, 0.5 + Math.random() * 0.5, k.schlamm ? 0x5a4326 : 0xc9b48a, 2);
       if (boost) Teilchen.neu(hx - cx * 0.9, y + 0.6, hz - cz * 0.9, -cx * 6 + (Math.random() - 0.5) * 2, Math.random() * 2, -cz * 6 + (Math.random() - 0.5) * 2, 0.3, 0.3, Math.random() < 0.5 ? 0xffd21f : 0xff6a1a, -2);
       if (k.windAktiv && Math.random() < 0.5) Teilchen.neu(x + (Math.random() - 0.5) * 2.4, y + 0.5 + Math.random() * 1.2, z + (Math.random() - 0.5) * 2.4, -cx * 14, 0, -cz * 14, 0.22, 0.12, 0xffffff, 0);
     }
@@ -3185,6 +3097,7 @@ Object.assign(Grafik, {
       const w = a.w * Wd, h = a.h * Hh, x = a.x * Wd, y = Hh - a.y * Hh - h;
       Re.setViewport(x, y, w, h); Re.setScissor(x, y, w, h);
       a.kamera.aspect = w / h; a.kamera.updateProjectionMatrix();
+      Dunst.mat.uniforms.mass.value = (h * Re.getPixelRatio()) / (2 * Math.tan((a.kamera.fov * Math.PI) / 360));
       if (R) this.fuerAnsicht(R, a);
       Re.render(this.szene, a.kamera);
     }
@@ -3193,6 +3106,9 @@ Object.assign(Grafik, {
   // Effekte zu Ereignissen aus dem Rennen
   ereignis(e, R) {
     const k = e.k >= 0 ? R.karts[e.k] : null;
+    const ko = k ? this.kartObjekte[k.idx] : null;
+    if (ko && (e.typ === 'wand' || e.typ === 'treffer')) { this.beschmutze(ko, 'kratzer'); if (e.typ === 'treffer') ko.warnBis = this.zeit + 2.5; }
+    if (e.typ === 'landung' && k) for (let q = 0; q < 7; q++) Dunst.neu(k.x + (Math.random() - 0.5) * 2, k.y + 0.2, k.z + (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 5, 0.8, (Math.random() - 0.5) * 5, 1.0, 0.7, this.staubFarbe || 0xb9a886, 0.3, 2.2, 0);
     if (e.typ === 'landung' && k) Teilchen.wolke(k.x, k.y + 0.2, k.z, 10, 4 + e.a * 0.2, 0xc9b48a, 0.5, 0.5, 4);
     else if (e.typ === 'wand' && k) Teilchen.wolke(k.x, k.y + 0.5, k.z, 8, 6, 0xffd98a, 0.16, 0.3, 12);
     else if (e.typ === 'turbo' && k) Teilchen.wolke(k.x, k.y + 0.4, k.z, 12, 7, e.a === 2 ? 0xff8a1a : 0x4db8ff, 0.2, 0.35, 6);
@@ -4043,7 +3959,7 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
   schutz.position.y = 0.8; schutz.visible = false; gr.add(schutz);
   return {
     gruppe: gr, aufbau: auf, raeder, flammen, flamme: flammen[0], schutz, lenkrad, koerper, rueckMat, blinkMat, warnlicht, bild, def, hinten,
-    auspuff: def.auspuff || [[0, 0.4, 0.05]], radWinkel: 0, vAlt: 0, blickAlt: null, ax: 0, ay: 0, roll: 0, rollV: 0, nick: 0, nickV: 0, hub: 0, hubV: 0, schmutz: 0, kratzer: 0,
+    auspuff: def.auspuff || [[0, 0.4, 0.05]], radWinkel: 0, vAlt: 0, blickAlt: null, ax: 0, ay: 0, roll: 0, rollV: 0, nick: 0, nickV: 0, hub: 0, hubV: 0, schmutz: 0, kratzer: 0, spur: [[0, 0, 0, 0], [0, 0, 0, 0]], dreckZeit: 0, warnBis: 0,
     frei() { gr.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); for (const e of eigene) e.dispose(); },
   };
 }
@@ -4354,6 +4270,255 @@ const Ton = {
     }
   },
 };
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 8e: Fahrbahn und Boden mit Struktur und Relief, Markierungen,
+   Leitplanken, dazu Rauch, Staub, Reifenspuren und Schmutz am Auto
+   ══════════════════════════════════════════════════════════════════════════ */
+const WEISS3 = [1, 1, 1];
+
+Object.assign(Grafik, {
+  // Oberfläche aus dem Code: ein Farb-Bild und ein Relief, das man im Licht sieht.
+  // Liefert { mat, kachel } (kachel = Kantenlänge einer Kachel in m).
+  belag(art) {
+    const B = this._belag || (this._belag = {});
+    if (B[art]) return B[art];
+    const einfach = this.qualitaet === 'niedrig', n = einfach ? 256 : 512, zuf = zufallsGenerator(art.length * 131 + art.charCodeAt(0) * 7), h = new Float32Array(n * n);
+    const w1 = Struktur.wolkig(n, 4, 5, zuf);
+    let fn, kraft = 2, rau = 0.92, kachel = 6, durch = false;
+    if (art === 'asphalt') {                    // Körnung, helle Steinchen, Risse, Flicken mit Teerfuge
+      const riss = new Float32Array(n * n), flick = [];
+      for (let q = 0; q < 6; q++) {
+        let x = zuf() * n, y = zuf() * n, w = zuf() * TAU;
+        const l = 120 + zuf() * 260;
+        for (let s = 0; s < l; s++) {
+          w += (zuf() - 0.5) * 0.8; x += Math.cos(w); y += Math.sin(w);
+          const xi = (((x | 0) % n) + n) % n, yi = (((y | 0) % n) + n) % n;
+          riss[yi * n + xi] = 1; if (zuf() < 0.35) riss[yi * n + ((xi + 1) % n)] = 0.6;
+        }
+      }
+      for (let q = 0; q < 2; q++) flick.push([zuf() * n * 0.6, zuf() * n * 0.6, 70 + zuf() * 90, 50 + zuf() * 70, q ? 7 : -9]);
+      fn = (i, x, y) => {
+        const k = zuf();
+        let t = 0;
+        for (const f of flick) if (x > f[0] && x < f[0] + f[2] && y > f[1] && y < f[1] + f[3]) t = Math.min(x - f[0], f[0] + f[2] - x, y - f[1], f[1] + f[3] - y) < 3 ? -24 : f[4];
+        const g = 60 + (w1[i] - 0.5) * 30 + (k - 0.5) * 22 + (k > 0.988 ? 42 : 0) - riss[i] * 36 + t;
+        h[i] = k * 0.55 + w1[i] * 0.5 - riss[i] * 1.8 - (t < -20 ? 0.6 : 0);
+        return [g, g + 1, g + 5];
+      };
+    } else if (art === 'schotter') {            // lose Steine
+      const st = Struktur.wolkig(n, 40, 2, zuf); kraft = 3.2; kachel = 5;
+      fn = (i) => { const k = zuf(), s = st[i], g = 118 + s * 90 + (k - 0.5) * 30 + (w1[i] - 0.5) * 30; h[i] = s * 1.6 + k * 0.3; return [g, g * 0.95, g * 0.86]; };
+    } else if (art === 'holz') {                // Bohlen quer zur Fahrt, mit Fugen, Maserung und Nägeln
+      const ton = [], bh = n / 16;
+      for (let q = 0; q < 16; q++) ton.push(zuf());
+      kraft = 2.4; kachel = 4; rau = 0.8;
+      fn = (i, x, y) => {
+        const b = (y / bh) | 0, r = y % bh, fuge = r < 2, m = Math.sin(x * 0.11 + w1[i] * 16 + b * 5) * 0.5 + 0.5, nagel = r > bh * 0.4 && r < bh * 0.55 && x % (n / 2) > 14 && x % (n / 2) < 19;
+        const g = fuge ? 30 : 118 + ton[b] * 50 + m * 26 + (zuf() - 0.5) * 12 - (nagel ? 60 : 0);
+        h[i] = fuge ? -1.5 : m * 0.35 + ton[b] * 0.5;
+        return [g, g * 0.74, g * 0.5];
+      };
+    } else if (art === 'randstein') {           // Beton mit Querrippen (Randsteine, Betonelemente)
+      kraft = 2.5; kachel = 2; rau = 0.75;
+      fn = (i, x, y) => { const z = (y % (n / 8)) / (n / 8), g = 214 + (zuf() - 0.5) * 34 + (w1[i] - 0.5) * 30; h[i] = z * 1.2 + zuf() * 0.2; return [g, g, g]; };
+    } else if (art === 'farbe') {               // abgenutzte Markierungsfarbe: Löcher im Anstrich
+      const st = Struktur.wolkig(n, 12, 4, zuf); kraft = 0; durch = true; kachel = 3;
+      fn = (i) => { const a = clamp((st[i] - 0.3) * 8, 0, 1) * (zuf() < 0.93 ? 1 : 0.3), g = 236 + (zuf() - 0.5) * 30; return [g, g, g, a * 255]; };
+    } else {                                    // 'boden': Wiese, Erde, Kies (die Farbe kommt aus dem Gelände)
+      const st = Struktur.wolkig(n, 28, 3, zuf); kraft = 2.6; kachel = 9; rau = 0.95;
+      fn = (i) => { const k = zuf(), g = 178 + st[i] * 60 + (k - 0.5) * 34; h[i] = st[i] * 1.5 + k * 0.4; return [g, g, g]; };
+    }
+    const o = { map: Struktur.textur(Struktur.bild(n, fn), true), vertexColors: true, side: THREE.DoubleSide };
+    if (durch) Object.assign(o, { transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    let mat;
+    if (einfach) mat = new THREE.MeshLambertMaterial(o);
+    else { o.roughness = rau; o.metalness = 0; if (kraft) o.normalMap = Struktur.textur(Struktur.relief(h, n, kraft), false); mat = new THREE.MeshStandardMaterial(o); }
+    return (B[art] = { mat, kachel });
+  },
+  // Wie stark rüttelt der Belag das Auto? (Wert für die Federung)
+  belagRau(k) { return 0.003; },
+
+  // Boden: weiche Formen statt Dreiecksflächen, Farbe je nach Nähe zur Strecke und Steilheit
+  baueBoden(W, raster, nx, nz, zelle, B) {
+    const F = Geo.farbe, f = new Form(), fGras = F(B.gras || 0x8a9a4c), fKies = F(B.kies || 0xb9a886), fFels = F(B.fels || 0x8d8472), zuf = zufallsGenerator(4711), K = this.belag('boden'), N = nx + 1;
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) {
+      const a = raster[j * N + i], l = raster[j * N + Math.max(0, i - 1)], r = raster[j * N + Math.min(nx, i + 1)], o = raster[Math.max(0, j - 1) * N + i], u = raster[Math.min(nz, j + 1) * N + i];
+      const steil = Math.max(Math.abs(l[1] - r[1]), Math.abs(o[1] - u[1])) / (2 * zelle);
+      const t = clamp((steil - 0.3) / 0.25, 0, 1), k = clamp(1 - (a[3] - 4) / 9, 0, 1), hell = (0.9 + zuf() * 0.2) * 1.5;
+      f.pkt(a[0], a[1], a[2], [0, 1, 2].map((q) => lerp(lerp(fGras[q], fKies[q], k), fFels[q], t) * hell), a[0] / K.kachel, a[2] / K.kachel);
+    }
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const A = j * N + i; f.vier(A, A + 1, A + N + 1, A + N); }
+    W.add(f.netz(K.mat));
+  },
+
+  // Fahrbahn, Randsteine, Seitenstreifen, Markierungen, Leitplanken, Nebenwege
+  baueBahn(S, W, pfade, imKorridor, hoehe) {
+    const def = S.def, H = S.haupt, n = H.n, F = Geo.farbe, B = def.boden || {}, zuf = zufallsGenerator(991), einfach = this.qualitaet === 'niedrig';
+    const pt = (P, i, d, dy) => [P.x[i] + P.nx[i] * d, P.y[i] + dy, -(P.z[i] + P.nz[i] * d)];
+    const formen = {}, form = (art) => formen[art] || (formen[art] = new Form());
+    // Band entlang eines Pfads: fn(i, q) liefert [d0, y0, d1, y1, farbe] oder null (Lücke)
+    const band = (f, P, a, b, fn, kachel) => {
+      let vor = -1;
+      for (let q = a; q <= b; q++) {
+        const i = P.geschlossen ? q % P.n : q, e = fn(i, q);
+        if (!e) { vor = -1; continue; }
+        const v = (q * P.ds) / kachel, c = e[4] || WEISS3;
+        const A = f.pkt(P.x[i] + P.nx[i] * e[0], P.y[i] + e[1], -(P.z[i] + P.nz[i] * e[0]), c, e[0] / kachel, v);
+        f.pkt(P.x[i] + P.nx[i] * e[2], P.y[i] + e[3], -(P.z[i] + P.nz[i] * e[2]), c, e[2] / kachel, v);
+        if (vor >= 0) f.vier(vor, A, A + 1, vor + 1);
+        vor = A;
+      }
+    };
+    const wandStueck = (geo, P, i, j, d0i, d0j, hoch, f, tief) => {
+      const s = d0i > 0 ? 1 : -1;
+      const a = pt(P, i, d0i, 0), b = pt(P, j, d0j, 0), a2 = pt(P, i, d0i, hoch), b2 = pt(P, j, d0j, hoch);
+      const c2 = pt(P, i, d0i + s * 0.45, hoch), d2 = pt(P, j, d0j + s * 0.45, hoch), c = pt(P, i, d0i + s * 0.45, -tief), d = pt(P, j, d0j + s * 0.45, -tief);
+      geo.quad(a, b, b2, a2, f); geo.quad(a2, b2, d2, c2, [f[0] * 1.08, f[1] * 1.08, f[2] * 1.08]); geo.quad(c2, d2, d, c, [f[0] * 0.8, f[1] * 0.8, f[2] * 0.8]);
+    };
+    const st = this.stimmung, lc = hexRgb(st.himmelLicht), lk = clamp(st.licht, 0.55, 1) / 255;
+    Dunst.mat.uniforms.licht.value.set(lc[0] * lk, lc[1] * lk, lc[2] * lk);
+    this.staubFarbe = B.kies || 0xb9a886;
+
+    // 1. Fahrbahn: Belag pro Abschnitt (def.belaege = [{ von, bis, art }]), sonst def.belag
+    const arten = new Array(n).fill(def.belag || 'asphalt');
+    for (const q of def.belaege || []) S.fuerBereich(q.von, q.bis, (i) => { arten[i] = q.art; });
+    this.belagArten = arten;
+    const hell = (i) => { const v = 0.92 + 0.14 * Math.sin(i * 0.37) * Math.sin(i * 0.071 + 1); return [v, v, v]; };
+    for (const art of new Set(arten)) band(form(art), H, 0, n, (i) => (arten[i] === art || arten[(i + n - 1) % n] === art ? [-H.hb[i] + 0.9, 0, H.hb[i] - 0.9, 0, hell(i)] : null), this.belag(art).kachel);
+    // rot-weisse Randsteine (jeder Block eigene Punkte, damit die Farben scharf wechseln)
+    const beton = form('randstein'), rot = F(0xd8281e), ws = F(0xf2efe6);
+    for (let q = 0; q < n; q += 2) for (const s of [1, -1]) band(beton, H, q, q + 2, (i) => [s * (H.hb[i] - 0.9), 0.005, s * H.hb[i], 0.07, (q >> 1) & 1 ? rot : ws], 2);
+
+    // 2. Abgrenzung pro Abschnitt und Seite: 0 nichts · 1 Leitplanke · 2 Betonelemente (Baustelle) · 3 Brückenmauer · 4+ Sperre einer Abkürzung
+    const seg = [new Int8Array(n), new Int8Array(n)], bau = new Uint8Array(n);
+    for (const sl of S.slots) if (sl.art === 'hindernis' || sl.art === 'rampe') for (let q = -7; q <= 7; q++) bau[(sl.i + q + n) % n] = 1;
+    for (let i = 0; i < n; i++) for (let e = 0; e < 2; e++) {
+      const s = e ? -1 : 1, j = (i + 1) % n, r = s > 0 ? S.randL[i] : S.randR[i];
+      if (s > 0 ? S.offenL[i] : S.offenR[i]) continue;
+      const mx = (H.x[i] + H.x[j]) / 2 + H.nx[i] * s * (H.hb[i] + r + 0.2), mz = (H.z[i] + H.z[j]) / 2 + H.nz[i] * s * (H.hb[i] + r + 0.2), q = imKorridor(mx, mz, pfade[0], -0.4);
+      seg[e][i] = !q ? (S.bruecke[i] ? 3 : bau[i] ? 2 : 1) : q.weg.art === 'abkuerzung' ? 4 + q.weg.idx : 0;
+    }
+    const D = (i, s) => H.hb[i] + (s > 0 ? S.randL[i] : S.randR[i]) + WV;
+    const kies = F(B.kies || 0xb9a886, 2.3), sch = form('schotter'), stahl = F(0xb4bac0), pf = F(0x5a6066), plank = new Form(), fest = new Geo();
+    this.sperrNetze = S.wege.map(() => null);
+    const sperrGeo = S.wege.map(() => new Geo());
+    for (let e = 0; e < 2; e++) {
+      const s = e ? -1 : 1, istP = (i) => seg[e][i] === 1 || seg[e][(i + n - 1) % n] === 1;
+      band(sch, H, 0, n, (i) => [s * H.hb[i], 0.05, s * D(i, s), -0.08, kies], 5);                       // Seitenstreifen
+      band(sch, H, 0, n, (i) => (seg[e][i] === 1 || seg[e][i] === 2 ? [s * D(i, s), -0.08, s * (D(i, s) + 2.6), -0.95, kies] : null), 5);   // Böschung
+      // Leitplanke: gewelltes Stahlband auf Pfosten
+      for (const p of [[0, 0.44, 0, 0.55], [0, 0.55, 0.045, 0.6], [0.045, 0.6, 0.045, 0.64], [0.045, 0.64, 0, 0.69], [0, 0.69, 0, 0.8]])
+        band(plank, H, 0, n, (i) => (istP(i) ? [s * (D(i, s) + p[0]), p[1], s * (D(i, s) + p[2]), p[3], stahl] : null), 3);
+      for (let i = 0; i < n; i += 2) if (seg[e][i] === 1) { const o = pt(H, i, s * (D(i, s) + 0.12), 0.3); plank.quader(o[0], o[1], o[2], 0.09, 0.9, 0.13, pf, Math.atan2(H.tz[i], H.tx[i])); }
+      // Betonelemente an den Baustellen, abwechselnd rot und weiss
+      for (let q = 0; q < n; q += 2) if (seg[e][q] === 2 || seg[e][(q + 1) % n] === 2) {
+        const f = (q >> 1) & 1 ? rot : F(0xeeeae0);
+        for (const p of [[-0.34, 0, -0.14, 0.26], [-0.14, 0.26, -0.07, 0.84], [-0.07, 0.84, 0.1, 0.84], [0.1, 0.84, 0.2, -0.4]]) band(beton, H, q, q + 2, (i) => [s * (D(i, s) + p[0]), p[1], s * (D(i, s) + p[2]), p[3], f], 2);
+      }
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n, t = seg[e][i];
+        if (t === 3) wandStueck(fest, H, i, j, s * D(i, s), s * D(j, s), 1.1, i & 1 ? F(0xc2beb2) : F(0xaeaa9e), 0.4);
+        else if (t >= 4) wandStueck(sperrGeo[t - 4], H, i, j, s * D(i, s), s * D(j, s), 1.25, i & 1 ? F(0xe0362c) : F(0xf5f1e6), 0.2);
+      }
+    }
+
+    // 3. Markierungen: Randlinien, Mittellinie, Start/Ziel, Startplätze, Richtungspfeile, Schachtdeckel
+    const mk = form('farbe'), wl = F(0xf4f1e4), o1 = {};
+    const ort = (s, d, y) => { H.ort(((s % S.laenge) + S.laenge) % S.laenge, d, o1); return [o1.x, o1.y + (y || 0.025), -o1.z]; };
+    const fleck = (f, s0, s1, d0, d1, farbe, d2, d3) => f.tafel(ort(s0, d0), ort(s1, d2 == null ? d0 : d2), ort(s1, d3 == null ? d1 : d3), ort(s0, d1), farbe, d0 / 3, s0 / 3, d1 / 3, s1 / 3);
+    for (const s of [1, -1]) band(mk, H, 0, n, (i) => [s * (H.hb[i] - 1.2) - 0.07, 0.02, s * (H.hb[i] - 1.2) + 0.07, 0.02, wl], 3);
+    band(mk, H, 0, n, (i, q) => (q % 6 <= 2 ? [-0.08, 0.02, 0.08, 0.02, wl] : null), 3);
+    const hb0 = H.hb[0] - 0.9;
+    for (let r = 0; r < 3; r++) for (let q = 0; q < 14; q++) fleck(mk, r * 0.6, r * 0.6 + 0.6, -hb0 + (q * 2 * hb0) / 14, -hb0 + ((q + 1) * 2 * hb0) / 14, (q + r) % 2 ? F(0x101010) : wl);
+    for (let j = 0; j < 12; j++) {
+      const p = S.startplaetze[j];
+      fleck(mk, p.s + 1.9, p.s + 2.05, p.d - 1.1, p.d + 1.1, wl); fleck(mk, p.s + 0.5, p.s + 1.9, p.d - 1.1, p.d - 0.98, wl); fleck(mk, p.s + 0.5, p.s + 1.9, p.d + 0.98, p.d + 1.1, wl);
+    }
+    for (let i = 40; i < n - 20; i += 60) if (Math.abs(H.kr[i]) < 0.004 && !S.bruecke[i]) {
+      const s = i * H.ds, d = H.hb[i] * 0.45;
+      fleck(mk, s, s + 2.6, d - 0.16, d + 0.16, wl); fleck(mk, s + 2.6, s + 4.2, d - 0.62, d + 0.62, wl, d, d);
+    }
+    for (let i = 25; i < n; i += 70) { const s = i * H.ds, d = (zuf() - 0.5) * H.hb[i]; fleck(mk, s, s + 0.7, d - 0.35, d + 0.35, F(0x2c2f33)); }
+    // dunkler Gummiabrieb auf der Ideallinie, Ölflecken und Flicken
+    const gm = new Form();
+    band(gm, H, 0, n, (i) => { const b = 0.5 + Math.min(1.2, Math.abs(S.idealKr[i]) * 70); return [S.ideal[i] - b, 0.012, S.ideal[i] + b, 0.012, WEISS3]; }, 3);
+    for (let q = 0; q < n / 22; q++) { const i = Math.floor(zuf() * n), s = i * H.ds, d = (zuf() - 0.5) * (H.hb[i] * 1.5), l = 1 + zuf() * 2.4, b = 0.4 + zuf() * 0.9; fleck(gm, s, s + l, d - b, d + b, WEISS3); }
+
+    // 4. feste Schanzen
+    for (const sch2 of S.schanzen) {
+      const o = {}, T = 4;
+      for (let q = 0; q < T; q++) {
+        const s0 = sch2.s + (sch2.laenge * q) / T, s1 = sch2.s + (sch2.laenge * (q + 1)) / T, h0 = (sch2.hoehe * q) / T, h1 = (sch2.hoehe * (q + 1)) / T, hb = H.bei(H.hb, s0);
+        const e = (s, d, h) => { H.ort(s, d, o); return [o.x, o.y + h + 0.04, -o.z]; };
+        fest.quad(e(s0, -hb, h0), e(s1, -hb, h1), e(s1, hb, h1), e(s0, hb, h0), q % 2 ? F(0xffc61a) : F(0x2a2d31));
+        fest.quad(e(s0, -hb, 0), e(s1, -hb, 0), e(s1, -hb, h1), e(s0, -hb, h0), F(0xff7a1a)); fest.quad(e(s0, hb, 0), e(s1, hb, 0), e(s1, hb, h1), e(s0, hb, h0), F(0xff7a1a));
+        if (q === T - 1) fest.quad(e(s1, -hb, 0), e(s1, hb, 0), e(s1, hb, h1), e(s1, -hb, h1), F(0x8d8472));
+      }
+    }
+    // 5. Nebenwege: Holzbohlen oder Schotter
+    for (const w of S.wege) {
+      const P = w.pfad, holz = w.belag === 'holz', art = holz ? 'holz' : 'schotter', fw = holz ? WEISS3 : F(0xb59c6c, 2.2), fg = holz ? F(0x6b4424) : F(0x8f8a7c);
+      band(form(art), P, 0, P.n - 1, (i) => [-P.hb[i] - w.rand, 0.035, P.hb[i] + w.rand, 0.035, fw], this.belag(art).kachel);
+      for (let i = 0; i < P.n - 1; i++) {
+        const j = i + 1, hb = P.hb[i], hb2 = P.hb[j];
+        for (const s of [1, -1]) {
+          const mx = (P.x[i] + P.x[j]) / 2 + P.nx[i] * s * (hb + w.rand + 0.2), mz = (P.z[i] + P.z[j]) / 2 + P.nz[i] * s * (hb + w.rand + 0.2);
+          if (imKorridor(mx, mz, pfade[w.idx + 1], -0.4)) continue;
+          wandStueck(fest, P, i, j, s * (hb + w.rand), s * (hb2 + w.rand), holz ? 1.0 : 0.8, i % 4 === 0 ? F(0xff7a1a) : fg, holz ? 0.5 : 1.4);
+        }
+        if (holz && i % 8 === 4) { const bo = hoehe(P.x[i], P.z[i]).y; fest.box(P.x[i], (P.y[i] + bo) / 2 - 0.3, -P.z[i], 1.0, Math.max(0.5, P.y[i] - bo), hb * 2 + 1, F(0x5a5d62), Math.atan2(P.tz[i], P.tx[i])); }
+      }
+    }
+    for (const art in formen) { const m = formen[art].netz(this.belag(art).mat); if (art === 'farbe') m.renderOrder = 0.2; W.add(m); }
+    const gn = gm.netz(new THREE.MeshLambertMaterial({ color: 0x050506, transparent: true, opacity: 0.2, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1, side: THREE.DoubleSide }));
+    gn.renderOrder = 0.1; W.add(gn);
+    if (plank.n) W.add(plank.netz(einfach ? this.mat : new THREE.MeshStandardMaterial({ vertexColors: true, metalness: 0.75, roughness: 0.42, side: THREE.DoubleSide }), true));
+    W.add(fest.netz(this.mat, true));
+    S.wege.forEach((w, q) => { if (sperrGeo[q].p.length) { const m = sperrGeo[q].netz(this.mat); this.sperrNetze[q] = m; W.add(m); } });
+  },
+
+  // weicher, dunkler Kontaktschatten unter dem Auto
+  schattenMat() {
+    if (!this._schatten) {
+      const c = document.createElement('canvas'); c.width = c.height = 64;
+      const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 4, 32, 32, 32);
+      g.addColorStop(0, 'rgba(0,0,0,.8)'); g.addColorStop(0.55, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+      this._schatten = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 });
+    }
+    return this._schatten;
+  },
+
+  // Rauch, Staub, Abgas, Reifenspuren und Schmutz eines Autos (pro Bild)
+  effekte(o, k, x, y, z, blick, dt, R) {
+    if (dt <= 0) return;
+    const c = Math.cos(blick), s = Math.sin(blick), hr = o.def.rad[o.def.rad.length - 1], am = !k.luft, v = k.v, zf = () => Math.random() - 0.5;
+    const strasse = k.aufStrasse && !k.schlamm, staub = k.schlamm ? 0x4a3826 : this.staubFarbe || 0xb9a886;
+    const zieht = am && v > 3 && ((k.drift && strasse) || o.ax < -9 || !strasse);
+    for (let q = 0; q < 2; q++) {
+      const lz = (q ? 1 : -1) * hr[1], wx = x + c * hr[0] - s * lz, wz = z + s * hr[0] + c * lz, alt = o.spur[q];
+      if (zieht && alt[3]) {                                            // Driftspur auf Asphalt, Fahrspur neben der Strasse
+        if (strasse) Spuren.strich(alt[0], alt[1], alt[2], wx, y + 0.03, wz, hr[3] * 0.8, 0.012, 0.012, 0.012, k.drift ? 0.5 : 0.36);
+        else Spuren.strich(alt[0], alt[1], alt[2], wx, y + 0.03, wz, hr[3] * 0.9, 0.1, 0.075, 0.05, 0.3);
+      }
+      alt[0] = wx; alt[1] = y + 0.03; alt[2] = wz; alt[3] = zieht ? 1 : 0;
+      if (am && k.drift && strasse && Math.random() < 0.7) Dunst.neu(wx, y + 0.12, wz, -c * 1.5 + zf() * 2, 0.5 + Math.random(), -s * 1.5 + zf() * 2, 1.0, 0.45, 0xe2e2e2, 0.24, 1.8, -0.5);           // Reifenrauch
+      else if (am && v > 5 && !strasse && Math.random() < 0.55) Dunst.neu(wx, y + 0.15, wz, -c * 2 + zf() * 3, 0.7 + Math.random(), -s * 2 + zf() * 3, 1.2, 0.55, staub, k.schlamm ? 0.5 : 0.3, 2, k.schlamm ? 3 : -0.3);   // Staubfahne
+    }
+    const start = R.zeit > -3 && R.zeit < 1.6, boost = k.boostZeit > 0;
+    if (boost || (start && Math.random() < (R.zeit > 0 ? 0.7 : 0.12))) for (const a of o.auspuff) {
+      const lx = o.hinten - 0.08, ex = x + c * lx + s * a[0], ez = z + s * lx - c * a[0];
+      if (boost) Dunst.neu(ex, y + a[1], ez, -c * 7 + zf(), 0.3, -s * 7 + zf(), 0.2, 0.3, Math.random() < 0.5 ? 0xffe27a : 0xff8a2a, 0.75, 0.9, 0);          // Flammen beim Turbo
+      else Dunst.neu(ex, y + a[1], ez, -c * 1.4 + zf(), 0.4, -s * 1.4 + zf(), 0.9, 0.2, 0x4a4d52, 0.32, 1.3, -0.7);                                             // Abgas beim Start
+    }
+    o.dreckZeit += dt;
+    if (o.dreckZeit > 1.3 && am && v > 6) {                              // Schmutz sammelt sich am Auto
+      o.dreckZeit = 0;
+      const art = R.S.def.schmutz || 'staub';
+      if (k.schlamm) this.beschmutze(o, 'schlamm', 3); else if (!k.aufStrasse) this.beschmutze(o, art, 2.5); else if (Math.random() < 0.3) this.beschmutze(o, art, 0.8);
+    }
+  },
+});
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 10: Eingabe – Tastatur, Gamepad, Touch
    Jedes Eingabegerät liefert dieselben «Tasten» wie in LEERE_EINGABE.
