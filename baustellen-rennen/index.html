@@ -222,11 +222,15 @@ const CONFIG = {
   belag: {
     asphalt:  { tempo: 1.0,  lenk: 1.0,  ruettel: 1 },
     pflaster: { tempo: 0.99, lenk: 0.97, ruettel: 3.2 },   // Kopfsteinpflaster: rüttelt, etwas weniger Halt
+    platten:  { tempo: 1.0,  lenk: 0.98, ruettel: 1.4 },   // grosse Steinplatten (Tempelhof): fast wie Asphalt
     schotter: { tempo: 0.97, lenk: 0.95, ruettel: 2.6 },   // Naturstrasse
     schnee:   { tempo: 0.96, lenk: 0.9,  ruettel: 1.6 },   // fester Schnee: weicher, lenkt träger
     eis:      { tempo: 1.0,  lenk: 0.74, ruettel: 0.6 },   // Eis: schnell, aber das Auto dreht nur zögernd ein
     holz:     { tempo: 1.0,  lenk: 1.0,  ruettel: 2.2 },   // Bohlen
     kies:     { tempo: 1.0,  lenk: 1.0,  ruettel: 2.6 },   // Nebenwege
+    sand:     { tempo: 0.95, lenk: 0.9,  ruettel: 1.8 },   // Wüstensand: bremst, das Heck schwimmt etwas
+    nass:     { tempo: 1.0,  lenk: 0.86, ruettel: 1 },     // nasser Asphalt: gleich schnell, aber weniger Halt in Kurven
+    gitter:   { tempo: 1.0,  lenk: 0.94, ruettel: 2.4 },   // Gitterrost auf Brücken: summt und rüttelt
   },
 
   drift: {
@@ -244,6 +248,18 @@ const CONFIG = {
   boost: {
     beschleunigung: 2.6,   // im Boost beschleunigt man so viel stärker (Faktor)
     offroadFaktor: 0.85,   // im Boost ist man neben der Fahrbahn weniger langsam
+  },
+
+  // ── Boost-Felder: leuchtende Pfeilfelder auf der Fahrbahn ───────────────
+  // Wer darüberfährt, bekommt einmal Schub wie ein Mini-Turbo. Die Felder liegen meist an Kurvenausgängen
+  // etwas neben der Ideallinie: Wer sie nimmt, fährt einen kleinen Umweg, ist danach aber schneller.
+  boostfeld: {
+    anzahl: 5,             // so viele Felder setzt die Strecke selbst, wenn sie keine eigene Liste hat (4–6 sind gut)
+    dauer: 1.0,            // so lange hält der Schub (s)
+    staerke: 1.2,          // Tempo-Faktor im Schub (Mini-Turbo: 1.2)
+    laenge: 7,             // Länge eines Feldes in Fahrtrichtung (m)
+    breite: 4,             // Breite eines Feldes (m); man trifft es, wenn die Fahrzeugmitte darauf liegt (+0.7 m Toleranz)
+    neben: 0.55,           // automatische Felder liegen so weit von der Ideallinie zur Mitte hin (Anteil, 0 = auf der Linie)
   },
 
   // ── Windschatten ────────────────────────────────────────────────────────
@@ -356,6 +372,7 @@ const CONFIG = {
     vorausHindernis: 0.8,  // vor einem Hindernis zielen Bots kürzer voraus (Anteil), damit sie die Lücke genau treffen
     vorausZeit: 0.42,      // Bots zielen auf einen Punkt, der so viele Sekunden voraus liegt
     sichtweite: 75,        // so weit voraus beachten Bots Hindernisse (m)
+    boostSicht: 40,        // so weit vor einem Boost-Feld ziehen Bots langsam zu ihm hin (m)
   },
 
   // ── Netzwerk ────────────────────────────────────────────────────────────
@@ -802,6 +819,151 @@ const STRECKEN = {
       { art: 'yaks', x: 150, z: -16 },                                               // Yaks weiden aussen an der ersten Kurve
     ],
   },
+  // ── Ägypten: Mittagssonne am Nil, durch das Tempeltor und die Säulenhalle, hinauf zu den Pyramiden, über die Dünen ──
+  aegypten: {
+    name: 'Ägypten',
+    text: 'Mittagsrennen am Nil: durch Tempeltor und Säulenhalle, an Sphinx und Pyramiden vorbei, über die Dünen.',
+    breite: 15,
+    rand: 3.5,
+    belag: 'asphalt',
+    szene: 'wueste', horizont: 'wueste', seite: 'sand', randstein: [0xa89a7c, 0xd8cbb0], schmutz: 'staub', staub: 0xd8bd8e,
+    wellen: 0.6, fern: 0.8,
+    himmel: [0x5d9be0, 0xf2e3c4],
+    boden: { gras: 0xdcc596, kies: 0xcfb183, fels: 0xa8875e, hell: 1.25 },
+    wegFarbe: 0xcdb48a,
+    belagTon: { platten: 0xf2dcae },                                                // Sandsteinplatten im Tempel
+    dorf: [[-130, 120]],                                                            // Häuser und Marktstände am Start (Streckenmeter)
+    punkte: [
+      [-80, 0, 2], [-20, 0, 2], [40, 0, 2], [100, 0, 2],                            // Start/Ziel auf der Uferstrasse am Nil
+      [150, 0, 2, 13],                                                              // durch das Tempeltor
+      [200, 0, 2], [250, 0, 2], [290, 0, 2.2],                                      // Sphinx-Allee und Säulenhalle
+      [310, 0, 2.4], [332.6, 9.4, 2.8], [342, 32, 3.2], [332.6, 54.6, 3.6], [310, 64, 4],   // Kehre (links)
+      [270, 64, 5], [235, 64, 6.5], [215, 64, 7.2],
+      [197.3, 71.3, 8.2], [190, 89, 9.5],                                           // rechts hinauf zum Plateau
+      [190, 120, 12.5], [190, 160, 16], [190, 200, 19], [190, 240, 20.5],           // lange Steigung, rechts die Pyramiden
+      [180, 268, 21], [160, 285, 21], [135, 290, 20.5], [110, 282, 20], [85, 290, 19.5], [62, 304, 19],   // schnelle Kurven durch die Dünen
+      [40, 310, 18.6], [10, 312, 16.5], [-25, 310, 13],                             // Dünenkamm mit Schanze, dann bergab
+      [-50, 302, 11], [-68, 312, 10], [-90, 304, 9],                                // Schikane
+      [-118, 296, 8], [-140, 278, 7], [-152, 255, 6],
+      [-158, 220, 5], [-160, 180, 4.2], [-160, 140, 3.6], [-158, 100, 3],           // lange Gerade zurück zum Fluss
+      [-155, 70, 2.6], [-145, 42, 2.3], [-128, 18, 2.1], [-105, 4, 2],              // Schlusskurve auf die Uferstrasse
+    ],
+    belaege: [
+      { von: [128, 0], bis: [300, 0], art: 'platten' },                             // Steinplatten im Tempel
+      { von: [190, 150], bis: [-50, 302], art: 'sand' },                            // Plateau und Dünen
+    ],
+    raender: [{ von: [138, 0], bis: [162, 0], seite: 0, rand: 0.6 }],
+    fluesse: [{ z: -48, breite: 46, y: -0.8, ufer: 1.3, x0: -440, x1: 440, farbe: 0x1f4a5a }],
+    schanzen: [{ pos: [30, 311], laenge: 10, hoehe: 1.6 }],
+    wege: [
+      { id: 'hof', art: 'abkuerzung', name: 'Tempelhof', breite: 8, rand: 1.2, belag: 'sand',
+        punkte: [[286, 0], [287, 16, 2.9], [288, 32, 3.3], [287, 48, 3.8], [286, 64]] },
+      { id: 'oase', art: 'umleitung', name: 'Oasenweg', breite: 12, rand: 1.5, belag: 'kies',
+        punkte: [[190, 108], [174, 126], [160, 152], [156, 182], [164, 210], [190, 230]] },
+    ],
+    slots: [
+      { id: 'R1', art: 'rampe', pos: [20, 0] },
+      { id: 'R2', art: 'rampe', pos: [190, 175] },
+      { id: 'R3', art: 'rampe', pos: [-160, 160] },
+      { id: 'A1', art: 'abkuerzung', weg: 'hof' },
+      { id: 'H1', art: 'hindernis', pos: [60, 0] },
+      { id: 'H2', art: 'hindernis', pos: [230, 0] },
+      { id: 'H3', art: 'hindernis', pos: [342, 32] },
+      { id: 'H4', art: 'hindernis', pos: [190, 215] },
+      { id: 'H5', art: 'hindernis', pos: [110, 282] },
+      { id: 'H6', art: 'hindernis', pos: [-68, 312] },
+      { id: 'H7', art: 'hindernis', pos: [-158, 220] },
+      { id: 'H8', art: 'hindernis', pos: [-128, 18] },
+      { id: 'U1', art: 'umleitung', weg: 'oase' },
+    ],
+    frei: [[280, 200, 70], [300, 320, 56], [220, 360, 34], [245, 105, 22], [60, 240, 20], [-20, -22, 18]],
+    gelaende: [[300, 250, 8, 90], [300, 330, 10, 80], [70, 250, 10, 60], [120, 380, 14, 60], [-40, 380, 12, 60], [20, 210, 7, 45],
+      [-280, 200, 25, 110], [-300, 420, 30, 120], [420, 420, 35, 140], [-60, 160, 5, 50]],
+    deko: [
+      { art: 'bogen', s: 0 },
+      { art: 'tribuene', x: -20, z: 24, dreh: 3.1416 },
+      { art: 'tempeltor', s: 230 },                                                 // Pylon über der Fahrbahn (Meter ab Start)
+      { art: 'allee', s0: 248, s1: 300 },                                           // liegende Löwen beidseits
+      { art: 'saeulenhalle', s0: 306, s1: 368 },
+      { art: 'obelisk', x: 138, z: 17, granit: 1 }, { art: 'obelisk', x: 138, z: -17, granit: 1 },
+      { art: 'pyramide', x: 280, z: 200, a: 100, h: 66 },
+      { art: 'pyramide', x: 300, z: 320, a: 78, h: 52 },
+      { art: 'pyramide', x: 220, z: 360, a: 40, h: 26 },
+      { art: 'pyramide', x: 238, z: 140, a: 14, h: 9 }, { art: 'pyramide', x: 238, z: 160, a: 14, h: 9 },
+      { art: 'sphinx', x: 245, z: 105, dreh: 3.1416 },                              // blickt nach Westen zur Strasse
+      { art: 'feluke', x: -40, z: -45, dreh: 0 }, { art: 'feluke', x: 120, z: -54, dreh: 3.1 }, { art: 'feluke', x: 260, z: -40, dreh: 0.3 },
+      { art: 'karawane', x: 60, z: 240, dreh: 0.4 },
+    ],
+  },
+  // ── New York: Nachtrennen durch Häuserschluchten und über den Leuchtreklame-Platz, über die Hängebrücke, an der Uferpromenade entlang, über die Stahlbrücke und durch den Park ──
+  newyork: {
+    name: 'New York',
+    text: 'Nachtrennen auf nassen Strassen: Leuchtreklamen, Hängebrücke, Skyline am Fluss, Stahlbrücke und Park.',
+    breite: 15,
+    rand: 3.5,
+    belag: 'nass',
+    szene: 'grossstadt', horizont: 'skyline', seite: 'platten', randstein: [0x6c7178, 0xa4a8ae], schmutz: 'staub', staub: 0x8a8f96,
+    wellen: 0.1, fern: 0.05,
+    boden: { gras: 0x5a5d62, kies: 0x64676c, fels: 0x5c5e62, hell: 0.95,                   // Beton und Asphalt; Rasen nur in den Parks
+      rasen: [[-330, 8, -150, 152], [-175, 284, 150, 326]], rasenFarbe: 0x3d5a30 },
+    wegFarbe: 0x8c8f94,
+    platz: [134, 40, 186, 138],                                                     // Platz mit Leuchtreklamen [x0, z0, x1, z1]
+    punkte: [
+      [-150, 0, 2], [-90, 0, 2], [-30, 0, 2], [30, 0, 2], [80, 0, 2], [110, 0, 2],  // Start/Ziel auf der Avenue zwischen den Hochhäusern
+      [135, 6.7, 2], [153.3, 25, 2], [160, 50, 2],                                 // weite Linkskurve zum Platz
+      [163, 76, 2], [157, 102, 2.1], [160, 126, 2.4],                              // Platz mit Leuchtreklamen, leichte Schikane
+      [160, 148, 3.6], [160, 170, 5.4],                                            // Rampe zur Hängebrücke
+      [160, 195, 6.6], [160, 220, 7], [160, 245, 6.6],                             // über den Fluss
+      [160, 270, 5.4], [160, 292, 3.6], [160, 312, 2.4],                           // hinunter ans andere Ufer
+      [151.2, 333.2, 2.2], [130, 342, 2],                                          // links auf die Uferstrasse
+      [98, 344, 2], [66, 336, 2], [36, 342, 2], [10, 362, 2], [-22, 374, 2],       // Kopfsteinpflaster zwischen alten Lagerhäusern
+      [-56, 366, 2], [-80, 346, 2], [-112, 338, 2], [-140, 342, 2], [-160, 342, 2],
+      [-181.2, 333.2, 2.2], [-190, 312, 2.4],                                      // links auf die Stahlbrücke
+      [-190, 292, 3.6], [-190, 270, 5.4], [-190, 245, 6.3], [-190, 220, 6.6], [-190, 195, 6.3], [-190, 170, 5.4], [-190, 148, 3.6], [-190, 126, 2.4],
+      [-196, 104, 2.2], [-212, 82, 2], [-216, 58, 2], [-206, 34, 2], [-188, 12, 2], [-170, 2, 2],   // durch den Park zurück auf die Avenue
+    ],
+    belaege: [
+      { von: [66, 336], bis: [-80, 346], art: 'pflaster' },                        // Kopfsteinpflaster am alten Hafen
+      { von: [-190, 268], bis: [-190, 172], art: 'gitter' },                       // Stahlbrücke mit Gitterrost
+    ],
+    bruecken: [{ von: [160, 168], bis: [160, 272] }, { von: [-190, 272], bis: [-190, 168] }],
+    brueckenArt: ['grossbruecke', 'stahl'],
+    fluesse: [{ z: 220, breite: 96, y: -1.2, ufer: 1.4, x0: -720, x1: 720, farbe: 0x0c1620 }],
+    wasser: [{ x: -282, z: 66, r: 15, y: 1.25 }],                                    // Teich im Park
+    wege: [
+      { id: 'hinterhof', art: 'abkuerzung', name: 'Hinterhof', breite: 8, rand: 1.2, belag: 'pflaster',
+        punkte: [[80, 0], [104, 14], [128, 30], [148, 50], [161.8, 66]] },
+      { id: 'parkweg', art: 'umleitung', name: 'Parkweg', breite: 12, rand: 1.5, belag: 'kies',
+        punkte: [[-198, 108], [-220, 98], [-238, 80], [-242, 58], [-232, 40], [-203, 30]] },
+    ],
+    slots: [
+      { id: 'R1', art: 'rampe', pos: [-80, 0] },
+      { id: 'R2', art: 'rampe', pos: [82, 340] },
+      { id: 'R3', art: 'rampe', pos: [-140, 342] },
+      { id: 'A1', art: 'abkuerzung', weg: 'hinterhof' },
+      { id: 'H1', art: 'hindernis', pos: [30, 0] },
+      { id: 'H2', art: 'hindernis', pos: [153.3, 25] },
+      { id: 'H3', art: 'hindernis', pos: [157, 102] },
+      { id: 'H4', art: 'hindernis', pos: [160, 220] },
+      { id: 'H5', art: 'hindernis', pos: [36, 342] },
+      { id: 'H6', art: 'hindernis', pos: [-56, 366] },
+      { id: 'H7', art: 'hindernis', pos: [-190, 220] },
+      { id: 'H8', art: 'hindernis', pos: [-216, 58] },
+      { id: 'U1', art: 'umleitung', weg: 'parkweg' },
+    ],
+    frei: [[-250, 80, 80, 1], [-100, -26, 20], [160, 148, 18], [160, 292, 18], [104, 300, 14, 1], [40, 128, 18], [216, 4, 34]],
+    gelaende: [[-270, 120, 4, 26]],
+    deko: [
+      { art: 'bogen', s: 0 },
+      { art: 'tribuene', x: -100, z: -24, dreh: 0 },
+      { art: 'leuchtplatz' },                                                      // Häuser mit Leuchtreklamen rund um den Platz (def.platz)
+      { art: 'kronenturm', x: 40, z: 128, dreh: 0.1 },                             // Turm mit gestufter Krone am Ufer (Blick von der Promenade)
+      { art: 'stufenturm', x: 216, z: 4, dreh: 0 },                                // Turm mit Rücksprüngen und Mast am Ende der Avenue
+      { art: 'fackelstatue', x: -330, z: 220, dreh: 0.5 },                         // Statue mit Fackel auf der Insel, blickt zur Stahlbrücke
+      { art: 'karussell', x: 104, z: 300 },                                        // Glaspavillon mit Karussell am Ufer
+      { art: 'schiff', x: -40, z: 205, dreh: 0 }, { art: 'schiff', x: 300, z: 236, dreh: 3.1416 },
+    ],
+  },
 };
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 4: Strecken-Aufbau
@@ -1011,6 +1173,9 @@ class Strecke {
     this.slots = [];
     for (const sd of def.slots || []) this.slots.push(this.baueSlot(sd, this.slots.length));
 
+    // Boost-Felder
+    this.boostfelder = this.baueBoostfelder(def);
+
     // Startplätze hinter der Startlinie (s = 0)
     const R = CONFIG.rennen;
     this.startplaetze = [];
@@ -1025,6 +1190,55 @@ class Strecke {
     erweitere(H);
     for (const w of this.wege) erweitere(w.pfad);
     this.grenzen = { x0, x1, z0, z1 };
+  }
+
+  // Boost-Felder: def.boostfelder = [{ pos: [x, z], d }] (d = seitlich, links positiv) oder eine Anzahl.
+  // Ohne Liste setzt die Strecke sie selbst an Kurvenausgänge, weg von Start, Bau-Slots, Schanzen und Abzweigungen.
+  baueBoostfelder(def) {
+    const H = this.haupt, n = H.n, L = this.laenge, B = CONFIG.boostfeld, aus = [];
+    const neu = (s, d) => { const i = Math.floor(s / H.ds) % n, lim = H.hb[i] - B.breite / 2 - 0.5; aus.push({ nr: aus.length, s, i, d: clamp(d, -lim, lim), laenge: B.laenge, breite: B.breite }); };
+    if (Array.isArray(def.boostfelder)) {
+      for (const f of def.boostfelder) { const p = H.projiziere(f.pos[0], f.pos[1], -1, 0); neu(p.s, f.d != null ? f.d : this.ideal[p.i] * (1 - B.neben)); }
+      return aus;
+    }
+    const anzahl = def.boostfelder == null ? B.anzahl : def.boostfelder;
+    if (!anzahl || !this.ideal) return aus;
+    const zu = new Uint8Array(n), sperre = (s, vor, nach) => { for (let q = -vor; q <= nach; q += H.ds) zu[Math.floor(((((s + q) % L) + L) % L) / H.ds) % n] = 1; };
+    sperre(0, 30, 80);                                                     // Start und Ziel
+    for (const sl of this.slots) if (sl.art === 'hindernis' || sl.art === 'rampe') sperre(sl.s, 20, 20);   // Bau-Slots (Rampen und Hindernisse)
+    for (const sch of this.schanzen) sperre(sch.s, 45, 30);                // feste Schanzen
+    for (const w of this.wege) { sperre(w.von, 35, 20); sperre(w.bis, 15, 25); }   // Abzweigungen und Einmündungen
+    const kr = this.idealKr, wert = new Float64Array(n), weit = (m) => Math.round(m / H.ds);
+    for (let i = 0; i < n; i++) {
+      if (zu[i]) continue;
+      let vor = 0, nach = 0;
+      for (let q = 1; q <= weit(40); q++) vor = Math.max(vor, Math.abs(kr[(i - q + n) % n]));
+      for (let q = 0; q <= weit(30); q++) nach = Math.max(nach, Math.abs(kr[(i + q) % n]));
+      if (nach < 0.008 && vor > 0.008) wert[i] = vor - nach * 2;           // Kurvenausgang mit Gerade danach
+      else if (nach < 0.004 && vor < 0.004) wert[i] = 0.002;               // lange Gerade
+    }
+    const gewaehlt = [], waehle = (wf, abstand) => {
+      const ord = Array.from(wf.keys()).filter((i) => wf[i] > 0).sort((a, b) => wf[b] - wf[a]);
+      for (const i of ord) {
+        if (gewaehlt.length >= anzahl) break;
+        const s = i * H.ds;
+        if (!gewaehlt.some((t) => Math.abs(rundenDiff(s, t, L)) < abstand)) gewaehlt.push(s);
+      }
+    };
+    waehle(wert, L / (anzahl * 1.4));
+    if (gewaehlt.length < anzahl) {                                        // zu wenige: auch sanfte Bögen zulassen, dichter setzen
+      const wert2 = new Float64Array(n);
+      for (let i = 0; i < n; i++) {
+        if (zu[i]) continue;
+        let nach = 0;
+        for (let q = 0; q <= weit(25); q++) nach = Math.max(nach, Math.abs(kr[(i + q) % n]));
+        if (nach < 0.016) wert2[i] = 0.02 - nach;
+      }
+      waehle(wert2, L / (anzahl * 2));
+    }
+    gewaehlt.sort((a, b) => a - b);
+    for (const s of gewaehlt) { const i = Math.floor(s / H.ds) % n; neu(s + B.laenge * 0.5, this.ideal[i] * (1 - B.neben)); }
+    return aus;
   }
 
   // führt fn(i) für alle Abtastpunkte zwischen zwei Weltpunkten aus (in Fahrtrichtung)
@@ -1202,7 +1416,7 @@ class Rennen {
       richtung: w, blick: w, v: 0, lenk: 0, schubX: 0, schubZ: 0,
       px: o.x, pz: o.z, py: o.y, pblick: w,     // Zustand vor dem letzten Schritt (für weiche Darstellung)
       drift: 0, driftZeit: 0, driftStufe: 0, driftGesperrt: false, hop: 0,
-      boostZeit: 0, boostStaerke: 1, windZeit: 0, windAktiv: false,
+      boostZeit: 0, boostStaerke: 1, boostFeld: -1, windZeit: 0, windAktiv: false,
       schutzZeit: 0, lahmZeit: 0, schlamm: 0, geistZeit: 0, wandZeit: 0,
       // Position auf der Strecke
       pfad: 0, mi: i, wi: 0, wegHinweis: this.S.wege.map(() => -1),
@@ -1444,6 +1658,17 @@ class Rennen {
     }
     k.s = s; k.d = d; k.aufStrasse = aufStrasse;
     k.belag = k.pfad > 0 ? this.S.wege[k.pfad - 1].belag : this.S.belagArt[Math.floor(Math.max(0, s) / this.S.haupt.ds) % this.S.haupt.n];
+    // Boost-Felder: einmal Schub pro Überfahrt (nur am Boden, nur auf der Hauptstrecke)
+    if (!nurOrten && this.S.boostfelder.length) {
+      let auf = -1;
+      if (k.pfad === 0 && !k.luft) for (const f of this.S.boostfelder) {
+        let dd = s - f.s;
+        if (dd > L / 2) dd -= L; else if (dd < -L / 2) dd += L;
+        if (Math.abs(dd) < f.laenge / 2 && Math.abs(d - f.d) < f.breite / 2 + 0.7) { auf = f.nr; break; }
+      }
+      if (auf >= 0 && k.boostFeld !== auf && k.zielZeit == null) { this.gibBoost(k, CONFIG.boostfeld.dauer, CONFIG.boostfeld.staerke); this.melde('boostfeld', k.idx); }
+      k.boostFeld = auf;
+    }
 
     // Fortschritt. Sprünge von mehr als 40 m zählen nicht (Checkpoint-Schutz gegen Abkürzen und Fehlortung).
     const ds = rundenDiff(sHaupt, k.sHaupt, L);
@@ -2037,6 +2262,7 @@ class Bot {
     this.versatz = (z() * 2 - 1) * p.linie * 0.5;                    // persönliche Abweichung von der Ideallinie
     this.rausch = 0; this.rauschZiel = 0; this.rauschUhr = 0;
     this.ausweich = 0;
+    this.boostLust = clamp(0.7 + z() * 0.6, 0, 1);                    // wie entschlossen der Bot Boost-Felder ansteuert
     this.fehlerUhr = 0;
     this.driftAn = false; this.driftAusUhr = 0; this.driftLust = z() < p.drift; this.lustUhr = 0;
     this.bauUhr = 1 + z() * 2;
@@ -2082,6 +2308,16 @@ class Bot {
       let vor = wegVor(sm, f.s, L); if (vor > L / 2) vor -= L;
       const w = vor > 0 ? clamp((CONFIG.bots.ausweichWeg - vor) / (CONFIG.bots.ausweichWeg * 0.65), 0, 1) : (vor > -(f.l + 6) ? 1 : 0);
       if (w > 0) { const zweite = f.a2 !== undefined && vor < -2; d += (clamp(d, zweite ? f.a2 : f.a, zweite ? f.b2 : f.b) - d) * w; }
+    } else if (S.boostfelder.length) {
+      // Boost-Feld voraus: die Route weich durch das Feld legen
+      const sicht = CONFIG.bots.boostSicht;
+      for (const f of S.boostfelder) {
+        let vor = wegVor(sm, f.s, L); if (vor > L / 2) vor -= L;
+        if (vor > sicht || vor < -f.laenge / 2 - 1.5) continue;
+        const w = vor > 0 ? clamp((sicht - vor) / (sicht * 0.6), 0, 1) : 1;
+        d += (f.d - d) * w * this.boostLust;
+        break;
+      }
     }
     H.ort(sm, d, aus);
     return S.idealKr[i];
@@ -2627,6 +2863,7 @@ const Grafik = {
     // 2. und 3. Fahrbahn, Randsteine, Markierungen, Leitplanken, Nebenwege (siehe Teil 8e)
     const pt = (P, i, d, dy) => [P.x[i] + P.nx[i] * d, P.y[i] + dy, -(P.z[i] + P.nz[i] * d)];
     this.baueBahn(S, W, pfade, imKorridor, hoehe);
+    Boostfelder.baue(this, S, W);
 
     // 4. Wasser
     for (const ws of def.wasser || []) {
@@ -2648,6 +2885,7 @@ const Grafik = {
     }
     // zufällig verteilt: Bäume, Kieshaufen, Felsen, Pylonen, Bauzäune
     const dichte = this.qualitaet === 'niedrig' ? 0.45 : 1;
+    Orte.dampf = [];                                                               // Dampfquellen (New York), werden von der Szene gefüllt
     if (def.szene && Szenen[def.szene]) Szenen[def.szene](bk, deko, zuf, dichte);
     else for (let i = 0; i < H.n; i += 3) {
       for (const s of [1, -1]) {
@@ -2827,10 +3065,11 @@ function himmelBild(st) {
   x.fillStyle = g; x.fillRect(0, H / 2, B, H / 2);
   const p = st.sonnePos, l = Math.hypot(p[0], p[1], p[2]);
   const sx = (Math.atan2(p[2] / l, p[0] / l) / TAU + 0.5) * B, sy = (0.5 - Math.asin(p[1] / l) / Math.PI) * H;
+  const sr = st.scheinGr || 190;                 // Grösse des Sonnenscheins im Himmelsbild (hoch stehende Sonne: kleiner)
   for (const dx of [-B, 0, B]) {
-    g = x.createRadialGradient(sx + dx, sy, 0, sx + dx, sy, 190);
+    g = x.createRadialGradient(sx + dx, sy, 0, sx + dx, sy, sr);
     g.addColorStop(0, 'rgba(255,252,240,1)'); g.addColorStop(0.05, 'rgba(255,246,214,.96)'); g.addColorStop(0.16, hexCss(st.schein) + '77'); g.addColorStop(1, hexCss(st.schein) + '00');
-    x.fillStyle = g; x.fillRect(sx + dx - 190, sy - 190, 380, 380);
+    x.fillStyle = g; x.fillRect(sx + dx - sr, sy - sr, 2 * sr, 2 * sr);
   }
   if (st.sterne) {                             // Sterne im oberen Himmel
     x.fillStyle = '#fff';
@@ -4481,6 +4720,49 @@ const Ton = {
   },
 };
 /* ══════════════════════════════════════════════════════════════════════════
+   TEIL 8e: Boost-Felder – leuchtende Pfeile auf der Fahrbahn, die nach vorn laufen
+   (Lage und Wirkung: Strecke.baueBoostfelder, Rennen.orte, CONFIG.boostfeld)
+   ══════════════════════════════════════════════════════════════════════════ */
+const Boostfelder = {
+  // ein Pfeil pro Kachel auf dunkler, halb durchsichtiger Platte mit hellblauem Rand (oben im Bild = vorn)
+  bild() {
+    const N = 64, c = document.createElement('canvas'); c.width = c.height = N;
+    const x = c.getContext('2d');
+    x.fillStyle = 'rgba(6,16,36,0.6)'; x.fillRect(0, 0, N, N);
+    x.fillStyle = 'rgba(90,225,255,0.95)'; x.fillRect(0, 0, 4, N); x.fillRect(N - 4, 0, 4, N);
+    x.strokeStyle = '#ffd43a'; x.lineWidth = 10; x.lineJoin = 'miter';
+    x.beginPath(); x.moveTo(11, 47); x.lineTo(32, 21); x.lineTo(53, 47); x.stroke();
+    x.strokeStyle = 'rgba(255,250,210,0.9)'; x.lineWidth = 3;
+    x.beginPath(); x.moveTo(15, 44); x.lineTo(32, 23); x.lineTo(49, 44); x.stroke();
+    return c;
+  },
+  baue(G, S, W) {
+    this.tex = null;
+    if (!S.boostfelder || !S.boostfelder.length) return;
+    const t = new THREE.CanvasTexture(this.bild());
+    t.wrapS = THREE.ClampToEdgeWrapping; t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = G.qualitaet === 'niedrig' ? 1 : 4;
+    this.tex = t;
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthWrite: false, toneMapped: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, side: THREE.DoubleSide });
+    const H = S.haupt, L = S.laenge, f = new Form(), o = {}, W3 = [1, 1, 1];
+    for (const b of S.boostfelder) {
+      const N = 8, kacheln = Math.round(b.laenge / (b.breite * 0.6));
+      let vor = -1;
+      for (let q = 0; q <= N; q++) {
+        const s = (((b.s - b.laenge / 2 + (q / N) * b.laenge) % L) + L) % L, v = (q / N) * kacheln;
+        H.ort(s, b.d - b.breite / 2, o); const A = f.pkt(o.x, o.y + 0.07, -o.z, W3, 0, v);
+        H.ort(s, b.d + b.breite / 2, o); f.pkt(o.x, o.y + 0.07, -o.z, W3, 1, v);
+        if (vor >= 0) f.vier(vor, A, A + 1, vor + 1);
+        vor = A;
+      }
+    }
+    const netz = f.netz(m, false);
+    netz.receiveShadow = false; netz.renderOrder = 0.5;
+    W.add(netz);
+  },
+  // die Pfeile laufen in Fahrtrichtung
+  proBild(dt) { if (this.tex && dt > 0) this.tex.offset.y = (this.tex.offset.y - dt * 1.6) % 1; },
+};
+/* ══════════════════════════════════════════════════════════════════════════
    TEIL 8e: Fahrbahn und Boden mit Struktur und Relief, Markierungen,
    Leitplanken, dazu Rauch, Staub, Reifenspuren und Schmutz am Auto
    ══════════════════════════════════════════════════════════════════════════ */
@@ -4494,7 +4776,7 @@ Object.assign(Grafik, {
     if (B[art]) return B[art];
     const einfach = this.qualitaet === 'niedrig', n = einfach ? 256 : 512, zuf = zufallsGenerator(art.length * 131 + art.charCodeAt(0) * 7), h = new Float32Array(n * n);
     const w1 = Struktur.wolkig(n, 4, 5, zuf);
-    let fn, kraft = 2, rau = 0.92, kachel = 6, durch = false;
+    let fn, kraft = 2, rau = 0.92, kachel = 6, durch = false, metall = 0, rauKarte = null;
     if (art === 'asphalt') {                    // Körnung, helle Steinchen, Risse, Flicken mit Teerfuge
       const riss = new Float32Array(n * n), flick = [];
       for (let q = 0; q < 6; q++) {
@@ -4558,6 +4840,21 @@ Object.assign(Grafik, {
         h[i] = st[i] * 1.5 - rille * 0.9 + k * 0.12;
         return [g * 0.965, g * 0.985, g * 1.02];
       };
+    } else if (art === 'sand') {                // festgefahrener Wüstensand: Windrippel quer zur Fahrt, Fahrspuren, einzelne Steinchen
+      const st = Struktur.wolkig(n, 6, 4, zuf); kraft = 1.8; kachel = 8; rau = 0.97;
+      fn = (i, x, y) => {
+        const rip = Math.pow(0.5 + 0.5 * Math.sin((y / n) * Math.PI * 22 + st[i] * 6 + Math.sin((x / n) * TAU * 2) * 1.5), 3), spur = Math.pow(Math.abs(Math.sin((x / n) * Math.PI * 4 + st[i] * 1.6)), 8), k = zuf(), stein = k > 0.996;
+        const g = 0.9 + st[i] * 0.16 - spur * 0.07 + rip * 0.05 - (stein ? 0.3 : 0);
+        h[i] = st[i] * 1.2 + rip * 0.6 - spur * 0.5 + (stein ? 0.8 : 0);
+        return [222 * g, 190 * g, 142 * g];
+      };
+    } else if (art === 'nass') {                // nasser Asphalt: dunkel, glänzend, Pfützen spiegeln (Glanz über eine eigene Karte)
+      const st = Struktur.wolkig(n, 5, 4, zuf), pf = new Float32Array(n * n); kraft = 1.1; kachel = 7; rau = 1;
+      fn = (i) => { const p = clamp((st[i] - 0.6) * 7, 0, 1), k = zuf(), g = 50 + k * 24 - p * 16; pf[i] = p; h[i] = k * 0.8 * (1 - p); return [g, g, g * 1.05]; };
+      rauKarte = () => Struktur.bild(n, (i) => { const r = lerp(150, 28, pf[i]); return [r, r, r]; });
+    } else if (art === 'gitter') {              // Gitterrost aus Stahl (Brückenfahrbahn): Stäbe längs und quer, dunkle Lücken
+      kraft = 3; kachel = 2.4; rau = 0.5; metall = 0.55;
+      fn = (i, x, y) => { const st = x % 16 < 4 || y % 32 < 5, k = zuf(), g = st ? 128 + k * 30 : 26 + k * 10; h[i] = st ? 1 : 0; return [g, g * 1.02, g * 1.06]; };
     } else if (art === 'eis') {                 // blankes Eis: glatt, bläulich, weisse Risse und Schneeflecken
       const st = Struktur.wolkig(n, 5, 3, zuf), riss = new Float32Array(n * n); kraft = 0.7; kachel = 9; rau = 0.16;
       for (let q = 0; q < 9; q++) {
@@ -4577,10 +4874,11 @@ Object.assign(Grafik, {
       fn = (i) => { const k = zuf(), g = 178 + st[i] * 60 + (k - 0.5) * 34; h[i] = st[i] * 1.5 + k * 0.4; return [g, g, g]; };
     }
     const o = { map: Struktur.textur(Struktur.bild(n, fn), true), vertexColors: true, side: THREE.DoubleSide };
+    if (rauKarte && !einfach) o.roughnessMap = Struktur.textur(rauKarte(), false);
     if (durch) Object.assign(o, { transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
     let mat;
     if (einfach) mat = new THREE.MeshLambertMaterial(o);
-    else { o.roughness = rau; o.metalness = 0; if (kraft) o.normalMap = Struktur.textur(Struktur.relief(h, n, kraft), false); mat = new THREE.MeshStandardMaterial(o); }
+    else { o.roughness = rau; o.metalness = metall; if (kraft) o.normalMap = Struktur.textur(Struktur.relief(h, n, kraft), false); mat = new THREE.MeshStandardMaterial(o); }
     return (B[art] = { mat, kachel });
   },
   // Wie stark rüttelt der Belag das Auto? (Wert für die Federung)
@@ -4632,11 +4930,15 @@ Object.assign(Grafik, {
     this.staubFarbe = def.staub || B.kies || 0xb9a886;
 
     // 1. Fahrbahn: Belag pro Abschnitt (def.belaege = [{ von, bis, art }]), sonst def.belag
-    const arten = S.belagArt, hart = (i) => arten[i] === 'asphalt' || arten[i] === 'pflaster', weiss = (i) => arten[i] === 'schnee' || arten[i] === 'eis';
+    const arten = S.belagArt, asph = (i) => arten[i] === 'asphalt' || arten[i] === 'nass', hart = (i) => asph(i) || arten[i] === 'pflaster', weiss = (i) => arten[i] === 'schnee' || arten[i] === 'eis';
     const rs = def.randstein || [0xd8281e, 0xf2efe6], hatWeiss = arten.some((a) => a === 'schnee' || a === 'eis');
     this.belagArten = arten;
     const hell = (i) => { const v = 0.92 + 0.14 * Math.sin(i * 0.37) * Math.sin(i * 0.071 + 1); return [v, v, v]; };
-    for (const art of new Set(arten)) { const ka = art === 'asphalt' || art === 'pflaster' ? 0.9 : 0; band(form(art), H, 0, n, (i) => (arten[i] === art || arten[(i + n - 1) % n] === art ? [-H.hb[i] + ka, 0, H.hb[i] - ka, 0, hell(i)] : null), this.belag(art).kachel); }
+    const tonB = def.belagTon || {};                                                  // Tönung eines Belags je Strecke, z. B. Sandstein statt grauem Pflaster
+    for (const art of new Set(arten)) {
+      const ka = art === 'asphalt' || art === 'nass' || art === 'pflaster' ? 0.9 : 0, t = tonB[art] ? F(tonB[art]) : WEISS3;
+      band(form(art), H, 0, n, (i) => { if (arten[i] !== art && arten[(i + n - 1) % n] !== art) return null; const v = hell(i); return [-H.hb[i] + ka, 0, H.hb[i] - ka, 0, [v[0] * t[0], v[1] * t[1], v[2] * t[2]]]; }, this.belag(art).kachel);
+    }
     // rot-weisse Randsteine (jeder Block eigene Punkte, damit die Farben scharf wechseln)
     const beton = form('randstein'), rot = F(0xd8281e), ws = F(0xf2efe6), rsA = F(rs[0]), rsB = F(rs[1]);
     for (let q = 0; q < n; q += 2) if (hart(q)) for (const s of [1, -1]) band(beton, H, q, q + 2, (i) => [s * (H.hb[i] - 0.9), 0.005, s * H.hb[i], 0.07, (q >> 1) & 1 ? rsA : rsB], 2);      // nur auf Asphalt und Pflaster
@@ -4688,15 +4990,15 @@ Object.assign(Grafik, {
     const mk = form('farbe'), wl = F(0xf4f1e4), o1 = {};
     const ort = (s, d, y) => { H.ort(((s % S.laenge) + S.laenge) % S.laenge, d, o1); return [o1.x, o1.y + (y || 0.025), -o1.z]; };
     const fleck = (f, s0, s1, d0, d1, farbe, d2, d3) => f.tafel(ort(s0, d0), ort(s1, d2 == null ? d0 : d2), ort(s1, d3 == null ? d1 : d3), ort(s0, d1), farbe, d0 / 3, s0 / 3, d1 / 3, s1 / 3);
-    for (const s of [1, -1]) band(mk, H, 0, n, (i) => (arten[i] === 'asphalt' ? [s * (H.hb[i] - 1.2) - 0.07, 0.02, s * (H.hb[i] - 1.2) + 0.07, 0.02, wl] : null), 3);
-    band(mk, H, 0, n, (i, q) => (q % 6 <= 2 && arten[i] === 'asphalt' ? [-0.08, 0.02, 0.08, 0.02, wl] : null), 3);
+    for (const s of [1, -1]) band(mk, H, 0, n, (i) => (asph(i) ? [s * (H.hb[i] - 1.2) - 0.07, 0.02, s * (H.hb[i] - 1.2) + 0.07, 0.02, wl] : null), 3);
+    band(mk, H, 0, n, (i, q) => (q % 6 <= 2 && asph(i) ? [-0.08, 0.02, 0.08, 0.02, wl] : null), 3);
     const hb0 = H.hb[0] - 0.9;
     for (let r = 0; r < 3; r++) for (let q = 0; q < 14; q++) fleck(mk, r * 0.6, r * 0.6 + 0.6, -hb0 + (q * 2 * hb0) / 14, -hb0 + ((q + 1) * 2 * hb0) / 14, (q + r) % 2 ? F(0x101010) : wl);
     for (let j = 0; j < 12; j++) {
       const p = S.startplaetze[j];
       fleck(mk, p.s + 1.9, p.s + 2.05, p.d - 1.1, p.d + 1.1, wl); fleck(mk, p.s + 0.5, p.s + 1.9, p.d - 1.1, p.d - 0.98, wl); fleck(mk, p.s + 0.5, p.s + 1.9, p.d + 0.98, p.d + 1.1, wl);
     }
-    for (let i = 40; i < n - 20; i += 60) if (Math.abs(H.kr[i]) < 0.004 && !S.bruecke[i] && arten[i] === 'asphalt') {
+    for (let i = 40; i < n - 20; i += 60) if (Math.abs(H.kr[i]) < 0.004 && !S.bruecke[i] && asph(i)) {
       const s = i * H.ds, d = H.hb[i] * 0.45;
       fleck(mk, s, s + 2.6, d - 0.16, d + 0.16, wl); fleck(mk, s + 2.6, s + 4.2, d - 0.62, d + 0.62, wl, d, d);
     }
@@ -4766,7 +5068,7 @@ Object.assign(Grafik, {
     if (dt <= 0) return;
     const c = Math.cos(blick), s = Math.sin(blick), hr = o.def.rad[o.def.rad.length - 1], am = !k.luft, v = k.v, zf = () => Math.random() - 0.5;
     const strasse = k.aufStrasse && !k.schlamm, staub = k.schlamm ? 0x4a3826 : this.staubFarbe || 0xb9a886, bel = k.belag;
-    const weiss = strasse && (bel === 'schnee' || bel === 'eis'), lose = strasse && (bel === 'schotter' || bel === 'kies');
+    const weiss = strasse && (bel === 'schnee' || bel === 'eis'), lose = strasse && (bel === 'schotter' || bel === 'kies' || bel === 'sand'), nass = strasse && bel === 'nass';
     const zieht = am && v > 3 && ((k.drift && strasse) || o.ax < -9 || !strasse || weiss);
     for (let q = 0; q < 2; q++) {
       const lz = (q ? 1 : -1) * hr[1], wx = x + c * hr[0] - s * lz, wz = z + s * hr[0] + c * lz, alt = o.spur[q];
@@ -4780,8 +5082,9 @@ Object.assign(Grafik, {
       alt[3] = zieht ? 1 : 0;
       if (!am) continue;
       if (weiss) { if (v > 8 && Math.random() < (k.drift ? 0.8 : bel === 'eis' ? 0.12 : 0.35)) Dunst.neu(wx, y + 0.15, wz, -c * 2 + zf() * 2.5, 0.8 + Math.random() * 0.9, -s * 2 + zf() * 2.5, 1.1, 0.55, 0xf4f8ff, 0.5, 2.0, 0.6); }      // Schneefahne
+      else if (nass && v > 9) { if (Math.random() < (k.drift ? 0.9 : 0.45)) Dunst.neu(wx, y + 0.12, wz, -c * 2.4 + zf() * 2, 0.5 + Math.random() * 0.6, -s * 2.4 + zf() * 2, 0.8, 0.45, 0xc4ccd4, 0.32, 2.2, 0.9); }   // Gischt auf nasser Strasse
       else if (k.drift && strasse && !lose) { if (Math.random() < 0.7) Dunst.neu(wx, y + 0.12, wz, -c * 1.5 + zf() * 2, 0.5 + Math.random(), -s * 1.5 + zf() * 2, 1.3, 0.6, 0xe6e6e6, 0.5, 2.2, -0.5); }           // Reifenrauch
-      else if (v > 5 && (!strasse || lose) && Math.random() < (lose && !k.drift ? 0.25 : 0.55)) Dunst.neu(wx, y + 0.15, wz, -c * 2 + zf() * 3, 0.7 + Math.random(), -s * 2 + zf() * 3, 1.5, 0.75, lose ? 0xa89a84 : staub, k.schlamm ? 0.6 : 0.5, 2.4, k.schlamm ? 3 : -0.3);   // Staubfahne
+      else if (v > 5 && (!strasse || lose) && Math.random() < (lose && !k.drift ? 0.25 : 0.55)) Dunst.neu(wx, y + 0.15, wz, -c * 2 + zf() * 3, 0.7 + Math.random(), -s * 2 + zf() * 3, 1.5, 0.75, lose && bel !== 'sand' ? 0xa89a84 : staub, k.schlamm ? 0.6 : 0.5, 2.4, k.schlamm ? 3 : -0.3);   // Staubfahne
     }
     const start = R.zeit > -3 && R.zeit < 1.6, boost = k.boostZeit > 0;
     if (boost || (start && Math.random() < (R.zeit > 0 ? 0.7 : 0.12))) for (const a of o.auspuff) {
@@ -4894,6 +5197,9 @@ function scheinBild() {
   return new THREE.CanvasTexture(c);
 }
 
+// weitere Werkstoffe einzelner Orte (Name → Funktion(einfach) liefert das Material), siehe Ägypten und New York
+const ORTSTOFFE = {};
+
 Object.assign(Grafik, {
   // Werkstoffe der Orte: stein (Mauern, Dächer, Bäume), fassade, gitter, glas, licht (leuchtet selbst), lichtfleck (Schein am Boden)
   ortStoff(name) {
@@ -4908,6 +5214,7 @@ Object.assign(Grafik, {
     } else if (name === 'gitter') m = new THREE.MeshBasicMaterial({ map: Struktur.textur(gitterBild(), true), alphaTest: 0.3, vertexColors: true, side: THREE.DoubleSide });
     else if (name === 'glas') m = new THREE.MeshBasicMaterial({ map: Struktur.textur(glasBild(), true), vertexColors: true, transparent: true, opacity: 0.92, side: THREE.DoubleSide });
     else if (name === 'lichtfleck') m = new THREE.MeshBasicMaterial({ map: scheinBild(), vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2, side: THREE.DoubleSide });
+    else if (ORTSTOFFE[name]) m = ORTSTOFFE[name](einfach);
     else m = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
     return (O[name] = m);
   },
@@ -4989,8 +5296,9 @@ function laterne(b, x, y, z, h, hex) {
   h = h || 4.6;
   D.rohr(x, y - 0.3, z, x, y + h, z, 0.09, 0.06, f, 6);
   D.rohr(x, y - 0.3, z, x, y + 0.7, z, 0.17, 0.11, f, 6);
-  L.kugel(x, y + h + 0.3, z, 0.24, 0.34, 0.24, Geo.farbe(hex || 0xffdc9a, 1.5), 6, 4);
   D.rohr(x, y + h + 0.6, z, x, y + h + 0.86, z, 0.2, 0.02, f, 6);
+  if (!b.G.stimmung || !b.G.stimmung.nacht) { D.kugel(x, y + h + 0.3, z, 0.24, 0.34, 0.24, Geo.farbe(0xe9e4d6), 6, 4); return; }   // am Tag: Glaskugel ohne Schein
+  L.kugel(x, y + h + 0.3, z, 0.24, 0.34, 0.24, Geo.farbe(hex || 0xffdc9a, 1.5), 6, 4);
   b.licht(x, y + h + 0.3, z, 2.4, hex || 0xffcf8a, 0.9);
 }
 // Schein einer Laterne auf der Fahrbahn: an Streckenmeter s, seitlich d, halbe Grösse gr
@@ -5259,13 +5567,19 @@ const Bauten = {
     b.licht(x, y + 5, z, 22, 0xffd9a0, 0.35);
     for (const p of P) laterne(b, x + p[0] * 1.45, y, z + p[1] * 1.45);
   },
-  // Obelisk mit goldener Spitze
-  obelisk(b, x, y, z) {
-    const F = b.f('stein'), L = b.f('licht');
-    kasten(F, x, y - 1.5, z, 5, 3.7, 5, Geo.farbe(0xcfc7b6));
-    stumpf(F, x, y + 2.2, z, 2.3, 2.3, y + 21, 1.5, 1.5, Geo.farbe(0xd9b98a, 1.25), Geo.farbe(0xd9b98a, 0.85), false);
+  // Obelisk mit goldener Spitze; d.granit = rötlicher Granit mit einer Zeichenspalte auf jeder Seite (Ägypten)
+  obelisk(b, x, y, z, dreh, d) {
+    const F = b.f('stein'), L = b.f('licht'), granit = d && d.granit, ton = granit ? 0xb5806e : 0xd9b98a;
+    kasten(F, x, y - 1.5, z, 5, 3.7, 5, Geo.farbe(granit ? 0xc9b088 : 0xcfc7b6));
+    stumpf(F, x, y + 2.2, z, 2.3, 2.3, y + 21, 1.5, 1.5, Geo.farbe(ton, 1.25), Geo.farbe(ton, 0.85), false);
     stumpf(L, x, y + 21, z, 1.5, 1.5, y + 23.4, 0, 0, Geo.farbe(0xffd870, 1.4));
-    b.licht(x, y + 3, z, 7, 0xffd9a0, 0.4);
+    if (!granit) { b.licht(x, y + 3, z, 7, 0xffd9a0, 0.4); return; }
+    const R = b.f('relief'), f0 = Geo.farbe(0xd4aab8, 1.0), f1 = Geo.farbe(0xd4aab8, 0.78);            // eine Zeichenspalte aus dem Relief-Bild, rötlich getönt
+    for (let q = 0; q < 4; q++) {
+      R.lage(x, 0, z, q * 1.5708);
+      R.vier(R.pkt(1.18, y + 2.2, -1.18, f0, 0.136, 0.36), R.pkt(1.18, y + 2.2, 1.18, f0, 0.204, 0.36), R.pkt(0.77, y + 21, 0.77, f1, 0.192, 0.88), R.pkt(0.77, y + 21, -0.77, f1, 0.148, 0.88));
+    }
+    R.lage();
   },
   // Rote Mühle mit leuchtenden Flügeln
   muehle(b, x, y, z, dreh) {
@@ -5342,6 +5656,8 @@ const Orte = {
   // pro Bild: Schneefall rund um die Kamera
   proBild(G, R, dt) {
     const st = G.stimmung;
+    Boostfelder.proBild(dt);
+    NY.proBild(G, dt);
     if (this._wellen && dt > 0) { this._wellen.offset.x += dt * 0.012; this._wellen.offset.y += dt * 0.02; }
     if (!st || !st.schneefall || dt <= 0 || !G.ansichten.length) return;
     this._schnee = Math.min(40, (this._schnee || 0) + dt * 70 * st.schneefall * (G.qualitaet === 'niedrig' ? 0.4 : 1));
@@ -5633,6 +5949,885 @@ Object.assign(Bauten, {
       if (q % 3 === 0) F.kugel(-0.15 * g, 1.42 * g, 0, 0.62 * g, 0.36 * g, 0.68 * g, Geo.farbe(q % 2 ? 0x2f6fd6 : 0xd63a2f), 6, 3);
       F.lage();
     }
+  },
+});
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 8h: Ägypten – Mittagssonne, Nil mit Feluken, Lehmhäuser und Markt,
+   Tempeltor, Sphinx-Allee, Säulenhalle, Pyramiden, Sphinx, Kamele, Dünen
+   ══════════════════════════════════════════════════════════════════════════ */
+
+Object.assign(STIMMUNG, {
+  aegypten: { zenit: 0x1b5fb5, mitte: 0x5d9be0, horizont: 0xf2e3c4, dunst: 0xeedcb8, schein: 0xfff3d6, sonnePos: [40, 170, 30], sonne: 0xfff6e8, sonneKraft: 2.5,
+    himmelLicht: 0xcfe0f5, bodenLicht: 0xb9a07c, licht: 1.1, wolke: 0xffffff, wolken: 3, boden: 0xd9bf90, nebel: [300, 1400], scheinGr: 45 },     // Mittag: Sonne fast senkrecht, Hitzedunst am Horizont
+});
+
+const SANDSTEIN = 0xd9bb8a, KALK = 0xd6c4a0;
+
+// ── Relief auf Sandstein (Werkstoff 'relief') ─────────────────────────────
+// Oben (v 0.25 … 1): Front eines Pylons, 20 m breit und 27 m hoch, in Metern gezeichnet: grosse Figur mit erhobener Keule,
+// kniende kleine Figuren, Namensring, Zeichenspalten, Zeichenband oben. Die Seite zur Fahrbahn liegt rechts (u = 1).
+// Unten (v 0 … 0.25): Fries für den Torsturz (19.2 × 3.6 m) mit geflügelter Sonnenscheibe.
+function reliefBild() {
+  const N = 512, c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d'), zuf = zufallsGenerator(3150);
+  x.fillStyle = '#dbbf92'; x.fillRect(0, 0, N, N);
+  for (let q = 0; q < 3200; q++) { x.fillStyle = zuf() < 0.5 ? 'rgba(255,244,214,.08)' : 'rgba(96,64,32,.07)'; x.fillRect(zuf() * N, zuf() * N, 1 + zuf() * 7, 1 + zuf() * 3); }
+  x.fillStyle = 'rgba(112,82,48,.2)';                                             // Steinlagen mit versetzten Fugen
+  for (let y = 0; y < N; y += 24) { x.fillRect(0, y, N, 1.5); for (let xx = (y / 24) % 2 ? 18 : 58; xx < N; xx += 80) x.fillRect(xx, y, 1.5, 24); }
+  const tief = 'rgba(92,62,32,.78)', flaeche = 'rgba(150,108,62,.3)', haut = 'rgba(176,92,52,.32)', weiss = 'rgba(246,240,222,.62)', blau = 'rgba(52,96,150,.55)';
+  // ein Bildzeichen mit Mitte (mx, my) und Grösse g (in Metern); die Formen sind in Einheiten von -0.5 … 0.5 beschrieben
+  const zeichen = (mx, my, g, art) => {
+    x.save(); x.translate(mx, my); x.scale(g, -g);
+    x.strokeStyle = tief; x.fillStyle = tief; x.lineWidth = 0.1; x.beginPath();
+    if (art === 0) { x.arc(0, 0, 0.3, 0, TAU); x.stroke(); x.beginPath(); x.arc(0, 0, 0.08, 0, TAU); x.fill(); }                                  // Sonne
+    else if (art === 1) { x.moveTo(-0.4, 0); for (let k = 1; k <= 8; k++) x.lineTo(-0.4 + k * 0.1, k & 1 ? -0.08 : 0.08); x.stroke(); }          // Wasser
+    else if (art === 2) { x.ellipse(0, 0.05, 0.26, 0.14, -0.2, 0, TAU); x.fill(); x.beginPath(); x.arc(0.24, -0.16, 0.08, 0, TAU); x.fill(); x.beginPath(); x.moveTo(-0.05, 0.15); x.lineTo(-0.05, 0.38); x.moveTo(0.06, 0.15); x.lineTo(0.08, 0.38); x.moveTo(-0.24, 0.05); x.lineTo(-0.42, 0.18); x.stroke(); }   // Vogel
+    else if (art === 3) { x.ellipse(0, -0.24, 0.1, 0.14, 0, 0, TAU); x.moveTo(-0.22, -0.06); x.lineTo(0.22, -0.06); x.moveTo(0, -0.1); x.lineTo(0, 0.4); x.stroke(); }          // Henkelkreuz
+    else if (art === 4) { x.ellipse(0, 0, 0.08, 0.38, 0.15, 0, TAU); x.fill(); }                                                                // Schilfblatt
+    else if (art === 5) { x.moveTo(-0.32, 0); x.quadraticCurveTo(0, -0.24, 0.32, 0); x.quadraticCurveTo(0, 0.2, -0.32, 0); x.stroke(); x.beginPath(); x.arc(0, -0.02, 0.07, 0, TAU); x.fill(); }   // Auge
+    else if (art === 6) { x.arc(0.04, -0.28, 0.09, 0, TAU); x.fill(); x.beginPath(); x.moveTo(0, -0.16); x.lineTo(-0.06, 0.12); x.lineTo(0.22, 0.12); x.lineTo(0.22, 0.38); x.stroke(); }   // sitzende Figur
+    else if (art === 7) { x.moveTo(-0.08, 0.3); x.lineTo(-0.3, 0.3); x.lineTo(-0.3, -0.25); x.lineTo(0.3, -0.25); x.lineTo(0.3, 0.3); x.lineTo(0.08, 0.3); x.stroke(); }   // Haus
+    else if (art === 8) { x.moveTo(-0.35, 0.1); x.bezierCurveTo(-0.15, -0.25, 0.05, 0.3, 0.3, -0.05); x.stroke(); x.beginPath(); x.arc(0.32, -0.08, 0.06, 0, TAU); x.fill(); }   // Schlange
+    else { x.arc(0, 0.12, 0.26, Math.PI, 0); x.fill(); }                                                                                         // Brot
+    x.restore();
+  };
+  const form = (pkte, fuell) => { x.beginPath(); x.moveTo(pkte[0][0], pkte[0][1]); for (let k = 1; k < pkte.length; k++) x.lineTo(pkte[k][0], pkte[k][1]); x.closePath(); if (fuell) { x.fillStyle = fuell; x.fill(); } x.stroke(); };
+  const glied = (ax, ay, bx, by, br, fuell) => { x.save(); x.lineCap = 'round'; x.lineWidth = br + 0.16; x.strokeStyle = tief; x.beginPath(); x.moveTo(ax, ay); x.lineTo(bx, by); x.stroke(); x.lineWidth = br; x.strokeStyle = fuell; x.stroke(); x.restore(); };
+
+  // Pylonfront: Meter-Koordinaten, y nach oben, Boden des Bildteils bei 27 m Höhe = Bildzeile 384
+  x.setTransform(N / 20, 0, 0, -384 / 27, 0, 384);
+  x.strokeStyle = tief; x.lineWidth = 0.08;
+  for (const yy of [23.4, 26.6]) { x.beginPath(); x.moveTo(2.6, yy); x.lineTo(17.4, yy); x.stroke(); }                                          // Zeichenband oben
+  for (let q = 0; q < 13; q++) zeichen(3.3 + q * 1.1, 25, 1.0, Math.floor(zuf() * 10));
+  for (let sp = 0; sp < 5; sp++) {                                                                                                           // Zeichenspalten
+    const mx = 3.4 + sp * 1.35;
+    x.lineWidth = 0.06; x.beginPath(); x.moveTo(mx - 0.68, 3.6); x.lineTo(mx - 0.68, 22.8); x.stroke();
+    for (let q = 0; q < 16; q++) zeichen(mx, 4.3 + q * 1.15, 0.95, Math.floor(zuf() * 10));
+  }
+  x.beginPath(); x.moveTo(2.6, 3.4); x.lineTo(17.6, 3.4); x.stroke();                                                                      // Standlinie
+  // grosse Figur mit erhobener Keule, blickt zur Fahrbahn
+  const fx = 12.2, fy = 3.5;
+  x.lineWidth = 0.1;
+  glied(fx + 0.3, fy + 6.6, fx + 1.7, fy + 0.2, 0.55, haut); glied(fx - 0.2, fy + 6.6, fx - 1.3, fy + 0.2, 0.55, haut);                  // Beine
+  form([[fx - 0.9, fy + 8.3], [fx + 0.9, fy + 8.3], [fx + 1.6, fy + 5.6], [fx - 1.1, fy + 5.6]], weiss);                                     // Schurz
+  form([[fx - 1.3, fy + 11.9], [fx + 1.3, fy + 11.9], [fx + 0.8, fy + 8.3], [fx - 0.8, fy + 8.3]], haut);                                     // Oberkörper
+  glied(fx - 1.0, fy + 11.5, fx - 1.9, fy + 14.6, 0.45, haut);                                                                               // erhobener Arm
+  glied(fx - 2.0, fy + 14.2, fx - 0.7, fy + 16.4, 0.18, flaeche); x.beginPath(); x.ellipse(fx - 0.6, fy + 16.6, 0.4, 0.5, 0, 0, TAU); x.fillStyle = flaeche; x.fill(); x.stroke();   // Keule
+  glied(fx + 1.1, fy + 11.4, fx + 3.3, fy + 10.1, 0.42, haut);                                                                               // greifender Arm
+  x.beginPath(); x.ellipse(fx + 0.4, fy + 12.8, 0.72, 0.8, 0, 0, TAU); x.fillStyle = haut; x.fill(); x.stroke();                             // Kopf
+  x.lineWidth = 0.3; x.strokeStyle = blau; x.beginPath(); x.arc(fx + 0.1, fy + 11.8, 1.1, Math.PI * 1.1, Math.PI * 1.9); x.stroke(); x.strokeStyle = tief; x.lineWidth = 0.1;   // Halskragen
+  form([[fx - 0.3, fy + 13.4], [fx - 0.5, fy + 15.1], [fx + 0.2, fy + 16.0], [fx + 0.9, fy + 15.1], [fx + 0.9, fy + 13.4]], weiss);           // hohe Krone
+  for (let k = 0; k < 3; k++) {                                                                                                              // kniende kleine Figuren
+    const kx = fx + 3.4 + k * 0.85, ky = fy + 0.2 + k * 0.25;
+    form([[kx - 0.5, ky], [kx + 0.6, ky], [kx + 0.5, ky + 2.4], [kx - 0.1, ky + 4.3], [kx - 0.6, ky + 2.2]], flaeche);
+    x.beginPath(); x.ellipse(kx - 0.15, ky + 5.0, 0.42, 0.5, 0, 0, TAU); x.fillStyle = flaeche; x.fill(); x.stroke();
+    glied(kx - 0.2, ky + 3.8, kx - 0.9 - k * 0.2, ky + 5.4, 0.22, flaeche);
+  }
+  x.beginPath(); x.ellipse(fx + 4.0, fy + 14.5, 0.85, 2.1, 0, 0, TAU); x.lineWidth = 0.12; x.stroke();                                        // Namensring
+  for (let q = 0; q < 3; q++) zeichen(fx + 4.0, fy + 13.3 + q * 1.15, 0.85, Math.floor(zuf() * 10));
+  // Fries für den Torsturz: 19.2 × 3.6 m, unten im Bild
+  x.setTransform(N / 19.2, 0, 0, -128 / 3.6, 0, N);
+  x.lineWidth = 0.05; x.strokeStyle = tief;
+  for (let q = 0; q < 48; q++) { x.fillStyle = ['rgba(52,96,150,.55)', 'rgba(204,160,72,.5)', 'rgba(170,64,44,.5)'][q % 3]; x.fillRect(q * 0.4, 3.0, 0.32, 0.6); }   // bemalte Hohlkehle
+  x.beginPath(); x.moveTo(0, 2.95); x.lineTo(19.2, 2.95); x.moveTo(0, 0.25); x.lineTo(19.2, 0.25); x.stroke();
+  for (const sx of [-1, 1]) {                                                                                                               // Flügel: drei Federlagen
+    const lagen = [[0.95, 'rgba(52,96,150,.62)'], [0.6, 'rgba(60,140,120,.55)'], [0.3, 'rgba(170,64,44,.55)']];
+    for (const l of lagen) form([[9.6 + sx * 0.6, 2.05 + l[0] * 0.55], [9.6 + sx * 6.6, 1.7 + l[0] * 0.5], [9.6 + sx * 6.9, 1.55], [9.6 + sx * 0.6, 1.45]], l[1]);
+    for (let q = 1; q < 12; q++) { const t = q / 12, fx2 = 9.6 + sx * (0.6 + t * 6.1); x.beginPath(); x.moveTo(fx2, 1.5); x.lineTo(fx2, 1.7 + (1 - t) * 0.75); x.stroke(); }
+    x.beginPath(); x.moveTo(9.6 + sx * 0.55, 1.4); x.bezierCurveTo(9.6 + sx * 0.9, 1.0, 9.6 + sx * 0.5, 0.8, 9.6 + sx * 0.75, 0.55); x.lineWidth = 0.09; x.stroke(); x.lineWidth = 0.05;   // Schlangen an der Scheibe
+  }
+  x.beginPath(); x.arc(9.6, 1.85, 0.55, 0, TAU); x.fillStyle = 'rgba(206,92,40,.85)'; x.fill(); x.stroke();                                   // Sonnenscheibe
+  for (let q = 0; q < 16; q++) if (Math.abs(q - 7.5) > 3) zeichen(0.6 + q * 1.2, 0.75, 0.75, Math.floor(zuf() * 10));
+  return c;
+}
+ORTSTOFFE.relief = (einfach) => {
+  const o = { map: Struktur.textur(reliefBild(), true), vertexColors: true, side: THREE.DoubleSide };
+  return einfach ? new THREE.MeshLambertMaterial(o) : new THREE.MeshStandardMaterial(Object.assign(o, { roughness: 0.92, metalness: 0 }));
+};
+
+// Dattelpalme: leicht gebogener Stamm mit Ringen, Krone aus hängenden Wedeln
+function palme(b, x, y, z, zuf, h) {
+  const F = b.f('stein'), neig = zuf() * TAU, st = Geo.farbe(0x8a7258, 0.9 + zuf() * 0.2), st2 = Geo.farbe(0x6e5a44);
+  h = h || 8 + zuf() * 5;
+  const nx = Math.cos(neig) * h * 0.14, nz = Math.sin(neig) * h * 0.14;
+  let px = x, py = y - 0.3, pz = z;
+  for (let q = 1; q <= 5; q++) {
+    const t = q / 5, qx = x + nx * t * t, qy = y + h * t, qz = z + nz * t * t;
+    F.rohr(px, py, pz, qx, qy, qz, 0.34 - t * 0.1, 0.3 - t * 0.1, q % 2 ? st : st2, 6);
+    px = qx; py = qy; pz = qz;
+  }
+  const gr = [Geo.farbe(0x557f2f), Geo.farbe(0x47702a), Geo.farbe(0x3c5e24)];
+  for (let k = 0; k < 9; k++) {
+    const w = (k / 9) * TAU + zuf() * 0.35, c = Math.cos(w), s = Math.sin(w), L = h * (0.4 + zuf() * 0.12), P = [];
+    for (let j = 0; j <= 4; j++) { const t = j / 4, r = L * t; P.push([px + c * r, py + L * (0.32 * t - 0.85 * t * t), pz + s * r, L * 0.13 * Math.sin(Math.PI * Math.min(1, 0.12 + t)) + 0.04]); }
+    for (let j = 0; j < 4; j++) {
+      const A = P[j], B = P[j + 1], f = gr[(k + j) % 3];
+      F.vier(F.pkt(A[0] - s * A[3], A[1], A[2] + c * A[3], f), F.pkt(B[0] - s * B[3], B[1], B[2] + c * B[3], f), F.pkt(B[0] + s * B[3], B[1], B[2] - c * B[3], f), F.pkt(A[0] + s * A[3], A[1], A[2] - c * A[3], f));
+    }
+  }
+  for (let k = 0; k < 4; k++) { const w = zuf() * TAU; F.kugel(px + Math.cos(w) * 0.35, py - 0.35, pz + Math.sin(w) * 0.35, 0.2, 0.25, 0.2, Geo.farbe(0x5a3a1c), 5, 3); }
+}
+// Lehmhaus mit Flachdach, Brüstung, kleinen Fenstern; manchmal ein Aufbau oder eine Kuppel (Front zeigt nach lokal +z)
+function lehmhaus(b, x, y, z, dreh, br, tf, h, zuf) {
+  const F = b.f('stein'), ton = [0xd8b48a, 0xe2c9a2, 0xcfa478, 0xe8dcc4, 0xc89870][Math.floor(zuf() * 5)], w = Geo.farbe(ton, 0.92 + zuf() * 0.14), w2 = Geo.farbe(ton, 0.8), du = Geo.farbe(0x2a2018), holz = Geo.farbe(0x6a4a2a);
+  const a = br / 2, t = tf / 2;
+  F.lage(x, y, z, dreh);
+  kasten(F, 0, -2.5, 0, br, h + 2.5, tf, w2, w, w);
+  for (const s of [-1, 1]) { kasten(F, 0, h, s * (t - 0.15), br, 0.7, 0.3, w); }
+  for (const s of [-1, 1]) kasten(F, s * (a - 0.15), h, 0, 0.3, 0.7, tf, w);
+  const stock = h > 5 ? 2 : 1, nF = Math.max(1, Math.round(br / 3.2));
+  for (let e = 0; e < stock; e++) for (let q = 0; q < nF; q++) {
+    const fx = -a + ((q + 0.5) / nF) * br, y0 = 1.4 + e * 3;
+    for (const s of [1, -1]) {
+      if (e === 0 && q === nF >> 1 && s > 0) { wandV(F, fx - 0.65, t + 0.04, fx + 0.65, t + 0.04, 0, 2.2, holz, holz); continue; }
+      wandV(F, fx - 0.42, s * (t + 0.04), fx + 0.42, s * (t + 0.04), y0, y0 + 1.0, du, du);
+    }
+  }
+  const art = zuf();
+  if (art < 0.3) kasten(F, -a * 0.4, h, -t * 0.3, br * 0.4, 2.6, tf * 0.45, w, w);                                   // Aufbau auf dem Dach
+  else if (art < 0.45) F.kugel(0, h, 0, Math.min(br, tf) * 0.32, Math.min(br, tf) * 0.3, Math.min(br, tf) * 0.32, Geo.farbe(0xefe6d4), 10, 5);   // weisse Kuppel
+  else if (art < 0.6) { for (const q of [-0.6, 0.6]) F.rohr(q * a, h, t * 0.6, q * a, h + 2.2, t * 0.6, 0.06, 0.06, holz, 4); kasten(F, 0, h + 2.2, t * 0.6, br * 0.7, 0.08, 2.2, Geo.farbe([0xc8462e, 0x2f6fb0, 0xe0a030][Math.floor(zuf() * 3)])); }   // Sonnendach
+  F.lage();
+}
+// Marktstand: vier Pfosten, gestreiftes Tuch, Tisch mit Waren (Front zeigt nach lokal +z)
+function marktstand(b, x, y, z, dreh, zuf) {
+  const F = b.f('stein'), holz = Geo.farbe(0x6a4a2a), f1 = Geo.farbe([0xc8462e, 0x2f6fb0, 0xe0a030, 0x3a8a4a][Math.floor(zuf() * 4)]), f2 = Geo.farbe(0xf2ead8);
+  F.lage(x, y, z, dreh);
+  for (const p of [[-1.6, -1.2], [1.6, -1.2], [-1.6, 1.4], [1.6, 1.4]]) F.rohr(p[0], -0.2, p[1], p[0], p[1] > 0 ? 2.3 : 2.7, p[1], 0.05, 0.05, holz, 4);
+  for (let q = 0; q < 6; q++) { const x0 = -1.8 + q * 0.6, f = q % 2 ? f1 : f2; F.vier(F.pkt(x0, 2.7, -1.3, f), F.pkt(x0 + 0.6, 2.7, -1.3, f), F.pkt(x0 + 0.6, 2.25, 1.7, f), F.pkt(x0, 2.25, 1.7, f)); }
+  kasten(F, 0, 0.75, 0.6, 3, 0.12, 1.1, holz);
+  kasten(F, 0, -0.2, 0.6, 2.8, 0.95, 0.9, Geo.farbe(0x5a3f26));
+  for (let q = 0; q < 7; q++) F.kugel(-1.2 + q * 0.4, 0.98, 0.4 + (q % 2) * 0.35, 0.2, 0.14, 0.2, Geo.farbe([0xe0a030, 0xc8462e, 0x8a5a2a, 0x6a8a2a, 0xd88a3a][q % 5]), 5, 3);
+  F.lage();
+}
+// Säule mit Papyruskapitell und farbigem Band
+function saeule(F, x, y, z, h, r) {
+  const st = Geo.farbe(SANDSTEIN), st2 = Geo.farbe(SANDSTEIN, 0.86);
+  F.rohr(x, y - 1, z, x, y + 0.8, z, r * 1.25, r * 1.2, st2, 10, true);
+  F.rohr(x, y + 0.8, z, x, y + h * 0.78, z, r, r * 0.92, st, 10);
+  for (const q of [[0.5, 0x2f5fa0], [0.56, 0xb8462e], [0.62, 0xc89a3a]]) F.rohr(x, y + h * q[0], z, x, y + h * (q[0] + 0.045), z, r * 0.96, r * 0.95, Geo.farbe(q[1], 0.9), 10);
+  F.rohr(x, y + h * 0.78, z, x, y + h * 0.94, z, r * 0.92, r * 1.55, st, 10);
+  kasten(F, x, y + h * 0.94, z, r * 2.6, h * 0.06, r * 2.6, st2);
+}
+// liegender Löwe mit Menschenkopf (klein für die Allee, gross als Sphinx); Kopf zeigt nach lokal +x
+function loewe(F, g, f, kopf) {
+  F.kugel(-0.5 * g, 1.25 * g, 0, 2.6 * g, 1.15 * g, 1.05 * g, f, 10, 6, 3);                                   // Leib
+  F.kugel(-2.9 * g, 0.75 * g, 0, 0.9 * g, 0.75 * g, 1.0 * g, f, 8, 5, 3);                                     // Hinterteil
+  for (const s of [-1, 1]) { kasten(F, 2.4 * g, 0, s * 0.55 * g, 2.6 * g, 0.55 * g, 0.5 * g, f); kasten(F, -2.2 * g, 0, s * 0.95 * g, 1.6 * g, 0.5 * g, 0.4 * g, f); }   // Vorder- und Hinterpfoten
+  F.kugel(1.6 * g, 1.9 * g, 0, 0.9 * g, 1.1 * g, 0.85 * g, f, 8, 5, 3);                                       // Brust
+  stumpf(F, 2.0 * g, 2.0 * g, 0, 1.2 * g, 1.9 * g, 3.5 * g, 1.0 * g, 1.2 * g, kopf, kopf);                     // Kopftuch, zu den Seiten breit
+  F.kugel(2.15 * g, 2.95 * g, 0, 0.62 * g, 0.75 * g, 0.55 * g, f, 8, 5);                                      // Gesicht
+  kasten(F, 1.9 * g, 3.5 * g, 0, 1.0 * g, 0.35 * g, 1.0 * g, kopf);
+}
+
+// ── Szene: Wüste am Nil ───────────────────────────────────────────────────
+Szenen.wueste = function (b, deko, zuf, dichte) {
+  const S = b.S, H = S.haupt, n = H.n, ds = H.ds, d = b.def;
+  // Dorf: Lehmhäuser und Marktstände entlang der Strecke (def.dorf = [[sVon, sBis]])
+  for (const ber of d.dorf || []) for (const s of [1, -1]) {
+    let m = ber[0] + zuf() * 6;
+    while (m < ber[1]) {
+      const br = 7 + zuf() * 5, tf = 6 + zuf() * 4, h = zuf() < 0.45 ? 6.2 : 3.6, i = Math.floor(((((m % S.laenge) + S.laenge) % S.laenge) / ds)) % n;
+      m += br + 1.5 + zuf() * 3;
+      const ab = H.hb[i] + (s > 0 ? S.randL[i] : S.randR[i]) + 6 + tf / 2, x = H.x[i] + H.nx[i] * s * ab, z = H.z[i] + H.nz[i] * s * ab;
+      if (!b.frei(x, z, 3)) continue;
+      lehmhaus(b, x, b.hoehe(x, z).y, -z, Math.atan2(H.tz[i], H.tx[i]) + (s > 0 ? Math.PI : 0), br, tf, h, zuf);
+      b.belegt.push([x, z, Math.max(br, tf) / 2 + 1]);
+      if (zuf() < 0.5) {                                                            // Marktstand vor dem Haus
+        const ab2 = H.hb[i] + (s > 0 ? S.randL[i] : S.randR[i]) + 2.6, mx = H.x[i] + H.nx[i] * s * ab2, mz = H.z[i] + H.nz[i] * s * ab2;
+        if (b.frei(mx, mz, 1.2)) marktstand(b, mx, b.hoehe(mx, mz).y, -mz, Math.atan2(H.tz[i], H.tx[i]) + (s > 0 ? Math.PI : 0), zuf);
+      }
+    }
+  }
+  // Palmen an beiden Nilufern, dahinter am Südufer Felder und einzelne Häuser
+  for (const fl of d.fluesse || []) for (const s of [1, -1]) for (let x = fl.x0 + 6; x < fl.x1; x += 9 + zuf() * 8) {
+    const z = fl.z + s * (fl.breite / 2 + 4 + zuf() * 5);
+    if (b.imKorridor(x, z, null, 2)) continue;
+    palme(b, x, b.hoehe(x, z).y, -z, zuf);
+    if (s < 0 && zuf() < 0.2) { const z2 = fl.z - fl.breite / 2 - 22 - zuf() * 30; lehmhaus(b, x + 6, b.hoehe(x + 6, z2).y, -z2, zuf() * 3, 7 + zuf() * 4, 6 + zuf() * 3, 3.6, zuf); }
+  }
+  // Oase: Palmenhain entlang der Umleitung
+  for (const w of S.wege) if (w.art === 'umleitung') for (let q = 0; q < w.pfad.n; q += 3) for (const s of [1, -1]) {
+    const ab = w.pfad.hb[q] + w.rand + 3 + zuf() * 10, x = w.pfad.x[q] + w.pfad.nx[q] * s * ab, z = w.pfad.z[q] + w.pfad.nz[q] * s * ab;
+    if (zuf() < 0.7 && !b.imKorridor(x, z, null, 2)) palme(b, x, b.hoehe(x, z).y, -z, zuf, 7 + zuf() * 4);
+  }
+  // am Weg: Felsen (am Hang tiefer eingesunken), trockene Büsche, Palmen in der Ebene, umgestürzte Säulentrommeln beim Tempel
+  for (let i = 0; i < n; i += 3) for (const s of [1, -1]) {
+    const w0 = zuf(), w1 = zuf(), w2 = zuf(), w3 = zuf();
+    if (w0 > 0.55 * dichte) continue;
+    const r = s > 0 ? S.randL[i] : S.randR[i], ab = H.hb[i] + r + 3 + w1 * w1 * 50, x = H.x[i] + H.nx[i] * s * ab, z = H.z[i] + H.nz[i] * s * ab;
+    if (!b.frei(x, z, 2.5)) continue;
+    let ok = true;
+    for (const q of b.belegt) if (hyp(x - q[0], z - q[1]) < q[2] + 1.5) { ok = false; break; }
+    if (!ok) continue;
+    const y = b.hoehe(x, z).y, F = b.f('stein');
+    if (S.belagArt[i] === 'platten') { if (w2 < 0.5) { F.lage(x, y + 0.5, -z, w3 * TAU, 1.5708); F.rohr(0, -0.9, 0, 0, 0.9, 0, 0.95, 0.95, Geo.farbe(SANDSTEIN, 0.95), 10, true); F.lage(); } continue; }   // Säulentrommel
+    const steil = Math.max(Math.abs(b.hoehe(x + 2, z).y - b.hoehe(x - 2, z).y), Math.abs(b.hoehe(x, z + 2).y - b.hoehe(x, z - 2).y)) / 4;
+    if (w2 < 0.34) { const gr = 0.6 + w3 * 1.4; F.kugel(x, y - 0.1 - steil * gr * 1.2, -z, gr * (1 + w1 * 0.5), gr * 0.8, gr, Geo.farbe([0xb89a6c, 0xa88a5e, 0xc4a676][Math.floor(w3 * 3)], 0.92 + w1 * 0.16), 9, 5, 2.2); }   // Fels
+    else if (w2 < 0.66) F.kugel(x, y + 0.2 - steil * 0.6, -z, 0.6 + w3 * 0.6, 0.45 + w3 * 0.4, 0.6 + w3 * 0.6, Geo.farbe([0x7a7a44, 0x8a7e4a, 0x6a6a3a][Math.floor(w1 * 3)]), 6, 4);   // trockener Busch
+    else if (w2 < 0.8 && y < 6) palme(b, x, y, -z, zuf);
+  }
+  ufermauern(b);
+};
+
+// ── Horizont: Tafelberge des Niltals und ferne Dünen ─────────────────────
+Horizont.wueste = function (b, deko, mx, mz, rad, zuf) {
+  const F = b.f('steinFern');
+  for (let q = 0; q < 22; q++) {
+    const w = (q / 22) * TAU + zuf() * 0.12, r = rad + 40 + zuf() * 240, x = mx + Math.cos(w) * r, z = mz + Math.sin(w) * r, br = 120 + zuf() * 160, h = 28 + zuf() * 46, f0 = Geo.farbe(0xb88e5e, 0.85 + zuf() * 0.15), f1 = Geo.farbe(0xd8b07a, 0.95);
+    F.lage(x, -6, -z, zuf() * TAU); stumpf(F, 0, 0, 0, br, br * 0.7, h, br * 0.72, br * 0.46, f0, f1, Geo.farbe(0xd9b886)); F.lage();     // Tafelberg mit flacher Kuppe
+  }
+  for (let q = 0; q < 30; q++) {
+    const w = zuf() * TAU, r = rad - 120 + zuf() * 160, x = mx + Math.cos(w) * r, z = mz + Math.sin(w) * r;
+    if (!b.frei(x, z, 30)) continue;
+    F.kugel(x, b.hoehe(x, z).y - 4, -z, 30 + zuf() * 40, 8 + zuf() * 12, 18 + zuf() * 24, Geo.farbe(0xe2c896, 0.92 + zuf() * 0.1), 12, 5);
+  }
+};
+
+// ── Bauwerke Ägyptens ─────────────────────────────────────────────────────
+Object.assign(Bauten, {
+  // Pyramide aus Kalkstein: Stufen als feine Bänder, Spitze heller (a = Seitenlänge, h = Höhe)
+  pyramide(b, x, y, z, dreh, d) {
+    const F = b.f('stein'), a = (d && d.a) || 60, h = (d && d.h) || 40, K = Math.max(6, Math.round(h / 3.2)), Q = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+    let yF = y;
+    for (const q of Q) yF = Math.min(yF, b.hoehe(x + q[0] * a * 0.5, -z + q[1] * a * 0.5).y);          // Fuss auf die tiefste Ecke, damit keine Kante schwebt
+    F.lage(x, yF - 1, z, (dreh || 0) + 0.12);
+    for (let j = 0; j < K; j++) {
+      const t0 = j / K, t1 = (j + 1) / K, r0 = (a / 2) * (1 - t0), r1 = (a / 2) * (1 - t1), f = Geo.farbe(KALK, (0.93 + ((j * 7919) % 5) * 0.025) * (j === K - 1 ? 1.12 : 1));
+      for (let q = 0; q < 4; q++) {
+        const p = Q[q], r = Q[(q + 1) % 4];
+        F.vier(F.pkt(p[0] * r0, h * t0, p[1] * r0, f), F.pkt(r[0] * r0, h * t0, r[1] * r0, f), F.pkt(r[0] * r1, h * t1, r[1] * r1, f), F.pkt(p[0] * r1, h * t1, p[1] * r1, f));
+      }
+    }
+    F.lage();
+  },
+  // grosse Sphinx auf einem Sockel (blickt nach lokal +x)
+  sphinx(b, x, y, z, dreh) {
+    const F = b.f('stein');
+    F.lage(x, y, z, dreh);
+    kasten(F, 0, -3, 0, 30, 3.6, 14, Geo.farbe(0xb89a6a));
+    F.lage(x, y + 0.6, z, dreh);
+    loewe(F, 3.4, Geo.farbe(0xcdb184), Geo.farbe(0xc2a676));
+    F.lage();
+  },
+  // Tempeltor: zwei Pylontürme beidseits der Fahrbahn und ein Torsturz darüber
+  tempeltor(b, x, y, z, dreh) {
+    const F = b.f('stein'), R = b.f('relief'), a = 7.6, st = Geo.farbe(SANDSTEIN), st2 = Geo.farbe(SANDSTEIN, 0.82), ws = Geo.farbe(0xffffff, 0.97);
+    F.lage(x, y, z, dreh); R.lage(x, y, z, dreh);
+    for (const s of [-1, 1]) {
+      const zm = s * (a + 10);
+      stumpf(F, 0, -2, zm, 12, 20, 25, 8, 15, st2, st);
+      kasten(F, 0, 25, zm, 8.8, 1.2, 15.8, st);
+      for (const fx of [1, -1]) {                                                                  // Relief vorne und hinten, u = 1 an der Seite zur Fahrbahn
+        const zi = zm - s * 10, za = zm + s * 10, zit = zm - s * 7.5, zat = zm + s * 7.5, xb = fx * 6.06, xt = fx * 4.06;
+        R.vier(R.pkt(xb, -2, za, ws, 0, 0.25), R.pkt(xb, -2, zi, ws, 1, 0.25), R.pkt(xt, 25, zit, ws, 0.875, 1), R.pkt(xt, 25, zat, ws, 0.125, 1));
+      }
+    }
+    kasten(F, 0, 14, 0, 7, 3.6, 2 * a + 4, st);                                                   // Torsturz über der Fahrbahn
+    kasten(F, 0, 17.6, 0, 7.6, 0.8, 2 * a + 5, st2);
+    for (const fx of [3.56, -3.56]) R.vier(R.pkt(fx, 14, -(a + 2), ws, 0, 0), R.pkt(fx, 14, a + 2, ws, 1, 0), R.pkt(fx, 17.6, a + 2, ws, 1, 0.25), R.pkt(fx, 17.6, -(a + 2), ws, 0, 0.25));
+    for (const s of [-1, 1]) for (const fx of [-3.5, 3.5]) kasten(F, fx, -1, s * (a + 0.4), 1.4, 14.5, 1.4, st2);    // Türpfosten
+    F.lage(); R.lage();
+  },
+  // Allee mit liegenden Löwen auf Sockeln beidseits der Fahrbahn (s0 bis s1)
+  allee(b, x, y, z, dreh, d) {
+    const S = b.S, H = S.haupt, F = b.f('stein');
+    for (let m = d.s0; m <= d.s1; m += 9) for (const s of [1, -1]) {
+      const i = Math.floor(m / H.ds) % H.n, D = H.hb[i] + (s > 0 ? S.randL[i] : S.randR[i]) + 3.4, o = b.ort(m, s * D), dr = Math.atan2(H.tz[i], H.tx[i]) - s * 1.5708;
+      F.lage(o[0], o[1], o[2], dr); kasten(F, 0, -1, 0, 6.4, 1.7, 2.6, Geo.farbe(0xb89a6a)); F.lage(o[0], o[1] + 0.7, o[2], dr); loewe(F, 0.62, Geo.farbe(0xcdb184), Geo.farbe(0xc2a676)); F.lage();
+    }
+  },
+  // Säulenhalle: je zwei Säulenreihen beidseits, oben Architrave (s0 bis s1)
+  saeulenhalle(b, x, y, z, dreh, d) {
+    const S = b.S, H = S.haupt, F = b.f('stein'), hS = 13, st = Geo.farbe(SANDSTEIN, 0.95), farb = Geo.farbe(0x2f5fa0, 0.85);
+    const reihe = [];
+    for (let m = d.s0; m <= d.s1; m += 7) {
+      const i = Math.floor(m / H.ds) % H.n, P = [];
+      for (const s of [1, -1]) for (const e of [2.6, 9.6]) {
+        const D = H.hb[i] + (s > 0 ? S.randL[i] : S.randR[i]) + e, o = b.ort(m, s * D), yb = b.hoehe(o[0], -o[2]).y;
+        saeule(F, o[0], yb, o[2], hS, 1.25); P.push([o[0], yb + hS, o[2]]);
+      }
+      reihe.push(P);
+    }
+    for (let q = 0; q < reihe.length; q++) {
+      const P = reihe[q];
+      for (const pq of [[0, 1], [2, 3]]) { const A = P[pq[0]], B = P[pq[1]]; F.rohr(A[0], A[1] + 0.55, A[2], B[0], B[1] + 0.55, B[2], 0.9, 0.9, st, 4); }
+      if (q) for (let k = 0; k < 4; k++) { const A = reihe[q - 1][k], B = P[k]; F.rohr(A[0], A[1] + 1.25, A[2], B[0], B[1] + 1.25, B[2], 0.85, 0.85, k % 2 ? farb : st, 4); }
+    }
+  },
+  // Feluke: Holzboot mit grossem, schrägem Dreieckssegel
+  feluke(b, x, y, z, dreh) {
+    const F = b.f('stein'), fl = (b.def.fluesse || [])[0], yw = fl ? fl.y : y, holz = Geo.farbe(0x6a4a2a), segel = Geo.farbe(0xf6f2e8, 1.05);
+    F.lage(x, yw, z, dreh);
+    stumpf(F, 0, -0.5, 0, 8, 2.2, 0.8, 10, 3, holz, Geo.farbe(0x8a6440), Geo.farbe(0x5a3f26));
+    F.rohr(1, 0.8, 0, 1, 9, 0, 0.1, 0.07, holz, 5);
+    F.rohr(-5, 1.6, 0, 6, 12.5, 0, 0.07, 0.05, holz, 4);
+    F.drei(F.pkt(-4.6, 2, 0.05, segel), F.pkt(5.6, 12.1, 0.05, segel), F.pkt(4.2, 1.6, 0.05, segel));
+    F.lage();
+  },
+  // Kamelkarawane: Kamele in einer Reihe, einige mit Last
+  karawane(b, x, y, z, dreh, d) {
+    const F = b.f('stein'), zuf = zufallsGenerator(1777), c = Math.cos(dreh), sn = Math.sin(dreh);
+    for (let q = 0; q < 5; q++) {
+      const px = x - c * q * 4.2 + (zuf() - 0.5), pz = z + sn * q * 4.2 + (zuf() - 0.5), py = b.hoehe(px, -pz).y, fell = Geo.farbe([0xb08a5a, 0xa07a4a, 0xc49a68][q % 3]), du = Geo.farbe(0x6a4a2a);
+      F.lage(px, py, pz, dreh + (zuf() - 0.5) * 0.3);
+      F.kugel(0, 2.3, 0, 1.25, 0.6, 0.55, fell, 8, 5);
+      F.kugel(-0.1, 2.85, 0, 0.6, 0.5, 0.45, fell, 7, 4);
+      F.rohr(1.0, 2.4, 0, 1.6, 3.4, 0, 0.2, 0.15, fell, 5);
+      F.kugel(1.85, 3.45, 0, 0.42, 0.22, 0.2, fell, 6, 4);
+      for (const lx of [-0.8, 0.8]) for (const lz of [-0.25, 0.25]) F.rohr(lx, 2.1, lz, lx + 0.05, 0, lz, 0.1, 0.07, fell, 4);
+      if (q % 2) { kasten(F, -0.2, 3.2, 0, 1.3, 0.5, 1.4, Geo.farbe(q % 4 === 1 ? 0xb8462e : 0x2f5fa0)); for (const s of [-1, 1]) kasten(F, -0.2, 2.2, s * 0.75, 1, 0.8, 0.35, du); }
+      F.lage();
+    }
+  },
+});
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 8i: New York bei Nacht – nasse Strassen, Hochhäuser mit Fensterlicht,
+   Platz mit Leuchtreklamen, Hängebrücke mit Lichterketten, Stahlbrücke,
+   Statue mit Fackel auf der Insel, Lagerhäuser am Hafen, Park mit Teich
+   ══════════════════════════════════════════════════════════════════════════ */
+
+Object.assign(STIMMUNG, {
+  newyork: { zenit: 0x04060d, mitte: 0x0d1428, horizont: 0x3b2f4a, dunst: 0x1b1a28, schein: 0x6a7090, sonnePos: [44, 148, 41], sonne: 0x9fb2dc, sonneKraft: 0.55,
+    himmelLicht: 0x50608a, bodenLicht: 0x3a3038, licht: 0.6, wolke: 0x2a2a3c, wolken: 8, boden: 0x0e1116, nebel: [180, 1300], sterne: 70, mond: [0.62, 0.12], nacht: 0.62, scheinGr: 40 },   // Nacht: Mondlicht, Lichter der Stadt
+});
+
+// ── Bilder: Fassaden mit Fenstern, Leuchtreklamen, Laufschrift, Mauerwerk ──
+// Fassade 512 × 512 mit 16 × 16 Feldern: ein Feld = ein Fenster eines Stockwerks. art: glas, stein, ziegel. Liefert [Farbe, Leuchten].
+function fensterBild(art) {
+  const N = 512, Z = 32, c = document.createElement('canvas'), e = document.createElement('canvas');
+  c.width = c.height = e.width = e.height = N;
+  const x = c.getContext('2d'), l = e.getContext('2d'), zuf = zufallsGenerator(art === 'glas' ? 711 : art === 'stein' ? 712 : 713);
+  l.fillStyle = '#000'; l.fillRect(0, 0, N, N);
+  const licht = () => { const r = zuf(); return r < 0.5 ? ['#f2e6c8', '#f7ebcf'] : r < 0.78 ? ['#ffd38a', '#ffcc7a'] : r < 0.93 ? ['#dfe9ff', '#dbe6ff'] : ['#bcd4ff', '#a9c6ff']; };
+  if (art === 'glas') {                                     // Glas und Stahl: Bürofenster, ganze Stockwerke hell oder dunkel
+    x.fillStyle = '#20262e'; x.fillRect(0, 0, N, N);
+    for (let r = 0; r < 16; r++) {
+      const st = zuf(), quote = st < 0.25 ? 0.85 : st < 0.6 ? 0.35 : 0.06;
+      for (let s = 0; s < 16; s++) {
+        const px = s * Z, py = r * Z, an = zuf() < quote, lc = licht();
+        if (an) x.fillStyle = lc[0];
+        else { const g = x.createLinearGradient(px, py, px, py + Z); g.addColorStop(0, '#2c3c50'); g.addColorStop(1, '#111a25'); x.fillStyle = g; }
+        x.fillRect(px + 2, py + 3, Z - 4, Z - 8);
+        if (an) { l.fillStyle = lc[1]; l.fillRect(px + 2, py + 3, Z - 4, Z - 8); }
+      }
+      x.fillStyle = '#151a20'; x.fillRect(0, r * Z + Z - 5, N, 5);
+    }
+  } else if (art === 'stein') {                             // Stein mit Pfeilern, Fenster mit Sprossen
+    x.fillStyle = '#8f877c'; x.fillRect(0, 0, N, N);
+    for (let q = 0; q < 4000; q++) { x.fillStyle = zuf() < 0.5 ? 'rgba(255,255,255,.05)' : 'rgba(0,0,0,.06)'; x.fillRect(zuf() * N, zuf() * N, 2 + zuf() * 6, 1 + zuf() * 2); }
+    for (let s = 0; s <= 16; s += 4) { x.fillStyle = 'rgba(255,250,240,.12)'; x.fillRect(s * Z - 3, 0, 6, N); }
+    for (let r = 0; r < 16; r++) {
+      const quote = zuf() < 0.3 ? 0.6 : 0.28;
+      for (let s = 0; s < 16; s++) {
+        const px = s * Z + 9, py = r * Z + 7, an = zuf() < quote, lc = licht();
+        x.fillStyle = an ? lc[0] : '#191c22'; x.fillRect(px, py, 14, 20);
+        x.fillStyle = 'rgba(60,55,50,.8)'; x.fillRect(px + 6, py, 2, 20); x.fillRect(px, py + 9, 14, 2);
+        if (an) { l.fillStyle = lc[1]; l.fillRect(px, py, 14, 20); l.fillStyle = '#000'; l.fillRect(px + 6, py, 2, 20); l.fillRect(px, py + 9, 14, 2); }
+      }
+    }
+  } else {                                                  // Backstein mit Rundbogenfenstern und Feuertreppen
+    x.fillStyle = '#5e2c20'; x.fillRect(0, 0, N, N);
+    for (let y = 0; y < N; y += 4) for (let xx = (y / 4) % 2 ? 0 : 4; xx < N; xx += 8) { const t = zuf(); x.fillStyle = `rgba(${150 + t * 40 | 0},${66 + t * 22 | 0},${46 + t * 16 | 0},.45)`; x.fillRect(xx, y, 7, 3); }
+    const bogen = (g, px, py, w, h) => { g.beginPath(); g.moveTo(px, py + h); g.lineTo(px, py + w / 2); g.arc(px + w / 2, py + w / 2, w / 2, Math.PI, 0); g.lineTo(px + w, py + h); g.closePath(); g.fill(); };
+    for (let r = 0; r < 16; r++) for (let s = 0; s < 16; s++) {
+      const px = s * Z + 8, py = r * Z + 5, an = zuf() < 0.3, lc = licht();
+      x.fillStyle = '#cfc4b2'; bogen(x, px - 2, py - 2, 20, 24);
+      x.fillStyle = an ? lc[0] : '#1a1c20'; bogen(x, px, py, 16, 21);
+      if (an) { l.fillStyle = lc[1]; bogen(l, px, py, 16, 21); }
+    }
+    x.strokeStyle = 'rgba(16,16,18,.95)'; x.lineWidth = 2; x.fillStyle = 'rgba(22,22,25,.92)';
+    for (const s of [3, 11]) for (let r = 0; r < 16; r++) {
+      const px = s * Z - 4, py = r * Z + 27;
+      x.fillRect(px, py, 2 * Z + 8, 3);
+      for (let k = 0; k <= 2 * Z + 8; k += 4) x.fillRect(px + k, py - 8, 1, 8);
+      x.fillRect(px, py - 9, 2 * Z + 8, 1);
+      x.beginPath(); x.moveTo(px + (r % 2 ? 6 : 2 * Z), py); x.lineTo(px + (r % 2 ? 2 * Z : 6), py + Z); x.stroke();
+    }
+  }
+  return [c, e];
+}
+// Leuchtreklamen: 4 × 4 Felder mit Farben und Formen; die Schrift sind nur helle Balken (keine Wörter, keine Marken)
+function reklameBild() {
+  const N = 512, T = 128, c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d'), zuf = zufallsGenerator(1977);
+  const farben = [['#ff2e88', '#5a0b3a'], ['#19d3ff', '#06263f'], ['#ffb21a', '#5a2300'], ['#7dff3a', '#0d3a10'], ['#a05bff', '#1a0840'], ['#ff4a2a', '#3a0800'], ['#f2f2f2', '#203040'], ['#00e0b0', '#00302a']];
+  for (let q = 0; q < 16; q++) {
+    const px = (q % 4) * T, py = Math.floor(q / 4) * T, f = farben[(q * 3) % 8], art = q % 6;
+    const g = x.createLinearGradient(px, py, px + T, py + T); g.addColorStop(0, f[1]); g.addColorStop(1, '#05060a');
+    x.fillStyle = g; x.fillRect(px, py, T, T);
+    x.save(); x.beginPath(); x.rect(px, py, T, T); x.clip();
+    x.fillStyle = f[0]; x.strokeStyle = f[0];
+    if (art === 0) for (let k = 0; k < 3; k++) { x.globalAlpha = 1 - k * 0.3; x.beginPath(); x.arc(px + T * 0.62, py + T * 0.42, T * (0.32 - k * 0.09), 0, TAU); x.fill(); }
+    else if (art === 1) for (let k = 0; k < 7; k++) { x.globalAlpha = 0.45 + 0.55 * (k % 2); x.fillRect(px, py + (k * T) / 7, T, T / 14); }
+    else if (art === 2) { x.lineWidth = 6; for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(px, py + 24 + k * 20); for (let s = 0; s <= T; s += 8) x.lineTo(px + s, py + 24 + k * 20 + Math.sin(s * 0.08 + k) * 8); x.stroke(); } }
+    else if (art === 3) for (let k = 0; k < 5; k++) { const o = px + 6 + k * 24; x.beginPath(); x.moveTo(o, py + 16); x.lineTo(o + 20, py + T / 2 - 8); x.lineTo(o, py + T - 34); x.lineTo(o + 12, py + T - 34); x.lineTo(o + 32, py + T / 2 - 8); x.lineTo(o + 12, py + 16); x.fill(); }
+    else if (art === 4) for (let k = 0; k < 9; k++) { const sx = px + zuf() * T, sy = py + zuf() * (T - 30), r = 4 + zuf() * 12; x.beginPath(); for (let j = 0; j < 10; j++) { const w = (j * Math.PI) / 5, rr = j % 2 ? r * 0.45 : r; x.lineTo(sx + Math.cos(w) * rr, sy + Math.sin(w) * rr); } x.fill(); }
+    else { x.beginPath(); x.moveTo(px, py + T - 30); x.lineTo(px + T * 0.45, py + T * 0.25); x.lineTo(px + T, py + T - 30); x.fill(); x.globalAlpha = 0.7; x.fillStyle = '#fff'; x.beginPath(); x.arc(px + T * 0.7, py + T * 0.3, 11, 0, TAU); x.fill(); }
+    x.globalAlpha = 1; x.fillStyle = 'rgba(255,255,255,.92)';
+    for (let k = 0, xx = px + 10; k < 6 && xx < px + T - 16; k++) { const w = 6 + zuf() * 12; x.fillRect(xx, py + T - 24, w, 10); xx += w + 4; }
+    x.restore();
+    x.strokeStyle = 'rgba(255,255,255,.6)'; x.lineWidth = 3; x.strokeRect(px + 2, py + 2, T - 4, T - 4);
+  }
+  return c;
+}
+// Laufschrift: Leuchtpunkte in Zeilen, wandert über die Fassaden
+function laufbandBild() {
+  const c = document.createElement('canvas'); c.width = 512; c.height = 32;
+  const x = c.getContext('2d'), zuf = zufallsGenerator(4040);
+  x.fillStyle = '#07080c'; x.fillRect(0, 0, 512, 32);
+  let xx = 4;
+  while (xx < 500) { const w = 4 + Math.floor(zuf() * 5) * 4, f = ['#ffb020', '#ff3a3a', '#5ad0ff', '#ffffff'][Math.floor(zuf() * 4)]; x.fillStyle = f; for (let k = 0; k < w; k += 4) for (let j = 0; j < 5; j++) if (zuf() < 0.7) x.fillRect(xx + k, 6 + j * 4, 3, 3); xx += w + 6 + (zuf() < 0.2 ? 18 : 0); }
+  return c;
+}
+// helles Mauerwerk für angestrahlte Bauten (Brückentürme, Sockel)
+function quaderBild() {
+  const N = 256, c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d'), zuf = zufallsGenerator(5150);
+  x.fillStyle = '#c9c0b0'; x.fillRect(0, 0, N, N);
+  for (let q = 0; q < 2500; q++) { x.fillStyle = zuf() < 0.5 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.07)'; x.fillRect(zuf() * N, zuf() * N, 2 + zuf() * 8, 1 + zuf() * 3); }
+  x.fillStyle = 'rgba(60,50,40,.35)';
+  for (let y = 0; y < N; y += 32) { x.fillRect(0, y, N, 2); for (let xx = (y / 32) % 2 ? 0 : 32; xx < N; xx += 64) x.fillRect(xx, y, 2, 32); }
+  return c;
+}
+// Kupfer mit Patina: senkrechte Schlieren
+function kupferBild() {
+  const N = 128, c = document.createElement('canvas'); c.width = c.height = N;
+  const x = c.getContext('2d'), zuf = zufallsGenerator(1886);
+  x.fillStyle = '#b8d8c8'; x.fillRect(0, 0, N, N);
+  for (let q = 0; q < 160; q++) { x.fillStyle = zuf() < 0.5 ? 'rgba(255,255,255,.12)' : 'rgba(20,60,50,.14)'; x.fillRect(zuf() * N, 0, 1 + zuf() * 3, N); }
+  return c;
+}
+for (const art of ['glas', 'stein', 'ziegel']) ORTSTOFFE['turm' + art] = (einfach) => {
+  const bi = fensterBild(art), o = { map: Struktur.textur(bi[0], true), emissiveMap: Struktur.textur(bi[1], true), emissive: 0xffffff, emissiveIntensity: 1, vertexColors: true, side: THREE.DoubleSide };
+  return einfach ? new THREE.MeshLambertMaterial(o) : new THREE.MeshStandardMaterial(Object.assign(o, { roughness: art === 'glas' ? 0.4 : 0.85, metalness: art === 'glas' ? 0.35 : 0 }));
+};
+ORTSTOFFE.reklame = () => (NY.reklame = new THREE.MeshBasicMaterial({ map: Struktur.textur(reklameBild(), true), vertexColors: true, side: THREE.DoubleSide }));
+ORTSTOFFE.laufband = () => (NY.laufband = new THREE.MeshBasicMaterial({ map: Struktur.textur(laufbandBild(), true), vertexColors: true, side: THREE.DoubleSide }));
+ORTSTOFFE.angestrahlt = () => new THREE.MeshBasicMaterial({ map: Struktur.textur(quaderBild(), true), vertexColors: true, side: THREE.DoubleSide });
+ORTSTOFFE.kupfer = () => new THREE.MeshBasicMaterial({ map: Struktur.textur(kupferBild(), true), vertexColors: true, side: THREE.DoubleSide });
+
+// ── Bewegung pro Bild: Reklamen wechseln, Laufschrift wandert, Dampf steigt aus den Rohren ──
+const NY = {
+  reklame: null, laufband: null, takt: 0,
+  proBild(G, dt) {
+    if (dt <= 0) return;
+    if (this.laufband) this.laufband.map.offset.x += dt * 0.18;
+    if (this.reklame && (this.takt += dt) > 4.5) { this.takt = 0; this.reklame.map.offset.x += 0.25; }
+    const D = Orte.dampf;
+    if (!D || !D.length || !G.ansichten.length) return;
+    const rate = G.qualitaet === 'niedrig' ? 2 : 5;
+    for (const p of D) {
+      let nah = false;
+      for (const a of G.ansichten) { const k = a.kamera.position; if (Math.abs(k.x - p[0]) < 140 && Math.abs(-k.z - p[2]) < 140) { nah = true; break; } }
+      if (!nah) continue;
+      p[3] = (p[3] || 0) + dt * rate;
+      while (p[3] >= 1) { p[3] -= 1; Dunst.neu(p[0] + (Math.random() - 0.5) * 0.5, p[1], p[2] + (Math.random() - 0.5) * 0.5, (Math.random() - 0.5) * 0.5, 1.1 + Math.random() * 0.7, (Math.random() - 0.5) * 0.5, 3.4, 0.8, 0xeef2f6, 0.38, 1.5, -0.25); }
+    }
+  },
+};
+
+// ── Bausteine der Stadt ───────────────────────────────────────────────────
+// ein Abschnitt eines Hochhauses: Grundfläche br × tf von y0 bis y1, Fassade art; u0/v0 verschieben das Fenstermuster
+function turmstufe(b, T, D, br, tf, y0, y1, art, u0, v0, f) {
+  const kw = art === 'ziegel' ? 3.2 : 2.6, tw = kw * 16, th = 57.6, a = br / 2, t = tf / 2, W = [[-a, t, a, t], [a, t, a, -t], [a, -t, -a, -t], [-a, -t, -a, t]];
+  let u = u0;
+  for (const w of W) { const len = hyp(w[2] - w[0], w[3] - w[1]); T.tafel([w[0], y0, w[1]], [w[2], y0, w[3]], [w[2], y1, w[3]], [w[0], y1, w[1]], f, u, v0 + (y0 + 1.5) / th, u + len / tw, v0 + (y1 + 1.5) / th); u += len / tw; }
+  kasten(D, 0, y1, 0, br + 0.5, 0.7, tf + 0.5, Geo.farbe(0x3a3c40));
+}
+// Wassertank aus Holz auf Stelzen (auf älteren Dächern)
+function wassertank(F, x, y, z, zuf) {
+  const holz = Geo.farbe(0x5e4632, 0.8 + zuf() * 0.3), st = Geo.farbe(0x2c2e32);
+  for (const p of [[-1.2, -1.2], [1.2, -1.2], [1.2, 1.2], [-1.2, 1.2]]) F.rohr(x + p[0], y, z + p[1], x + p[0] * 0.9, y + 2.2, z + p[1] * 0.9, 0.08, 0.08, st, 4);
+  F.rohr(x, y + 2.2, z, x, y + 5.2, z, 1.6, 1.6, holz, 10, true);
+  for (const q of [2.9, 3.8, 4.7]) F.rohr(x, y + q, z, x, y + q + 0.1, z, 1.64, 1.64, st, 10);
+  F.rohr(x, y + 5.2, z, x, y + 6.6, z, 1.75, 0.1, Geo.farbe(0x3a3430), 10);
+}
+// Hochhaus: Fassade mit Fensterlicht, bei grosser Höhe mit Rücksprüngen; unten Läden mit Licht; oben Wassertank, Technik oder Antenne mit rotem Licht
+function hochhaus(b, x, y, z, dreh, br, tf, h, art, zuf, laeden) {
+  const T = b.f('turm' + art), D = b.f('stein'), L = b.f('licht'), ton = 0.8 + zuf() * 0.35, f = art === 'glas' ? [ton * 0.9, ton * 0.96, ton] : [ton, ton * 0.97, ton * 0.93];
+  h = Math.max(7.2, Math.round(h / 3.6) * 3.6);
+  const stufen = [[br, tf, h]];
+  if (h > 70 && zuf() < 0.7) { stufen[0][2] = Math.round((h * 0.6) / 3.6) * 3.6; stufen.push([br * 0.76, tf * 0.76, h]); if (h > 110 && zuf() < 0.6) { stufen[1][2] = Math.round((h * 0.84) / 3.6) * 3.6; stufen.push([br * 0.52, tf * 0.52, h]); } }
+  T.lage(x, y, z, dreh); D.lage(x, y, z, dreh); L.lage(x, y, z, dreh);
+  const u0 = Math.floor(zuf() * 16) / 16, v0 = Math.floor(zuf() * 16) / 16;
+  let y0 = -1.5;
+  for (const st of stufen) { turmstufe(b, T, D, st[0], st[1], y0, st[2], art, u0, v0, f); y0 = st[2]; }
+  if (laeden) {                                                                   // Läden im Erdgeschoss: helle und dunkle Schaufenster
+    const a = br / 2 + 0.12, t = tf / 2 + 0.12, W = [[-a, t, a, t], [a, t, a, -t], [a, -t, -a, -t], [-a, -t, -a, t]];
+    for (const w of W) {
+      const len = hyp(w[2] - w[0], w[3] - w[1]), k = Math.max(1, Math.round(len / 6));
+      for (let q = 0; q < k; q++) {
+        if (zuf() < 0.25) continue;
+        const t0 = (q + 0.08) / k, t1 = (q + 0.92) / k, hx = [0xffd28a, 0xf3efe2, 0xffe7b8, 0xff8a5a, 0x8ad8ff][Math.floor(zuf() * 5)], fa = Geo.farbe(hx, 0.55 + zuf() * 0.3);
+        wandV(L, lerp(w[0], w[2], t0), lerp(w[1], w[3], t0), lerp(w[0], w[2], t1), lerp(w[1], w[3], t1), 0.3, 3.3, fa, Geo.farbe(hx, 0.3));
+      }
+    }
+  }
+  const top = stufen[stufen.length - 1], ht = top[2] + 0.7;
+  if (top[2] > 90 && zuf() < 0.65) { const hm = 8 + zuf() * 16; D.rohr(0, ht, 0, 0, ht + hm, 0, 0.4, 0.07, Geo.farbe(0x55585e), 5); b.lichtLokal(D, 0, ht + hm + 0.3, 0, 1.6, 0xff3a2a, 0.9); }
+  else if (art !== 'glas' && top[2] < 75 && zuf() < 0.7) wassertank(D, (zuf() - 0.5) * top[0] * 0.5, ht, (zuf() - 0.5) * top[1] * 0.5, zuf);
+  else if (zuf() < 0.6) kasten(D, (zuf() - 0.5) * top[0] * 0.4, ht, (zuf() - 0.5) * top[1] * 0.4, 4 + zuf() * 4, 2.5, 3 + zuf() * 3, Geo.farbe(0x45474c));
+  T.lage(); D.lage(); L.lage();
+}
+// Strassenlaterne mit Ausleger über die Fahrbahn (Welt-Koordinaten; ax/az = Richtung zur Fahrbahn)
+function stadtlampe(b, x, y, z, ax, az) {
+  const D = b.f('stein'), L = b.f('licht'), f = Geo.farbe(0x3a3e44);
+  D.rohr(x, y - 0.3, z, x, y + 8.2, z, 0.14, 0.09, f, 6);
+  D.rohr(x, y + 8.1, z, x + ax * 2.6, y + 8.6, z + az * 2.6, 0.07, 0.06, f, 5);
+  D.kugel(x + ax * 2.9, y + 8.55, z + az * 2.9, 0.55, 0.18, 0.3, f, 8, 4);
+  L.kugel(x + ax * 2.9, y + 8.4, z + az * 2.9, 0.42, 0.06, 0.24, Geo.farbe(0xffe2a8, 1.4), 8, 3);
+  b.licht(x + ax * 2.9, y + 8.3, z + az * 2.9, 3.2, 0xffcf8a, 0.95);
+}
+// Ampel am Strassenrand: gelber Kasten, ein Licht brennt
+function ampel(b, x, y, z, rot) {
+  const D = b.f('stein'), L = b.f('licht');
+  D.rohr(x, y - 0.3, z, x, y + 5.6, z, 0.11, 0.09, Geo.farbe(0x3a3e44), 6);
+  kasten(D, x, y + 5.6, z, 0.5, 1.5, 0.5, Geo.farbe(0xc8a020));
+  const hy = y + (rot ? 6.85 : 5.85), hx = rot ? 0xff2a1a : 0x2aff7a;
+  L.kugel(x, hy, z, 0.17, 0.17, 0.17, Geo.farbe(hx, 1.2), 6, 4);
+  b.licht(x, hy, z, 1.5, hx, 0.9);
+}
+// Taxi, gelb, am Strassenrand geparkt (Front nach lokal +x)
+function taxi(b, x, y, z, dreh) {
+  const F = b.f('stein'), L = b.f('licht'), gelb = Geo.farbe(0xf2b80c, 0.95), du = Geo.farbe(0x15171a), glas = Geo.farbe(0x1c2836);
+  F.lage(x, y, z, dreh); L.lage(x, y, z, dreh);
+  F.kugel(0, 0.78, 0, 2.45, 0.42, 0.95, gelb, 12, 5, 3.4);
+  F.kugel(-0.25, 1.3, 0, 1.35, 0.42, 0.86, glas, 10, 5, 3);
+  for (const wx of [-1.5, 1.5]) F.rohr(wx, 0.36, -1.0, wx, 0.36, 1.0, 0.36, 0.36, du, 8, true);
+  kasten(L, -0.25, 1.68, 0, 0.9, 0.28, 0.26, Geo.farbe(0xfff2c0, 0.95));
+  for (const s of [-0.7, 0.7]) { kasten(L, -2.47, 0.72, s, 0.06, 0.2, 0.3, Geo.farbe(0xff2a1a, 0.9)); kasten(L, 2.47, 0.72, s, 0.06, 0.2, 0.32, Geo.farbe(0xe8e4d8, 0.6)); }
+  F.lage(); L.lage();
+}
+// Dampfrohr, orange-weiss gestreift; der Dampf steigt im Spiel auf (NY.proBild)
+function dampfrohr(b, x, y, z) {
+  const F = b.f('stein');
+  for (let k = 0; k < 4; k++) F.rohr(x, y - 0.2 + k * 0.45, z, x, y + 0.25 + k * 0.45, z, 0.42, 0.4, Geo.farbe(k % 2 ? 0xf2f2ee : 0xe8661c, 0.9), 10, k === 3);
+  Orte.dampf.push([x, y + 1.9, -z, 0]);
+}
+// Laubbaum im Park: Stamm und dunkle, runde Krone
+function parkbaum(b, x, y, z, zuf) {
+  const D = b.f('stein'), h = 6 + zuf() * 4, g = Geo.farbe([0x2f4a2a, 0x36502c, 0x2a4228][Math.floor(zuf() * 3)], 0.85 + zuf() * 0.3);
+  D.rohr(x, y - 0.4, z, x, y + h * 0.5, z, 0.3, 0.2, Geo.farbe(0x4a4038), 6);
+  D.kugel(x, y + h * 0.7, z, h * 0.38, h * 0.32, h * 0.38, g, 9, 5);
+  D.kugel(x + (zuf() - 0.5) * h * 0.3, y + h * 0.9, z + (zuf() - 0.5) * h * 0.3, h * 0.26, h * 0.22, h * 0.26, g, 7, 4);
+}
+
+// ── Szene: Grossstadt ─────────────────────────────────────────────────────
+Szenen.grossstadt = function (b, deko, zuf, dichte) {
+  const S = b.S, H = S.haupt, n = H.n, ds = H.ds, d = b.def, pl = d.platz || [0, 0, 0, 0];
+  const imPlatz = (x, z, r) => x > pl[0] - r && x < pl[2] + r && z > pl[1] - r && z < pl[3] + r;
+  const brooklyn = (z) => z > 268;
+  // 1. Häuserzeilen entlang der Strecke (Lücken für Querstrassen mit Ampeln)
+  for (const s of [1, -1]) {
+    let i = 0, letztes = null, quer = 50 + zuf() * 30;
+    while (i < n - 2) {
+      const br = 16 + zuf() * 14, m = Math.max(3, Math.round(br / ds)), j = Math.min(n - 1, i + (m >> 1)), j2 = Math.min(n - 1, j + 2), tf = 18 + zuf() * 10;
+      i += m + 1;
+      if (i * ds > quer) {                                                            // Querstrasse: Lücke, Ampel an der Ecke
+        quer = i * ds + 60 + zuf() * 40; letztes = null;
+        const ab = H.hb[j] + (s > 0 ? S.randL[j] : S.randR[j]) + 2.2, ax = H.x[j] + H.nx[j] * s * ab, az = H.z[j] + H.nz[j] * s * ab;
+        if (!S.bruecke[j] && b.frei(ax, az, 1.2) && !imPlatz(ax, az, 0)) ampel(b, ax, b.hoehe(ax, az).y, -az, zuf() < 0.5);
+        continue;
+      }
+      const ab = H.hb[j] + (s > 0 ? S.randL[j] : S.randR[j]) + 7 + tf / 2;
+      const x = H.x[j] + H.nx[j] * s * ab, z = H.z[j] + H.nz[j] * s * ab, eng = hyp(H.x[j2] + H.nx[j2] * s * ab - x, H.z[j2] + H.nz[j2] * s * ab - z) / ((j2 - j) * ds || 1);
+      if (S.bruecke[j] || eng < 0.6 || imPlatz(x, z, 12)) { letztes = null; continue; }
+      const dreh = Math.atan2(H.tz[j], H.tx[j]), c = Math.cos(dreh), sn = Math.sin(dreh), rad = (br + tf) / 4;
+      let ok = true;
+      for (const p of [[0, 0], [-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]) if (!b.frei(x + c * p[0] * br - sn * p[1] * tf, z + sn * p[0] * br + c * p[1] * tf, 3)) { ok = false; break; }
+      if (ok) for (const q of b.belegt) if (q !== letztes && hyp(x - q[0], z - q[1]) < (rad + q[2]) * 1.1) { ok = false; break; }
+      if (!ok) { letztes = null; continue; }
+      const y = b.hoehe(x, z).y, bk = brooklyn(z), w = zuf();
+      const art = bk ? (w < 0.8 ? 'ziegel' : 'glas') : w < 0.45 ? 'glas' : w < 0.85 ? 'stein' : 'ziegel', h = bk ? (art === 'glas' ? 50 + zuf() * 40 : 14 + zuf() * 18) : 30 + zuf() * zuf() * 90;          // nahe Häuser höchstens 120 m, damit die Wahrzeichen herausragen
+      hochhaus(b, x, y, -z, dreh, br - 0.6, tf, h, art, zuf, true);
+      letztes = [x, z, rad]; b.belegt.push(letztes);
+    }
+  }
+  // 2. Häuserblöcke in der Fläche: Manhattan hoch, Brooklyn niedrig
+  const g = S.grenzen;
+  for (let z = g.z0 - 160; z < g.z1 + 160; z += 36) for (let x = g.x0 - 160; x < g.x1 + 160; x += 36) {
+    const br = 20 + zuf() * 12, tf = 20 + zuf() * 12, px = x + (zuf() - 0.5) * 6, pz = z + (zuf() - 0.5) * 6, rad = (br + tf) / 4, w = zuf(), hz = zuf();
+    if (imPlatz(px, pz, 20)) continue;
+    let ok = b.frei(px, pz, 15);
+    if (ok) for (const q of b.belegt) if (hyp(px - q[0], pz - q[1]) < (rad + q[2]) * 1.15) { ok = false; break; }
+    if (!ok) continue;
+    const bk = brooklyn(pz), art = bk ? (w < 0.85 ? 'ziegel' : 'glas') : w < 0.5 ? 'glas' : w < 0.85 ? 'stein' : 'ziegel', h = bk ? (art === 'glas' ? 45 + hz * 45 : 12 + hz * 22) : 36 + hz * hz * 100;
+    hochhaus(b, px, b.hoehe(px, pz).y, -pz, zuf() < 0.5 ? 0 : Math.PI / 2, br, tf, h, art, zuf, false);
+    b.belegt.push([px, pz, rad]);
+  }
+  // 3. Laternen mit Lichtschein, Taxis, Dampfrohre, Bäume im Park und am Ufer
+  let taxiZ = 0, dampfZ = 0;
+  for (let i = 2; i < n; i += 4) for (const s of [1, -1]) {
+    if (S.bruecke[i]) continue;
+    const r = s > 0 ? S.randL[i] : S.randR[i], nx = H.nx[i] * s, nz = H.nz[i] * s, ab = H.hb[i] + r + 1.6, x = H.x[i] + nx * ab, z = H.z[i] + nz * ab;
+    if (!b.frei(x, z, 0.8, true)) continue;
+    const y = b.hoehe(x, z).y, park = !b.frei(x, z, 0.8, false) && b.frei(x, z, 0.8, true), wurf = zuf();
+    if (((i / 4) | 0) % 3 === (s > 0 ? 0 : 1)) {
+      if (park) laterne(b, x, y, -z, 4.2, 0xffe0b0); else stadtlampe(b, x, y, -z, -nx, nz);
+      lichtfleck(b, i * ds, s * (H.hb[i] - 2.5), 8, 0xffc070, 0.26);
+      continue;
+    }
+    if (park) { if (wurf < 0.75 * dichte) { const ab2 = ab + 3 + zuf() * 10; parkbaum(b, H.x[i] + nx * ab2, b.hoehe(H.x[i] + nx * ab2, H.z[i] + nz * ab2).y, -(H.z[i] + nz * ab2), zuf); } continue; }
+    if (brooklyn(z)) continue;
+    const ab2 = ab + 2.4, x2 = H.x[i] + nx * ab2, z2 = H.z[i] + nz * ab2;
+    if (wurf < 0.3 && (taxiZ += 1) && b.frei(x2, z2, 1.5) && !imPlatz(x2, z2, -6)) taxi(b, x2, b.hoehe(x2, z2).y, -z2, Math.atan2(H.tz[i], H.tx[i]) + (zuf() < 0.5 ? 0 : Math.PI));
+    else if (wurf > 0.93 && (dampfZ += 1) && b.frei(x2, z2, 1)) dampfrohr(b, x2, b.hoehe(x2, z2).y, -z2);
+  }
+  // Bäume in den Parks (Rasenflächen) und Teich mit Uferweg
+  for (const ra of (d.boden && d.boden.rasen) || []) for (let q = 0; q < (ra[2] - ra[0]) * (ra[3] - ra[1]) / 90 * dichte; q++) {
+    const x = ra[0] + zuf() * (ra[2] - ra[0]), z = ra[1] + zuf() * (ra[3] - ra[1]);
+    if (b.imKorridor(x, z, null, 4)) continue;
+    let nass = false;
+    for (const ws of d.wasser || []) if (hyp(x - ws.x, z - ws.z) < ws.r + 4) nass = true;
+    if (!nass && zuf() < 0.5) parkbaum(b, x, b.hoehe(x, z).y, -z, zuf);
+  }
+  for (const ws of d.wasser || []) for (let q = 0; q < 10; q++) { const w = (q / 10) * TAU, x = ws.x + Math.cos(w) * (ws.r + 3), z = ws.z + Math.sin(w) * (ws.r + 3); if (!b.imKorridor(x, z, null, 2)) laterne(b, x, b.hoehe(x, z).y, -z, 4, 0xffe0b0); }
+  bruecken(b);
+  ufermauern(b);
+};
+
+// ── Horizont: Skyline rundherum, im Süden hoch, im Norden niedrig ────────
+Horizont.skyline = function (b, deko, mx, mz, rad, zuf) {
+  for (let q = 0; q < 110; q++) {
+    const w = (q / 110) * TAU + zuf() * 0.04, r = rad - 150 + zuf() * 230, x = mx + Math.cos(w) * r, z = mz + Math.sin(w) * r;
+    if (!b.frei(x, z, 26)) continue;
+    let ok = true;
+    for (const p of b.belegt) if (hyp(x - p[0], z - p[1]) < p[2] + 16) { ok = false; break; }
+    if (!ok) continue;
+    const nord = z > 268, h = nord ? 20 + zuf() * zuf() * 70 : 60 + zuf() * zuf() * 220, br = 22 + zuf() * 22, tf = 22 + zuf() * 22;
+    hochhaus(b, x, b.hoehe(x, z).y, -z, zuf() * TAU, br, tf, h, nord ? (zuf() < 0.7 ? 'ziegel' : 'glas') : zuf() < 0.55 ? 'glas' : 'stein', zuf, false);
+    b.belegt.push([x, z, (br + tf) / 4]);
+  }
+};
+
+// ── Brücken von New York ──────────────────────────────────────────────────
+Object.assign(BRUECKEN, {
+  // grosse Hängebrücke: zwei Steintürme mit Spitzbogen über der Fahrbahn, Tragseile mit Lichterketten, Hänger und Schrägseile
+  grossbruecke(b, a, e) {
+    const S = b.S, H = S.haupt, n = H.n, A = b.f('angestrahlt'), F = b.f('stein'), G = b.f('gitter'), fl = (b.def.fluesse || [])[0], yW = fl ? fl.y : 0;
+    const iBei = (s) => Math.floor((((s % S.laenge) + S.laenge) % S.laenge) / H.ds) % n, sA = a * H.ds, sE = e * H.ds, L = sE - sA;
+    const hell = Geo.farbe(0xd8ccb0, 1.05), dunkel = Geo.farbe(0x8a8070, 0.9), seil = Geo.farbe(0x3a3d42), stahl = Geo.farbe(0x2e3338);
+    const sT = [sA + L * 0.17, sE - L * 0.17], hT = 30, sAnk = [sA + 1, sE - 1], dkB = H.hb[iBei(sT[0])] + 0.5 + WV + 3.2;
+    const dk = () => dkB;                                                           // Abstand der Seilebene von der Mitte
+    const yD = (s) => b.ort(s, 0)[1];
+    // Türme
+    for (const st of sT) {
+      const i = iBei(st), m = b.ort(st, 0), dr = Math.atan2(H.tz[i], H.tx[i]), y0 = m[1], d0 = dk(st) - 3.2;
+      A.lage(m[0], 0, m[2], dr); F.lage(m[0], 0, m[2], dr);
+      kasten(A, 0, yW - 1, 0, 14, y0 - 0.6 - (yW - 1), 2 * d0 + 18, dunkel, hell);                         // Sockel im Wasser
+      for (const sd of [-1, 1]) kasten(A, 0, y0 - 0.6, sd * (d0 + 3.2), 9, hT + 0.6, 6.4, hell, dunkel);  // zwei Pfeiler
+      const ys = y0 + 11, hb = 8, K = 12, bog = (zz) => ys + hb * Math.pow(Math.max(0, 1 - Math.abs(zz) / d0), 0.55);
+      for (let k = 0; k < K; k++) {                                                                  // Spitzbogen und Mauer darüber
+        const z0 = -d0 + (2 * d0 * k) / K, z1 = -d0 + (2 * d0 * (k + 1)) / K;
+        for (const fx of [-4.5, 4.5]) A.vier(A.pkt(fx, bog(z0), z0, hell), A.pkt(fx, bog(z1), z1, hell), A.pkt(fx, y0 + hT, z1, dunkel), A.pkt(fx, y0 + hT, z0, dunkel));
+        A.vier(A.pkt(-4.5, bog(z0), z0, dunkel), A.pkt(4.5, bog(z0), z0, dunkel), A.pkt(4.5, bog(z1), z1, dunkel), A.pkt(-4.5, bog(z1), z1, dunkel));
+      }
+      for (const fx of [-4.56, 4.56]) for (const zz of [-d0 * 0.5, d0 * 0.5]) {                        // zwei schmale Spitzfenster oben
+        const fw = 1.1, y1 = y0 + 21, y2 = y0 + 26.5, du = Geo.farbe(0x0e1014);
+        F.vier(F.pkt(fx, y1, zz - fw, du), F.pkt(fx, y1, zz + fw, du), F.pkt(fx, y2, zz + fw, du), F.pkt(fx, y2, zz - fw, du));
+        F.drei(F.pkt(fx, y2, zz - fw, du), F.pkt(fx, y2, zz + fw, du), F.pkt(fx, y2 + 1.6, zz, du));
+      }
+      kasten(A, 0, y0 + hT, 0, 10.2, 1.4, 2 * d0 + 14.4, hell, dunkel);                                 // Gesims
+      kasten(A, 0, y0 + hT + 1.4, 0, 9, 1.2, 2 * d0 + 12.8, dunkel);
+      for (const sd of [-1, 1]) for (const fx of [-6, 6]) b.lichtLokal(A, fx, y0 + 0.5, sd * (d0 + 3.2), 7, 0xffe2b8, 0.32);   // Strahler am Fuss
+      A.lage(); F.lage();
+    }
+    // Tragseile: über die Turmspitzen, dazwischen durchhängend, aussen zu den Ankern
+    const seilY = (s) => {
+      if (s <= sT[0]) { const t = (s - sAnk[0]) / (sT[0] - sAnk[0]); return lerp(yD(sAnk[0]) + 3, yD(sT[0]) + hT + 1.6, t) - 2 * Math.sin(Math.PI * t); }
+      if (s >= sT[1]) { const t = (s - sT[1]) / (sAnk[1] - sT[1]); return lerp(yD(sT[1]) + hT + 1.6, yD(sAnk[1]) + 3, t) - 2 * Math.sin(Math.PI * t); }
+      const t = (s - sT[0]) / (sT[1] - sT[0]), u = 2 * t - 1;
+      return lerp(yD(sT[0]), yD(sT[1]), t) + 2.6 + (hT + 1.6 - 2.6) * u * u;
+    };
+    for (const sd of [-1, 1]) {
+      let vor = null, z = 0;
+      for (let s = sAnk[0]; s <= sAnk[1] + 0.1; s += 3) {
+        const o = b.ort(s, sd * dk(s)), y = seilY(s), p = [o[0], y, o[2]];
+        if (vor) F.rohr(vor[0], vor[1], vor[2], p[0], p[1], p[2], 0.32, 0.32, seil, 5);
+        if (z++ % 2 === 0) b.licht(p[0], p[1] + 0.35, p[2], 1.15, 0xfff2d6, 0.95);                        // Lichterkette
+        const yd = yD(s);
+        if (s > sA - 2 && s < sE + 2 && y - yd > 2.4 && Math.abs(s - sT[0]) > 5 && Math.abs(s - sT[1]) > 5) F.rohr(p[0], y, p[2], o[0], yd + 0.8, o[2], 0.06, 0.06, seil, 4);   // Hänger
+        vor = p;
+      }
+      for (const st of sT) for (const r of [-1, 1]) for (let k = 1; k <= 6; k++) {                        // Schrägseile vom Turm
+        const s2 = st + r * k * 5.5, o = b.ort(st, sd * dk(st)), o2 = b.ort(s2, sd * dk(s2));
+        F.rohr(o[0], yD(st) + hT - 1, o[2], o2[0], yD(s2) + 0.9, o2[2], 0.07, 0.07, seil, 4);
+      }
+      // Fachwerkträger am Fahrbahnrand
+      let vg = null;
+      for (let s = sA; s <= sE + 0.1; s += 2) {
+        const o = b.ort(s, sd * dk(s)), y = yD(s), q = [G.pkt(o[0], y - 2.4, o[2], stahl, s / 4, 0), G.pkt(o[0], y + 1.1, o[2], stahl, s / 4, 1)];
+        if (vg) G.vier(vg[0], q[0], q[1], vg[1]);
+        vg = q;
+      }
+    }
+    // Unterseite der Fahrbahn und Gehsteg aussen an den Mauern (dort hängen die Seile)
+    let vu = null;
+    const steg = Geo.farbe(0x3a3c40), wi = dkB - 3.2;
+    for (let s = sA; s <= sE + 0.1; s += 3) {
+      const l = b.ort(s, dkB + 0.8), r = b.ort(s, -dkB - 0.8), l2 = b.ort(s, wi), r2 = b.ort(s, -wi);
+      const q = [F.pkt(l[0], l[1] - 2.4, l[2], stahl), F.pkt(r[0], r[1] - 2.4, r[2], stahl), F.pkt(l[0], l[1] - 0.1, l[2], steg), F.pkt(l2[0], l2[1] - 0.1, l2[2], steg), F.pkt(r[0], r[1] - 0.1, r[2], steg), F.pkt(r2[0], r2[1] - 0.1, r2[2], steg)];
+      if (vu) { F.vier(vu[0], q[0], q[1], vu[1]); F.vier(vu[2], q[2], q[3], vu[3]); F.vier(vu[4], q[4], q[5], vu[5]); }
+      vu = q;
+    }
+    // Endpfeiler am Ufer: hier enden die Tragseile
+    for (const sa of sAnk) {
+      const i = iBei(sa), m = b.ort(sa, 0), dr = Math.atan2(H.tz[i], H.tx[i]);
+      A.lage(m[0], 0, m[2], dr);
+      for (const sd of [-1, 1]) { const o = b.ort(sa, sd * dkB), y0 = b.hoehe(o[0], -o[2]).y; kasten(A, 0, Math.min(y0, yD(sa)) - 2, sd * dkB, 6, yD(sa) + 5 - Math.min(y0, yD(sa)), 6.4, hell, dunkel); b.lichtLokal(A, 4, yD(sa) - 1, sd * dkB, 5, 0xffe2b8, 0.3); }
+      A.lage();
+    }
+  },
+  // Stahlbrücke: hohe Fachwerkträger beidseits, oben Querverbände, Lichter auf dem Obergurt, zwei Steinpfeiler
+  stahl(b, a, e) {
+    const S = b.S, H = S.haupt, n = H.n, G = b.f('gitter'), F = b.f('stein'), A = b.f('angestrahlt'), fl = (b.def.fluesse || [])[0], yW = fl ? fl.y : 0;
+    const gr = Geo.farbe(0x34465a), du = Geo.farbe(0x1e2630), hT = 8.5;
+    let vor = null, vl = null, vr = null;
+    for (let k = 0; k <= e - a; k++) {
+      const i = (a + k) % n, s = (a + k) * H.ds, D = H.hb[i] + S.randL[i] + WV + 0.6, l = b.ort(s, D), r = b.ort(s, -D), yD = l[1], v = (k * H.ds) / 8.5;
+      const P = [G.pkt(l[0], yD - 0.6, l[2], gr, v, 0), G.pkt(l[0], yD + hT, l[2], gr, v, 1), G.pkt(r[0], yD - 0.6, r[2], gr, v, 0), G.pkt(r[0], yD + hT, r[2], gr, v, 1),
+        F.pkt(l[0], yD - 1.6, l[2], du), F.pkt(r[0], yD - 1.6, r[2], du)];
+      if (vor) {
+        G.vier(vor[0], P[0], P[1], vor[1]); G.vier(vor[2], P[2], P[3], vor[3]); F.vier(vor[4], P[4], P[5], vor[5]);
+        F.rohr(vl[0], vl[1] + hT, vl[2], l[0], yD + hT, l[2], 0.3, 0.3, du, 5); F.rohr(vr[0], vr[1] + hT, vr[2], r[0], yD + hT, r[2], 0.3, 0.3, du, 5);
+      }
+      if (k % 8 === 0) {                                                                  // Querverband über der Fahrbahn
+        F.rohr(l[0], yD + hT, l[2], r[0], yD + hT, r[2], 0.22, 0.22, du, 5);
+        if (vl) { const j = Math.max(0, k - 8), ii = (a + j) % n, sj = (a + j) * H.ds, Dj = H.hb[ii] + S.randL[ii] + WV + 0.6, lj = b.ort(sj, Dj), rj = b.ort(sj, -Dj); F.rohr(lj[0], lj[1] + hT, lj[2], r[0], yD + hT, r[2], 0.12, 0.12, du, 4); F.rohr(rj[0], rj[1] + hT, rj[2], l[0], yD + hT, l[2], 0.12, 0.12, du, 4); }
+        for (const q of [l, r]) b.licht(q[0], yD + hT + 0.5, q[2], 1.3, 0xfff0d0, 0.9);
+      }
+      vor = P; vl = l; vr = r;
+      if (k === Math.round((e - a) / 3) || k === Math.round(((e - a) * 2) / 3)) {        // Pfeiler im Fluss
+        const m = b.ort(s, 0);
+        A.lage(m[0], 0, m[2], Math.atan2(H.tz[i], H.tx[i])); kasten(A, 0, yW - 1, 0, 5, yD - 1.6 - (yW - 1), 2 * D + 3, Geo.farbe(0xb8ad98, 0.9), Geo.farbe(0x8a8070, 0.8)); A.lage();
+        b.licht(m[0] + 3, yW + 2, m[2], 6, 0xffe2b8, 0.25);
+      }
+    }
+  },
+});
+
+// ── Bauwerke von New York ─────────────────────────────────────────────────
+Object.assign(Bauten, {
+  // Platz mit Leuchtreklamen: Häuser auf beiden Seiten der Fahrbahn, Reklametafeln übereinander, Laufschrift, farbiger Schein auf der nassen Strasse
+  leuchtplatz(b) {
+    const S = b.S, H = S.haupt, n = H.n, pl = b.def.platz, zuf = zufallsGenerator(4711), R = b.f('reklame'), LB = b.f('laufband');
+    // Hausblöcke: Fronten parallel zur Fahrbahn (die Strasse läuft hier nach +z)
+    const bloecke = [[-1, 76, 106], [-1, 108, 138], [1, 40, 72], [1, 74, 106], [1, 108, 138]];
+    for (const bl of bloecke) {
+      const sd = bl[0], zm = (bl[1] + bl[2]) / 2, i0 = H.projiziere(160, zm, -1, 0).i, xm = H.x[i0], front = xm + sd * (H.hb[i0] + S.randL[i0] + 3.5), tf = 28, xc = front + sd * tf / 2, br = bl[2] - bl[1];
+      const h = 50 + zuf() * 60, y = b.hoehe(xc, zm).y;
+      hochhaus(b, xc, y, -zm, Math.PI / 2, br, tf, h, zuf() < 0.5 ? 'stein' : 'glas', zuf, true);
+      b.belegt.push([xc, zm, (br + tf) / 4]);
+      const fx = front + sd * -0.35;                                                   // Tafeln knapp vor der Front
+      let yy = 6.5;
+      while (yy < 44) {
+        const hT = 7 + zuf() * 9, bT = Math.min(br - 3, 10 + zuf() * 16), zc = zm + (zuf() - 0.5) * (br - bT - 2), k = Math.floor(zuf() * 16), u0 = (k % 4) / 4 + 0.004, v1 = 1 - Math.floor(k / 4) / 4 - 0.004, f = Geo.farbe(0xffffff, 0.92 + zuf() * 0.12);
+        const za = -(zc - bT / 2), zb = -(zc + bT / 2);
+        R.tafel([fx, y + yy, sd > 0 ? zb : za], [fx, y + yy, sd > 0 ? za : zb], [fx, y + yy + hT, sd > 0 ? za : zb], [fx, y + yy + hT, sd > 0 ? zb : za], f, u0, v1 - 0.242, u0 + 0.242, v1);
+        yy += hT + 1.2 + zuf() * 3;
+      }
+      const zl = -(bl[1] + 0.5), zr = -(bl[2] - 0.5), fl = front + sd * -0.4;           // Laufschrift über den Läden
+      LB.tafel([fl, y + 4.1, sd > 0 ? zr : zl], [fl, y + 4.1, sd > 0 ? zl : zr], [fl, y + 5.3, sd > 0 ? zl : zr], [fl, y + 5.3, sd > 0 ? zr : zl], Geo.farbe(0xffffff, 1), 0, 0, br / 14, 1);
+    }
+    // farbiger Schein der Reklamen auf der Fahrbahn
+    const farben = [0xff2e88, 0x19d3ff, 0xffb21a, 0xa05bff, 0x00e0b0, 0xff4a2a];
+    for (let i = 0, q = 0; i < n; i += 3) {
+      if (H.x[i] < pl[0] || H.x[i] > pl[2] || H.z[i] < pl[1] || H.z[i] > pl[3]) continue;
+      lichtfleck(b, i * H.ds, (q % 2 ? 1 : -1) * (H.hb[i] - 2.2), 7.5, farben[q % farben.length], 0.3); q++;
+    }
+  },
+  // Turm mit gestufter Krone aus Bögen und dreieckigen Fenstern, darüber eine Nadel
+  kronenturm(b, x, y, z, dreh) {
+    const T = b.f('turmstein'), D = b.f('stein'), L = b.f('licht'), zuf = zufallsGenerator(1930), f = [0.95, 0.95, 0.95];
+    T.lage(x, y, z, dreh); D.lage(x, y, z, dreh); L.lage(x, y, z, dreh);
+    turmstufe(b, T, D, 28, 28, -1.5, 82.8, 'stein', 0.25, 0, f);
+    turmstufe(b, T, D, 23, 23, 82.8, 111.6, 'stein', 0.5, 0.25, f);
+    turmstufe(b, T, D, 19, 19, 111.6, 122.4, 'stein', 0.75, 0.5, f);
+    const y0 = 123.1;
+    for (let k = 0; k < 6; k++) {
+      const a = 9 - k * 1.35, yb = y0 + k * 4.4, silber = (t) => Geo.farbe(0xc8d0dc, 1.05 - t * 0.35 - k * 0.04);
+      for (let q = 0; q < 4; q++) {
+        L.lage(x, y, z, dreh + q * 1.5708);
+        const P = [];
+        for (let t = 0; t <= 10; t++) { const w = (t / 10) * Math.PI; P.push([a * Math.cos(w), yb + 1.6 + 4.6 * Math.sin(w)]); }
+        const m = L.pkt(a, yb - 0.2, 0, silber(0));
+        for (let t = 0; t < 10; t++) L.drei(m, L.pkt(a, P[t][1], P[t][0], silber(1)), L.pkt(a, P[t + 1][1], P[t + 1][0], silber(1)));
+        L.vier(L.pkt(a, yb - 0.2, -a, silber(0)), L.pkt(a, yb - 0.2, a, silber(0)), L.pkt(a, yb + 1.6, a, silber(0.3)), L.pkt(a, yb + 1.6, -a, silber(0.3)));
+        for (let t = 1; t < 10; t += 2) {                                               // dreieckige Fenster im Bogen
+          const w = (t / 10) * Math.PI, cx = a * 0.72 * Math.cos(w), cy = yb + 1.6 + 4.6 * 0.66 * Math.sin(w), fe = Geo.farbe(0xfff0cc, 1.25);
+          L.drei(L.pkt(a + 0.05, cy - 0.7, cx - 0.45, fe), L.pkt(a + 0.05, cy - 0.7, cx + 0.45, fe), L.pkt(a + 0.05, cy + 0.9, cx, fe));
+        }
+      }
+      L.lage(x, y, z, dreh);
+      b.lichtLokal(L, 0, yb + 3, 0, a * 1.4, 0xfff0d8, 0.18);
+    }
+    L.rohr(0, y0 + 26, 0, 0, y0 + 56, 0, 0.75, 0.03, Geo.farbe(0xd8dee8, 1.1), 6);
+    b.lichtLokal(L, 0, y0 + 56.5, 0, 1.4, 0xff3a2a, 0.9);
+    T.lage(); D.lage(); L.lage();
+  },
+  // Turm mit Rücksprüngen und Ankermast; die oberen Stockwerke leuchten golden
+  stufenturm(b, x, y, z, dreh) {
+    const T = b.f('turmstein'), D = b.f('stein'), L = b.f('licht'), f = [0.92, 0.9, 0.86];
+    T.lage(x, y, z, dreh); D.lage(x, y, z, dreh); L.lage(x, y, z, dreh);
+    turmstufe(b, T, D, 58, 46, -1.5, 21.6, 'stein', 0, 0, f);
+    turmstufe(b, T, D, 40, 32, 21.6, 133.2, 'stein', 0.3, 0.2, f);
+    turmstufe(b, T, D, 33, 26, 133.2, 147.6, 'stein', 0.55, 0.4, f);
+    const gold = (t) => Geo.farbe(0xffd890, 1.2 - t * 0.5);
+    kasten(L, 0, 148.3, 0, 26, 7.2, 20, gold(0), gold(0.5));
+    kasten(L, 0, 155.5, 0, 19, 6, 15, gold(0.3), gold(0.7));
+    L.rohr(0, 161.5, 0, 0, 170, 0, 5.2, 4.6, gold(0.4), 12, true);
+    L.rohr(0, 170, 0, 0, 176, 0, 4.4, 2.6, gold(0.6), 12, true);
+    L.rohr(0, 176, 0, 0, 182, 0, 2.2, 1.4, Geo.farbe(0xf0f2f6, 1.1), 10, true);
+    D.rohr(0, 182, 0, 0, 214, 0, 0.9, 0.06, Geo.farbe(0x8a8e96), 6);
+    b.lichtLokal(L, 0, 215, 0, 1.6, 0xff3a2a, 0.9);
+    for (const p of [[14, 0], [-14, 0], [0, 11], [0, -11]]) b.lichtLokal(L, p[0], 150, p[1], 12, 0xffd890, 0.22);
+    T.lage(); D.lage(); L.lage();
+  },
+  // Statue mit Fackel auf einer Insel im Fluss: Sternfestung, Sockel, Gewand aus Kupfer mit Patina, Strahlenkrone
+  fackelstatue(b, x, y, z, dreh) {
+    const fl = (b.def.fluesse || [])[0], y0 = fl ? fl.ufer + 0.2 : y, F = b.f('stein'), A = b.f('angestrahlt'), K = b.f('kupfer'), L = b.f('licht');
+    F.lage(x, 0, z, dreh); A.lage(x, 0, z, dreh); K.lage(x, 0, z, dreh); L.lage(x, 0, z, dreh);
+    F.rohr(0, (fl ? fl.y : y) - 2, 0, 0, y0, 0, 32, 30, Geo.farbe(0x55574f), 18, false);                  // Insel
+    F.rohr(0, y0, 0, 0, y0 + 0.05, 0, 30, 30, Geo.farbe(0x24381f), 18, true);
+    const sp = [], N = 11;                                                                         // Festung als Stern
+    for (let q = 0; q < 2 * N; q++) { const w = (q / (2 * N)) * TAU, r = q % 2 ? 11 : 17; sp.push([Math.cos(w) * r, Math.sin(w) * r]); }
+    const st0 = Geo.farbe(0xd4c6a8, 1.05), st1 = Geo.farbe(0x9a8e78, 0.95);
+    for (let q = 0; q < 2 * N; q++) { const p = sp[q], r = sp[(q + 1) % (2 * N)]; A.vier(A.pkt(p[0], y0, p[1], st0), A.pkt(r[0], y0, r[1], st0), A.pkt(r[0], y0 + 4.5, r[1], st1), A.pkt(p[0], y0 + 4.5, p[1], st1)); }
+    const mz = A.pkt(0, y0 + 4.5, 0, st1);
+    for (let q = 0; q < 2 * N; q++) { const p = sp[q], r = sp[(q + 1) % (2 * N)]; A.drei(mz, A.pkt(p[0], y0 + 4.5, p[1], st1), A.pkt(r[0], y0 + 4.5, r[1], st1)); }
+    stumpf(A, 0, y0 + 4.5, 0, 14, 14, y0 + 17, 10, 10, st0, st1);                                      // Sockel
+    kasten(A, 0, y0 + 17, 0, 11.4, 1.2, 11.4, st0);
+    kasten(A, 0, y0 + 18.2, 0, 9, 9, 9, st0, st1);
+    kasten(A, 0, y0 + 27.2, 0, 10.2, 1, 10.2, st1);
+    const yS = y0 + 28.2, g = 1.5, k0 = Geo.farbe(0x9ad0b8, 1.12), k1 = Geo.farbe(0x5a9a84, 0.9);            // Figur im Massstab g
+    K.rohr(0, yS, 0, 0, yS + 15 * g, 0, 3.3 * g, 1.75 * g, k0, 14, true);                               // Gewand
+    for (let q = 0; q < 7; q++) { const w = (q / 7) * TAU; K.rohr(Math.cos(w) * 2.6 * g, yS, Math.sin(w) * 2.6 * g, Math.cos(w) * 1.5 * g, yS + 13 * g, Math.sin(w) * 1.5 * g, 0.35 * g, 0.2 * g, k1, 5); }
+    K.kugel(0, yS + 16 * g, 0, 1.85 * g, 2.2 * g, 1.45 * g, k0, 10, 6);                                  // Oberkörper
+    K.kugel(0.2 * g, yS + 19.2 * g, 0, 0.95 * g, 1.15 * g, 0.9 * g, k0, 10, 6);                           // Kopf
+    for (let q = 0; q < 7; q++) { const w = -1.2 + (q / 6) * 2.4; K.rohr(0.2 * g, yS + 19.9 * g, 0, (0.2 + Math.cos(w) * 0.6) * g, yS + (20.4 + Math.cos(w) * 1.6) * g, Math.sin(w) * 2.4 * g, 0.2 * g, 0.02, k0, 4); }   // Strahlenkrone
+    K.rohr(0, yS + 17 * g, 1.4 * g, 0.4 * g, yS + 25 * g, 1.9 * g, 0.48 * g, 0.36 * g, k0, 7);                // erhobener Arm
+    K.rohr(0.4 * g, yS + 25 * g, 1.9 * g, 0.5 * g, yS + 26.6 * g, 2.0 * g, 0.3 * g, 0.55 * g, k0, 7, true);    // Fackel
+    L.kugel(0.5 * g, yS + 27.3 * g, 2.0 * g, 0.65 * g, 1.0 * g, 0.65 * g, Geo.farbe(0xffc850, 1.4), 8, 5);
+    b.lichtLokal(L, 0.5 * g, yS + 27.4 * g, 2.0 * g, 9, 0xffc04a, 0.9);
+    K.lage(x, 0, z, dreh + 0.25); kasten(K, 0.9 * g, yS + 13.2 * g, -1.7 * g, 0.6 * g, 3.2 * g, 2.2 * g, k1); K.lage();   // Tafel im linken Arm
+    for (let q = 0; q < 6; q++) { const w = (q / 6) * TAU; b.lichtLokal(A, Math.cos(w) * 15, y0 + 1, Math.sin(w) * 15, 6, 0xfff0d0, 0.28); }
+    F.lage(); A.lage(); L.lage();
+  },
+  // Glaspavillon am Ufer mit beleuchtetem Karussell
+  karussell(b, x, y, z) {
+    const G = b.f('glas'), F = b.f('stein'), a = 8, h = 6.5, f = Geo.farbe(0xffe8c0, 0.62), P = [[-a, -a], [a, -a], [a, a], [-a, a]];
+    for (let q = 0; q < 4; q++) { const p = P[q], r = P[(q + 1) % 4]; G.tafel([x + p[0], y, z + p[1]], [x + r[0], y, z + r[1]], [x + r[0], y + h, z + r[1]], [x + p[0], y + h, z + p[1]], f, 0, 0, 3, 1.2); }
+    kasten(F, x, y + h, z, 2 * a + 0.8, 0.6, 2 * a + 0.8, Geo.farbe(0x2a2c30));
+    F.rohr(x, y + 3.9, z, x, y + 5.4, z, 5.4, 0.5, Geo.farbe(0xc8402e), 16);
+    F.rohr(x, y - 0.2, z, x, y + 5.6, z, 0.35, 0.35, Geo.farbe(0xd8b060), 8);
+    for (let q = 0; q < 12; q++) {
+      const w = (q / 12) * TAU, cx = x + Math.cos(w) * 3.8, cz = z + Math.sin(w) * 3.8;
+      F.rohr(cx, y + 0.3, cz, cx, y + 3.9, cz, 0.05, 0.05, Geo.farbe(0xd8b060), 4);
+      F.kugel(cx, y + 1.5 + (q % 2) * 0.4, cz, 0.7, 0.35, 0.25, Geo.farbe([0xf2efe6, 0x8a5a3a, 0x3a3a40][q % 3]), 6, 4);
+      b.licht(x + Math.cos(w) * 5.2, y + 3.9, z + Math.sin(w) * 5.2, 0.8, 0xffe2a0, 0.9);
+    }
+    b.licht(x, y + 3, z, 12, 0xffd890, 0.3);
   },
 });
 /* ══════════════════════════════════════════════════════════════════════════
@@ -6628,6 +7823,7 @@ const Spiel = {
       case 'los': Ton.spiele('los'); Ton.jubel(1); for (const q of Hud.teile) Hud.gross(q, 'Los!', false, 1.1); break;
       case 'turbo': if (t) { Ton.spiele('turbo'); Hud.meldung(t, e.a === 2 ? 'Super-Turbo!' : 'Mini-Turbo!', true); } break;
       case 'rampe': if (t) { Ton.spiele('boost'); Hud.meldung(t, 'Rampe! Boost!', true); } break;
+      case 'boostfeld': if (t) { Ton.spiele('boost'); Hud.meldung(t, 'Boost!', true); } break;
       case 'abkuerzung': if (t) { Ton.spiele('boost'); Hud.meldung(t, 'Abkürzung genommen!', true); } break;
       case 'landung': if (t && e.a > 6) Ton.spiele('landung'); break;
       case 'wand': if (t) Ton.spiele('wand'); break;
