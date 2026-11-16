@@ -86,7 +86,7 @@ Baustellen gelten nur für Fahrer, die beim Bauen vor dir lagen. Für alle ander
 2. Mit «Link kopieren» schickt er den Einladungslink (`…/index.html?raum=CODE`) an die Mitspieler. Der Link funktioniert, sobald das Spiel im Internet liegt. Wer die Datei lokal öffnet, wählt «Online: Raum beitreten» und tippt den Code ein.
 3. Alle wählen Name, Fahrzeug und Farbe und drücken «Bereit». Der Host stellt Strecke, Runden und Bots ein und startet.
 
-Die Verbindung läuft direkt von Browser zu Browser (WebRTC), vermittelt über den öffentlichen PeerJS-Server. Fällt ein Mitspieler aus, fährt ein Bot für ihn weiter. Verlässt der Host das Spiel, endet es für alle.
+Die Verbindung läuft direkt von Browser zu Browser (WebRTC), vermittelt über den öffentlichen PeerJS-Server. Lässt das Netz keine direkte Verbindung zu (das kann auch im selben WLAN passieren, wenn Router oder Firewall sie blockieren), läuft sie über einen Umweg-Server (TURN, siehe unten). Fällt ein Mitspieler aus, fährt ein Bot für ihn weiter. Verlässt der Host das Spiel, endet es für alle.
 
 **Wichtig für den Host:** Lass die Lobby offen und im Vordergrund, bis alle da sind. Handys und Tablets frieren eine Seite im Hintergrund ein (andere App, Bildschirm aus), dann kann niemand beitreten. Kommst du zurück, meldet sich der Raum von selbst wieder an.
 
@@ -98,10 +98,22 @@ Der Gast versucht es bis zu dreimal von selbst (je 12 s). Danach sagt die Meldun
 |---|---|---|
 | «Diesen Raum gibt es nicht (mehr)» | Code falsch, Raum geschlossen oder Gerät des Hosts eingeschlafen | Code prüfen. Der Host holt das Spiel nach vorne oder erstellt einen neuen Raum. |
 | «… das Gerät des Hosts antwortet nicht» | Der Raum ist angemeldet, aber die Seite des Hosts ist im Hintergrund | Der Host lässt die Lobby sichtbar, der Gast versucht es nochmals. |
-| «… die direkte Verbindung … kam nicht zustande» | Das Netz lässt keine direkte Verbindung zu (Gäste-WLAN, VPN, manche Mobilfunk-, Schul- und Firmennetze) | Beide Geräte ins selbe WLAN ohne VPN. Sonst einen eigenen TURN-Server in `CONFIG.netz.iceServer` eintragen. |
+| «… kein Umweg-Server eingerichtet» | Das Netz lässt keine direkte Verbindung zu, und es ist kein TURN-Zugang eingetragen | Einen Umweg-Server einrichten (siehe unten). |
+| «Auch der Umweg-Server war nicht erreichbar» | Zugang falsch oder gelöscht, Gratis-Kontingent aufgebraucht, oder das Netz blockiert ihn (VPN, Schul- oder Firmennetz) | Im Konto beim Anbieter nachsehen, ohne VPN versuchen. |
+| «Auch über den Umweg-Server ging es nicht» | Sehr strenges Netz | Nochmals versuchen, sonst ein anderes Netz (z. B. Handy-Hotspot). |
 | «Der Vermittlungs-Server antwortet nicht» oder «… ist gerade nicht erreichbar» | Kein Internet, oder der PeerJS-Server ist überlastet | Internetverbindung prüfen, später nochmals versuchen. |
 
-Unter der Meldung steht klein eine Zeile «Diagnose: …» mit der Stufe, der Anzahl Versuche und den gefundenen Adressen. `host` sind Adressen im selben Netz, `srflx` öffentliche Adressen, `relay` Umleitungen über einen TURN-Server. Diese Zeile hilft bei der Fehlersuche.
+Unter der Meldung steht klein eine Zeile «Diagnose: …» mit der Stufe, der Anzahl Versuche, den gefundenen Adressen und der Zahl der eingerichteten Umweg-Server. `host` sind Adressen im selben Netz, `srflx` öffentliche Adressen, `relay` Umleitungen über einen TURN-Server. Fehlt `relay` bei den eigenen Adressen, war kein Umweg-Server erreichbar. Diese Zeile hilft bei der Fehlersuche.
+
+### Umweg-Server (TURN) einrichten
+
+Der frühere Gratis-Umweg-Server von PeerJS ist abgeschaltet. Im Spiel ist darum ein eigener Gratis-Zugang bei Metered eingetragen (Plan «Free Trial», 500 MB pro Monat, das reicht für grob 50 bis 100 Rennen mit einem Gast über den Umweg). Ist das Kontingent aufgebraucht, klappt das Online-Spiel bis zum nächsten Monat nur in Netzen, die direkte Verbindungen zulassen. Den Verbrauch zeigt das Dashboard von Metered. So richtest du einen eigenen Zugang ein:
+
+1. Bei [Metered Open Relay](https://www.metered.ca/tools/openrelay/) ein Gratis-Konto anlegen, eine App erstellen und den Plan «Free Trial» wählen (500 MB pro Monat, ohne Kreditkarte).
+2. Im Dashboard unter «TURN Server» einen Zugang anlegen («Add Credential»).
+3. Benutzername und Passwort in `CONFIG.netz.iceServer` beim Eintrag mit `relay.metered.ca` ersetzen. Statt fester Daten kann das Spiel sie auch über `CONFIG.netz.turnAbruf` (API-Key von Metered) holen.
+
+Die Zugangsdaten stehen damit lesbar in der Seite. Schlimmstenfalls brauchen Fremde das Gratis-Kontingent auf, mehr kann damit nicht passieren.
 
 ## Hochladen
 

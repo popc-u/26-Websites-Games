@@ -385,12 +385,22 @@ const CONFIG = {
     verbindenVersuche: 3,  // so oft versucht es ein Gast von selbst, bevor die Fehlermeldung kommt
     lobbyTimeout: 8,       // steht die Verbindung, muss der Host innert so vielen Sekunden die Raum-Daten schicken
     neuAnmelden: 10,       // war das Fenster des Hosts so viele Sekunden im Hintergrund, meldet sich der Raum frisch beim Vermittler an
-    // Wege, über die sich zwei Browser finden (STUN) und über die sie notfalls umgeleitet werden (TURN).
-    // Einen eigenen TURN-Server kannst du hier anfügen: { urls: 'turn:…', username: '…', credential: '…' }
+    // Wege, über die sich zwei Browser finden (STUN), und Umweg-Server (TURN), über die sie sich notfalls verbinden.
+    // Ohne TURN scheitert die Verbindung in manchen Netzen immer, auch im selben WLAN (Router oder Firewall blockieren sie).
+    // Der frühere Gratis-TURN von PeerJS ist abgeschaltet. Eigene Zugangsdaten (z. B. Gratis-Konto bei Metered) so anfügen:
+    //   { urls: ['turn:HOST:80', 'turn:HOST:443?transport=tcp', 'turns:HOST:443?transport=tcp'], username: '…', credential: '…' }
     iceServer: [
       { urls: ['stun:stun.l.google.com:19302', 'stun:stun.cloudflare.com:3478'] },
-      { urls: ['turn:eu-0.turn.peerjs.com:3478', 'turn:us-0.turn.peerjs.com:3478'], username: 'peerjs', credential: 'peerjsp' },
+      // Umweg-Server von Metered, Bereich «baustellen-rennen», Plan «Free Trial» (500 MB pro Monat, danach Pause bis zum nächsten Monat).
+      // «global» ist der empfohlene Zugang, «standard» der Zugang der Gratis-Pläne; UDP zuerst, dann TCP und TLS auf Port 443 für strenge Netze.
+      { urls: ['turn:global.relay.metered.ca:80', 'turn:global.relay.metered.ca:80?transport=tcp', 'turns:global.relay.metered.ca:443?transport=tcp',
+        'turn:standard.relay.metered.ca:80', 'turns:standard.relay.metered.ca:443?transport=tcp'],
+        username: 'd34b89540340007e56d4ee57', credential: 'R46p6w4ARllEV0sa' },
     ],
+    // Statt fester Zugangsdaten kann das Spiel sie beim Start eines Online-Spiels von einer Adresse holen, z. B. bei Metered
+    // 'https://NAME.metered.live/api/v1/turn/credentials?apiKey=SCHLUESSEL' (die Antwort ist eine Liste wie oben). Leer = aus.
+    turnAbruf: '',
+    turnAbrufTimeout: 5,   // so viele Sekunden darf dieser Abruf dauern, danach geht es ohne Umweg-Server weiter
     ausfallTimeout: 6,     // hört man so lange nichts von jemandem, gilt die Verbindung als verloren
   },
 
@@ -6962,19 +6972,42 @@ const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 
 
 const Online = {
   peer: null, host: false, code: '', gaeste: {}, zumHost: null, zumHostZ: null, meineId: '', lobby: null, imRennen: false, bereit: false,
-  versatz: 0, rtt: 0, bestRtt: 1e9, t0: 0, schrittNr: 0, puffer: [], bekannt: {}, letzterEmpfang: 0, meinKart: -1, endeGesendet: false, takte: [], zeitlimit: null, verstecktSeit: 0, lauf: 0,
+  versatz: 0, rtt: 0, bestRtt: 1e9, t0: 0, schrittNr: 0, puffer: [], bekannt: {}, letzterEmpfang: 0, meinKart: -1, endeGesendet: false, takte: [], zeitlimit: null, verstecktSeit: 0, lauf: 0, turnGeholt: null, turnFehler: '',
 
   profil() { const D = Speicher.daten; return { name: D.name, fahrzeug: D.fahrzeug, farbe: D.farbe }; },
   jetzt() { return performance.now() + (this.host ? 0 : this.versatz); },           // gemeinsame Uhr (die des Hosts)
   peerOptionen() {
-    const o = { debug: 1, config: { iceServers: CONFIG.netz.iceServer, sdpSemantics: 'unified-plan' } };
+    const o = { debug: 1, config: { iceServers: this.iceServer(), sdpSemantics: 'unified-plan' } };
+    if (App.parameter.get('relay')) o.config.iceTransportPolicy = 'relay';     // nur für Tests: ausschliesslich über den Umweg-Server
     const p = App.parameter.get('peer');            // nur für Tests: eigener Vermittlungs-Server, z. B. ?peer=localhost:9000
     if (p) { const t = p.split(':'); o.host = t[0]; o.port = +t[1] || 9000; o.path = '/'; o.secure = false; }
     return o;
   },
+  // STUN/TURN-Liste: die festen aus CONFIG, dazu die abgerufenen Zugänge und (nur für Tests) ?turn=host:port:name:passwort
+  iceServer() {
+    const liste = CONFIG.netz.iceServer.concat(this.turnGeholt || []);
+    const t = App.parameter.get('turn');
+    if (t) { const [h, port, name, pw] = t.split(':'); liste.push({ urls: ['turn:' + h + ':' + (port || 3478)], username: name || 'test', credential: pw || 'test' }); }
+    return liste;
+  },
+  // Wie viele Umweg-Server (TURN) sind eingerichtet?
+  turnAnzahl() { return this.iceServer().filter((s) => [].concat(s.urls || s.url || []).some((u) => /^turns?:/.test(u))).length; },
   ladeBibliothek(fertig) {
-    if (window.Peer) { fertig(); return; }
-    ladeSkript(PEER_QUELLEN, fertig, () => this.fehler('Die Netzwerk-Bibliothek (PeerJS) konnte nicht geladen werden. Prüfe deine Internetverbindung.'));
+    const weiter = () => this.holeTurn(fertig);
+    if (window.Peer) { weiter(); return; }
+    ladeSkript(PEER_QUELLEN, weiter, () => this.fehler('Die Netzwerk-Bibliothek (PeerJS) konnte nicht geladen werden. Prüfe deine Internetverbindung.'));
+  },
+  // Zugänge zum Umweg-Server abrufen, wenn CONFIG.netz.turnAbruf gesetzt ist. Scheitert der Abruf, geht es ohne weiter
+  // (beim nächsten Versuch wird nochmals abgerufen).
+  holeTurn(fertig) {
+    const N = CONFIG.netz;
+    if (!N.turnAbruf || this.turnGeholt || typeof fetch !== 'function') { fertig(); return; }
+    let erledigt = false;
+    const ende = (liste, fehler) => { if (erledigt) return; erledigt = true; this.turnGeholt = liste; this.turnFehler = fehler || ''; fertig(); };
+    setTimeout(() => ende(null, 'Zeit abgelaufen'), N.turnAbrufTimeout * 1000);
+    fetch(N.turnAbruf, { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+      .then((j) => (Array.isArray(j) ? ende(j.filter((s) => s && (s.urls || s.url))) : ende(null, 'unbekannte Antwort')))
+      .catch((e) => ende(null, (e && e.message) || 'Abruf gescheitert'));
   },
   fehlerText(e) {
     const t = e && e.type;
@@ -7174,6 +7207,14 @@ const Online = {
         const c = p.connect(RAUM_VORSATZ + code, { reliable: true, label: 'k', serialization: 'json' });
         if (!c) return;                               // Vermittler gerade getrennt: Die Meldung dazu kommt über p.on('error')
         this.zumHost = c;
+        const pc = c.peerConnection;                  // merken: PeerJS gibt die Verbindung beim Schliessen frei
+        // ein Versuch ist gescheitert: nochmals versuchen oder sagen, woran es liegt
+        const gescheitert = () => {
+          const antwort = !!(pc && pc.remoteDescription);       // hat das Gerät des Hosts auf die Anfrage geantwortet?
+          // Ohne Antwort lohnt sich Warten (der Host holt das Spiel vielleicht gerade nach vorne), bei blockiertem Netz kaum
+          if (versuch < (antwort ? Math.min(2, N.verbindenVersuche) : N.verbindenVersuche)) { this.zumHost = null; try { c.close(); } catch (e) { /* egal */ } verbinde(); }
+          else this.beitrittFehler(code, antwort ? 'direkt' : 'stumm', c, versuch, pc);
+        };
         c.on('open', () => {
           if (!laeuft() || this.zumHost !== c) return;
           this.letzterEmpfang = performance.now();
@@ -7186,13 +7227,10 @@ const Online = {
           frist(N.lobbyTimeout, () => this.beitrittFehler(code, 'lobby', c, versuch));
         });
         c.on('data', (d) => { if (this.zumHost === c) this.vomHost(d); });
-        c.on('close', () => { if (this.zumHost === c) this.hostWeg(); });
-        frist(N.verbindenTimeout, () => {
-          const pc = c.peerConnection, antwort = !!(pc && pc.remoteDescription);       // hat das Gerät des Hosts auf die Anfrage geantwortet?
-          // Ohne Antwort lohnt sich Warten (der Host holt das Spiel vielleicht gerade nach vorne), bei blockiertem Netz kaum
-          if (versuch < (antwort ? Math.min(2, N.verbindenVersuche) : N.verbindenVersuche)) { this.zumHost = null; try { c.close(); } catch (e) { /* egal */ } verbinde(); }
-          else this.beitrittFehler(code, antwort ? 'direkt' : 'stumm', c, versuch);
-        });
+        // Schliesst sich die Leitung noch während des Beitritts (z. B. weil der Verbindungsaufbau gescheitert ist), gilt das als
+        // gescheiterter Versuch. Erst wenn die Raum-Daten da sind, heisst «geschlossen», dass der Host weg ist.
+        c.on('close', () => { if (this.zumHost !== c) return; if (laeuft()) { clearTimeout(this.zeitlimit); gescheitert(); } else this.hostWeg(); });
+        frist(N.verbindenTimeout, gescheitert);
       };
       frist(N.vermittlerTimeout, () => this.beitrittFehler(code, 'vermittler', null, 0));
       p.on('open', () => { this.meineId = p.id; if (laeuft() && !versuch) verbinde(); });
@@ -7202,12 +7240,17 @@ const Online = {
     });
   },
   // Beitritt gescheitert: sagen, an welcher Stelle es hängt, und eine Zeile für die Fehlersuche dazuschreiben
-  beitrittFehler(code, stufe, c, versuche) {
-    const pc = c && c.peerConnection;
+  beitrittFehler(code, stufe, c, versuche, pcGemerkt) {
+    const pc = (c && c.peerConnection) || pcGemerkt, nTurn = this.turnAnzahl();
+    let relay = false;
+    try { relay = / typ relay/.test((pc && pc.localDescription && pc.localDescription.sdp) || ''); } catch (e) { /* egal */ }
     const texte = {
       vermittler: 'Der Vermittlungs-Server antwortet nicht. Prüfe deine Internetverbindung und versuch es nochmals.',
       stumm: 'Der Raum ' + code + ' ist angemeldet, aber das Gerät des Hosts antwortet nicht. Meistens ist das Spiel dort nicht mehr im Vordergrund (anderer Tab, andere App oder Bildschirm aus). Der Host soll die Lobby offen und sichtbar lassen, dann versuchst du es nochmals.',
-      direkt: 'Der Host hat geantwortet, aber die direkte Verbindung zwischen den beiden Geräten kam nicht zustande. Das liegt am Netz: Gäste-WLAN, VPN und manche Mobilfunk-, Schul- und Firmennetze lassen sie nicht durch. Am ehesten klappt es, wenn beide Geräte im selben WLAN sind (ohne VPN).',
+      direkt: 'Der Host hat geantwortet, aber die Verbindung zwischen den beiden Geräten kam nicht zustande. ' + (!nTurn
+        ? 'Das Netz lässt die direkte Verbindung nicht durch (das kann auch im selben WLAN passieren), und für diesen Fall ist kein Umweg-Server eingerichtet. Wie man einen einrichtet, steht in der Anleitung unter «Online spielen».'
+        : !relay ? 'Auch der Umweg-Server war nicht erreichbar. Vielleicht ist sein Gratis-Kontingent aufgebraucht, oder das Netz blockiert ihn (VPN, Schul- oder Firmennetz).'
+          : 'Auch über den Umweg-Server ging es nicht. Versucht es nochmals. Hilft das nicht, blockiert das Netz die Verbindung (VPN, Schul- oder Firmennetz).'),
       lobby: 'Die Verbindung zum Host steht, aber er schickt keine Raum-Daten. Der Host soll einen neuen Raum erstellen.',
     };
     let diagnose = 'Diagnose: ' + stufe + (versuche ? ' · Versuche ' + versuche : '');
@@ -7221,6 +7264,7 @@ const Online = {
       };
       try { diagnose += ' · eigene Adressen: ' + adressen(pc.localDescription) + ' · Adressen des Hosts: ' + adressen(pc.remoteDescription); } catch (e) { /* nur eine Zusatz-Angabe */ }
     }
+    diagnose += ' · Umweg-Server: ' + (nTurn || 'keiner') + (this.turnFehler ? ' (Abruf: ' + this.turnFehler + ')' : '');
     this.fehler(texte[stufe], code, diagnose);
   },
   zumHostSenden(d, schnell) {
