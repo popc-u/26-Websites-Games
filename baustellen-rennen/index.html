@@ -349,8 +349,8 @@ const CONFIG = {
 
   // ── Bauen ───────────────────────────────────────────────────────────────
   bau: {
-    preise: {              // Preise in BP (Pylonen kosten seit 17.11.2026 3 statt 2)
-      rampe: 3, abkuerzung: 6, pylonen: 3, schlamm: 3, absperrung: 4, umleitung: 6,
+    preise: {              // Preise in BP
+      rampe: 3, abkuerzung: 6, pylonen: 2, schlamm: 3, absperrung: 4, umleitung: 6,
     },
     aufbauZeit: 2.0,       // Hindernisse bauen sich so lange sichtbar auf, erst dann sind sie fest
     aufbauZeitEigen: 1.0,  // eigene Bauwerke (Rampe, Abkürzung) sind schneller fertig
@@ -424,13 +424,7 @@ const CONFIG = {
       // bremst spät (bremsen: Verzögerung in m/s², mit der er rechnet; die anderen rechnen vorsichtig mit 22) und driftet
       // schon in sanfteren Kurven (driftAb). tempo: Tempo-Vorteil auf das Höchsttempo (1.03 = 3 %, mehr ist nicht erlaubt).
       schwer: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.03 },
-      // «Ultra» fährt, so gut es die Fahrphysik erlaubt: Fahr-Einstellungen pro Strecke vom Optimierer (tools/ultra.js, mit
-      // mehreren Autos geprüft), jedes Boost-Feld, keine Fehler, sieht jedes Hindernis. tempo: Tempo-Vorteil (höchstens 1.08 = 8 %).
-      // hindernisse: Anteil der Hindernisse, die er baut (er spart vor allem für Abkürzung und Rampe); pylonen: 0 = setzt keine.
-      ultra: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.06, hindernisse: 0.15, pylonen: 0,
-        strecken: {} },
     },
-    pylonen: 0.4,          // so oft wie früher setzen Bots Pylonen (1 = wie bis 17.11.2026, 0 = nie); sonst sparen sie oder bauen etwas anderes
     zielVordermann: 0.8,   // Anteil der Hindernisse, die Bots ihrem direkten Gegner statt dem Führenden in den Weg bauen
     streuung: 0.02,        // zufällige Tagesform: ± so viel Unterschied im Mut zwischen gleich starken Bots
     ausweichWeg: 45,       // m: so weit vor einem Hindernis beginnen Bots, zur Lücke zu ziehen
@@ -1613,7 +1607,7 @@ class Rennen {
 
     // erlaubtes Höchsttempo je nach Auto, Untergrund und Zustand
     let vmax = F.vmax * w.vmax;
-    if (k.typ === 'bot' && k.bot && k.bot.p.tempo) vmax *= k.bot.p.tempo;      // nur «Schwer» und «Ultra»: Tempo-Vorteil (CONFIG.bots)
+    if (k.typ === 'bot' && k.bot && k.bot.p.tempo) vmax *= k.bot.p.tempo;      // nur «Schwer»: kleiner Tempo-Vorteil (CONFIG.bots)
     if (boost) vmax *= k.boostStaerke;
     if (k.windAktiv) vmax *= 1 + W.bonus * w.wind;
     if (!k.aufStrasse) vmax *= boost ? CONFIG.boost.offroadFaktor : Math.min(1, F.offroadFaktor * w.offroad);
@@ -2291,8 +2285,6 @@ class Rennen {
     if (k.rang === 1 || k.bauSperre > 0 || k.bp < preis || k.zielZeit != null) return false;
     if (this.gueltigeSlots(k, art).indexOf(slotIdx) < 0) return false;
     k.bp -= preis; k.bpAusgegeben += preis; k.bauSperre = B.wartezeit; k.gebaut++; k.slotWahl = 0;
-    const ga = this.gebautArt || (this.gebautArt = {}), wer = (k.typ === 'bot' ? k.stufe : 'mensch') + ':' + art;   // Zählung für Messungen
-    ga[art] = (ga[art] || 0) + 1; ga[wer] = (ga[wer] || 0) + 1;
     const bw = this.neuesBauwerk({ id: this.naechsteBauId++, art, slot: slotIdx, besitzer: k.idx, t0: this.zeit });
     // Wer ist betroffen? Alle, die jetzt vor dem Erbauer liegen.
     if (!bw.eigen) {
@@ -2375,15 +2367,14 @@ class Rennen {
    TEIL 6: Bots
    Ein Bot «drückt» dieselben Tasten wie ein Mensch (Lenken, Gas, Bremse, Drift,
    Bauen) und fährt mit derselben Physik. Die Stufen unterscheiden sich im Können
-   (siehe CONFIG.bots). Einzige Ausnahme: «Schwer» und «Ultra» dürfen ein paar Prozent
-   mehr Höchsttempo haben (CONFIG.bots.stufen.*.tempo, höchstens 8 %).
+   (siehe CONFIG.bots). Einzige Ausnahme: «Schwer» darf ein paar Prozent mehr
+   Höchsttempo haben (CONFIG.bots.stufen.schwer.tempo), damit er fast unschlagbar ist.
    ══════════════════════════════════════════════════════════════════════════ */
 const BOT_VORAUS = [4, 12, 22, 34, 48, 64];      // in diesen Abständen schaut ein Bot auf die Krümmung voraus
 
 class Bot {
   constructor(R, k, stufe) {
-    const roh = CONFIG.bots.stufen[stufe] || CONFIG.bots.stufen.mittel;
-    const p = roh.strecken && R.S && roh.strecken[R.S.id] ? Object.assign({}, roh, roh.strecken[R.S.id]) : roh;   // «Ultra»: Einstellungen pro Strecke
+    const p = CONFIG.bots.stufen[stufe] || CONFIG.bots.stufen.mittel;
     const z = R.zufall;
     this.p = p;
     this.stufe = stufe;
@@ -2656,14 +2647,10 @@ class Bot {
     // Die Stärke des eigenen Autos zählt mit: Geländewagen lieben Abkürzungen, Rallye-Autos Rampen, Sportwagen meiden Kies
     pruefe('abkuerzung', 9 + (k.w.abkuerzung > 1 ? 3 : k.w.abkuerzung < 1 ? -3.5 : 0), 300);      // lohnt sich am meisten: spart rund 2 s
     pruefe('rampe', 4.2 + (k.w.rampe > 1 ? 3.5 : 0), 240);
-    // Hindernisse für die anderen. «Ultra» baut sie nur selten (p.hindernisse) und spart lieber für Abkürzung und Rampe.
-    const hind = this.p.hindernisse, gegen = (art, wert) => { if (hind == null || z() < hind) pruefe(art, wert, 0); };
-    gegen('umleitung', 4.4 + m * 0.7);
-    gegen('absperrung', 3.6 + m * 0.5);
-    gegen('schlamm', 3.0 + m * 0.4);
-    // Pylonen nur noch selten (CONFIG.bots.pylonen, «Ultra» gar nicht). Bei 1 genau wie früher, ohne zusätzliche Zufallszahl.
-    const fP = CONFIG.bots.pylonen * (this.p.pylonen != null ? this.p.pylonen : 1);
-    if (fP >= 1 || (fP > 0 && z() < fP)) gegen('pylonen', 2.2 + m * 0.3);
+    pruefe('umleitung', 4.4 + m * 0.7, 0);
+    pruefe('absperrung', 3.6 + m * 0.5, 0);
+    pruefe('schlamm', 3.0 + m * 0.4, 0);
+    pruefe('pylonen', 2.2 + m * 0.3, 0);
     if (!best) return;
     // Sparen: Kommt bald eine freie Abkürzung, hebt der Bot seine Punkte manchmal dafür auf
     if (best.art !== 'abkuerzung' && k.bp < P.abkuerzung + 2 && z() < 0.5) {
@@ -2764,7 +2751,7 @@ function simRennen(opt) {
     fuehrerGewinnt: R.fuehrerRunde1 === sieger, streuung: alleImZiel ? letzte - erste : null, siegerZeit: erste,
     maxSteh, resets, bpVerdient: bpV / n, bpAusgegeben: bpA / n, gebaut, ueberholt, treffer, verluste,
     rundenZeit: rundenAnz ? rundenSumme / rundenAnz : 0, dauer: R.zeit, raenge: R.reihenfolge.slice(),
-    autos: R.karts.map((k) => k.fahrzeug), siegerAuto: R.karts[sieger].fahrzeug, arten: Object.assign({}, R.gebautArt || {}),
+    autos: R.karts.map((k) => k.fahrzeug), siegerAuto: R.karts[sieger].fahrzeug,
   };
 }
 
@@ -2772,7 +2759,7 @@ function simRennen(opt) {
 function simAuswertung(liste) {
   const N = liste.length;
   const A = { rennen: N, fuehrerGewinnt: 0, streuungMedian: 0, streuungUnter8: 0, maxSteh: 0, resets: 0, bpVerdient: 0, bpAusgegeben: 0,
-    gebaut: 0, ueberholt: 0, treffer: 0, rundenZeit: 0, pylonen: 0, arten: {}, verlust: {}, siegNachStufe: {}, siegNachStart: {}, autos: {} };
+    gebaut: 0, ueberholt: 0, treffer: 0, rundenZeit: 0, verlust: {}, siegNachStufe: {}, siegNachStart: {}, autos: {} };
   const streu = [];
   for (const f of FAHRZEUGE) A.autos[f.id] = { rennen: 0, siege: 0, rang: 0 };      // pro Auto: Starts, Siege, mittlerer Platz
   for (const r of liste) {
@@ -2782,8 +2769,6 @@ function simAuswertung(liste) {
     A.maxSteh = Math.max(A.maxSteh, r.maxSteh); A.resets += r.resets;
     A.bpVerdient += r.bpVerdient; A.bpAusgegeben += r.bpAusgegeben; A.gebaut += r.gebaut; A.ueberholt += r.ueberholt; A.treffer += r.treffer;
     A.rundenZeit += r.rundenZeit;
-    for (const a in r.arten || {}) A.arten[a] = (A.arten[a] || 0) + r.arten[a];
-    A.pylonen += (r.arten && r.arten.pylonen) || 0;
     A.siegNachStufe[r.siegerStufe] = (A.siegNachStufe[r.siegerStufe] || 0) + 1;
     A.siegNachStart[r.siegerStart] = (A.siegNachStart[r.siegerStart] || 0) + 1;
     for (const v of r.verluste) { (A.verlust[v.art] = A.verlust[v.art] || []).push(v.verlust); }
@@ -2793,8 +2778,7 @@ function simAuswertung(liste) {
   A.streuungMedian = streu.length ? streu[streu.length >> 1] : 0;
   A.streuungUnter8 = streu.length ? A.streuungUnter8 / streu.length : 0;
   A.fuehrerGewinnt /= N;
-  for (const key of ['resets', 'bpVerdient', 'bpAusgegeben', 'gebaut', 'ueberholt', 'treffer', 'rundenZeit', 'pylonen']) A[key] /= N;
-  for (const a in A.arten) A.arten[a] /= N;
+  for (const key of ['resets', 'bpVerdient', 'bpAusgegeben', 'gebaut', 'ueberholt', 'treffer', 'rundenZeit']) A[key] /= N;
   for (const art in A.verlust) {
     const v = A.verlust[art].sort((a, b) => a - b);
     A.verlust[art] = { anzahl: v.length, mittel: v.reduce((a, b) => a + b, 0) / v.length, p95: v[Math.floor(v.length * 0.95)], max: v[v.length - 1] };
@@ -2806,11 +2790,10 @@ function simAuswertung(liste) {
 const SIM_SZENARIEN = {
   gleich: ['mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel'],   // 8 gleich starke Bots
   stark: ['schwer', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel'],    // 1 deutlich besserer gegen 7
-  ultra: ['ultra', 'schwer', 'schwer', 'schwer', 'schwer', 'schwer', 'schwer', 'schwer'],      // 1 «Ultra» gegen 7 «Schwer»
 };
 function simEinzel(szenario, nr, opt) {
   const ids = Object.keys(STRECKEN);
-  return simRennen({ strecke: (opt && opt.strecke) || ids[nr % ids.length], stufen: SIM_SZENARIEN[szenario], seed: nr + 1 + (szenario === 'stark' ? 100000 : szenario === 'ultra' ? 200000 : 0),
+  return simRennen({ strecke: (opt && opt.strecke) || ids[nr % ids.length], stufen: SIM_SZENARIEN[szenario], seed: nr + 1 + (szenario === 'stark' ? 100000 : 0),
     runden: (opt && opt.runden) || CONFIG.rennen.runden, bauen: !(opt && opt.bauen === false) });
 }
 </script>
@@ -9250,7 +9233,7 @@ const Spiel = {
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 12: Menüs, Ergebnis, Simulations-Seite und Programmstart
    ══════════════════════════════════════════════════════════════════════════ */
-const STUFEN_LISTE = [{ wert: 'leicht', text: 'Leicht' }, { wert: 'mittel', text: 'Mittel' }, { wert: 'schwer', text: 'Schwer' }, { wert: 'ultra', text: 'Ultra · unschlagbar' }];
+const STUFEN_LISTE = [{ wert: 'leicht', text: 'Leicht' }, { wert: 'mittel', text: 'Mittel' }, { wert: 'schwer', text: 'Schwer' }];
 const GERAETE_LISTE = [{ wert: 'tasten1', text: 'Tastatur W A S D' }, { wert: 'tasten2', text: 'Tastatur Pfeile' }, { wert: 'pad0', text: 'Gamepad 1' }, { wert: 'pad1', text: 'Gamepad 2' }, { wert: 'pad2', text: 'Gamepad 3' }, { wert: 'pad3', text: 'Gamepad 4' }];
 const FARB_LISTE = FARBEN.map((f, i) => ({ wert: i, text: '<span class="farbfeld" style="background:' + hexCss(f.hex) + '"></span> ' + f.name }));
 const FAHRZEUG_LISTE = FAHRZEUGE.map((f, i) => ({ wert: i, text: f.klasse + ' · ' + f.name }));
@@ -9698,7 +9681,7 @@ const App = {
 // Die Liste eines Autos zeigt dessen Zeiten und den schnellsten Bot mit diesem Auto. Die Gesamtliste nimmt pro Name die beste
 // Zeit über alle Autos und genau einen Bot: den schnellsten, der je auf dieser Strecke gefahren ist.
 const BL_VERSION = 1;
-const BL_STUFE = { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer', ultra: 'Ultra' };
+const BL_STUFE = { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer' };
 const BL_ARTIKEL = { limo: 'der' };                 // «mit der Limousine», sonst «mit dem …»
 const BL_ROBOTER = '<svg class="bl-robo" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2h2v3h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h4zM8.5 9.5a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm7 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM9 15h6v1.6H9zM1 10h2v5H1zm20 0h2v5h-2z"/></svg>';
 
