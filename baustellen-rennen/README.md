@@ -8,7 +8,7 @@ Das ganze Spiel steckt in einer einzigen Datei: `index.html`.
 
 `index.html` doppelklicken (Chrome, Edge, Firefox oder Safari). Es braucht eine Internetverbindung, weil three.js 0.160.0 von einem CDN geladen wird (für Online-Spiele zusätzlich PeerJS 1.5.4). Sonst ist nichts zu installieren.
 
-- **Gegen Bots:** 1 Spieler und bis zu 7 Bots, Stufe leicht, mittel oder schwer.
+- **Gegen Bots:** 1 Spieler und bis zu 7 Bots, Stufe leicht, mittel, schwer oder ultra (praktisch unschlagbar).
 - **Lokal am selben Gerät:** 2 Spieler an einer Tastatur, mit Gamepads bis 4, dazu Bots. Der Bildschirm wird geteilt.
 - **Online:** bis 8 Fahrer, ohne eigenen Server (siehe unten).
 
@@ -102,7 +102,7 @@ Baupunkte gibt es nur fürs Aufholen: +3 pro überholtem Fahrer und +1 pro 15 m,
 |---|---|---|
 | Sprungrampe | 3 BP | Sprung und 1,5 s Schub, nur für dich |
 | Abkürzung | 6 BP | öffnet einen kurzen Weg nur für dich, spart rund 2 s |
-| Pylonen | 2 BP | Slalom für alle Fahrer vor dir |
+| Pylonen | 3 BP | Slalom für alle Fahrer vor dir |
 | Schlammloch | 3 BP | bremst auf der halben Fahrbahn |
 | Absperrung | 4 BP | sperrt rund 60 % der Breite |
 | Umleitung | 6 BP | sperrt an einer Gabelung 20 s lang den kurzen Weg |
@@ -228,31 +228,37 @@ Die Zugangsdaten stehen damit lesbar in der Seite. Schlimmstenfalls brauchen Fre
 
 ## Balancing: gemessene Werte
 
-Stand 14.11.2026 mit den 8 Autos, pro Strecke 400 Rennen mit 8 gleich starken Bots und 200 Rennen mit einem starken gegen 7 mittlere Bots. Jedes Rennen lost die Autos neu zu.
+Stand 17.11.2026, seit Pylonen 3 BP kosten und Bots kaum noch Pylonen setzen. Pro Strecke 200 Rennen mit 8 gleich starken Bots und 100 Rennen mit einem «Schwer»-Bot gegen 7 «Mittel»-Bots, jedes Rennen lost die Autos neu zu. «Vorher» ist derselbe Code mit den alten Werten (Pylonen 2 BP, Bots bauen wie bis 17.11.2026), mit demselben Zufall.
 
-| Zielwert | Kiesgrube | Bergpass |
-|---|---|---|
-| Führender nach Runde 1 gewinnt (Ziel 35–60 %) | 47,8 % | 38,0 % |
-| Feld kommt innerhalb von 8 s ins Ziel | 100 % (Median 2,0 s) | 100 % (Median 2,5 s) |
-| Stärkerer Bot gewinnt gegen 7 schwächere (Ziel ab 50 %) | 66,5 % | 45,0 % (knapp darunter) |
-| Grösster Zeitverlust durch ein Hindernis (Ziel höchstens rund 2 s) | 1,52 s | 1,82 s |
-| Längster Stillstand eines Bots (Ziel unter 3 s) | 0,1 s | 0,2 s |
-| Bauwerke und Treffer pro Rennen | 22, 4 | 26, 8 |
+| Zielwert | Kiesgrube vorher | Kiesgrube nachher | Bergpass vorher | Bergpass nachher |
+|---|---|---|---|---|
+| Führender nach Runde 1 gewinnt (Ziel 35–60 %) | 45 % | 47 % | 31 % | 50 % |
+| Feld kommt innerhalb von 8 s ins Ziel | 100 % (Median 1,9 s) | 100 % (Median 2,0 s) | 100 % (Median 2,2 s) | 100 % (Median 3,1 s) |
+| Stärkerer Bot gewinnt gegen 7 schwächere (Ziel ab 50 %) | 100 % | 96 % | 92 % | 96 % |
+| Grösster Zeitverlust durch ein Hindernis (Ziel höchstens rund 2 s) | 1,18 s | 1,55 s | 1,85 s | 1,88 s |
+| Längster Stillstand eines Bots (Ziel unter 3 s) | 0,1 s | 0,1 s | 0,2 s | 0,2 s |
+| **Pylonen pro Rennen** | **13,8** | **0,2** | **15,9** | **0,2** |
+| Bauwerke pro Rennen (Schlamm, Absperrung) | 21 (4,2, 1,6) | 15 (7,7, 3,9) | 27 (4,9, 2,3) | 18 (9,1, 5,1) |
+| Treffer pro Rennen | 4,4 | 1,6 | 8,0 | 5,1 |
+
+Die Bots setzen also 98 % weniger Pylonen. Mit den Punkten bauen sie stattdessen öfter Rampen, Schlammlöcher und Absperrungen, oder sie sparen: Jedes zweite Mal, wenn sie ein Schlammloch statt Pylonen bauen würden, heben sie die Punkte auf (`CONFIG.bots.schlammSparen`), sonst gäbe es doppelt so viele Schlammlöcher. Ein Mensch kann weiterhin so viele Pylonen setzen, wie er will.
 
 **Siegquote pro Auto** (Ziel rund 8 % bis 17 %, ideal 12,5 %):
 
-| Auto | Kiesgrube | Bergpass |
-|---|---|---|
-| Sportwagen | 12,0 % | 10,8 % |
-| Limousine | 14,8 % | 10,8 % |
-| Panzerwagen | 13,3 % | 14,0 % |
-| Transporter | 12,3 % | 14,5 % |
-| Geländewagen | 12,8 % | 13,0 % |
-| Pick-up | 11,3 % | 12,5 % |
-| Rennwagen | 13,0 % | 15,0 % |
-| Rallye-Auto | 10,8 % | 9,5 % |
+| Auto | Kiesgrube vorher | Kiesgrube nachher | Bergpass vorher | Bergpass nachher |
+|---|---|---|---|---|
+| Sportwagen | 10,5 % | 16,0 % | 15,5 % | 10,5 % |
+| Limousine | 24,0 % | 23,5 % | 10,0 % | 18,0 % |
+| Panzerwagen | 9,5 % | 14,5 % | 15,5 % | 8,5 % |
+| Transporter | 11,5 % | 8,5 % | 10,0 % | 13,0 % |
+| Geländewagen | 10,0 % | 11,0 % | 13,5 % | 15,0 % |
+| Pick-up | 11,0 % | 10,5 % | 9,0 % | 7,0 % |
+| Rennwagen | 17,5 % | 10,5 % | 18,0 % | 24,0 % |
+| Rallye-Auto | 6,0 % | 5,5 % | 8,5 % | 4,0 % |
 
-Damit die Autos trotz ihrer Eigenheiten gleich stark sind, sind Höchsttempo und Lenkung jedes Autos zusätzlich um wenige Prozent fein abgestimmt (`CONFIG.fahrzeuge`). Die Limousine hat einen 2,5-fachen statt 4-fachen Windschatten, weil sie sonst zu oft führte und dann doch verlor. Am Bergpass gewann der starke Bot damals mit 45 % etwas seltener als das Ziel von 50 %. Seit dem 17.11.2026 ist «Schwer» viel stärker und gewinnt 95 bis 100 % (siehe «Schwer»-Bots). Die Rennen mit 8 «Mittel»-Bots gehen genau gleich aus wie vorher (36 von 36 Vergleichsrennen mit gleichem Zufall), die Siegquoten der Autos gelten also weiter.
+Bei 200 Rennen schwanken diese Werte um rund ±2,5 Prozentpunkte. Schon vorher lagen in der Kiesgrube die Limousine (24 %) und das Rallye-Auto (6 %) ausserhalb des Ziels. Nachher liegt am Bergpass der Rennwagen mit 24 % klar darüber und das Rallye-Auto mit 4 % darunter. Der Grund: Ohne Pylonen gibt es viel weniger Treffer, und davon profitiert der Rennwagen, der schnellste, aber empfindlichste Wagen. Ich habe die Autos nicht neu abgestimmt, weil sie sonst anders fahren würden als vorher. Das wäre ein eigener Auftrag. Am 14.11.2026 (400 Rennen pro Strecke, damals noch mit vielen Pylonen) lagen alle Autos zwischen 9,5 % und 15 %.
+
+Damit die Autos trotz ihrer Eigenheiten gleich stark sind, sind Höchsttempo und Lenkung jedes Autos zusätzlich um wenige Prozent fein abgestimmt (`CONFIG.fahrzeuge`). Die Limousine hat einen 2,5-fachen statt 4-fachen Windschatten, weil sie sonst zu oft führte und dann doch verlor. Am Bergpass gewann der starke Bot damals mit 45 % etwas seltener als das Ziel von 50 %. Seit dem 17.11.2026 ist «Schwer» viel stärker und gewinnt 97 bis 100 % (siehe «Schwer»-Bots). Mit den alten Pylonen-Werten (`bots.pylonen` 1, Pylonen 2 BP, `bots.schlammSparen` 0) gehen Rennen mit 8 «Mittel»-Bots genau gleich aus wie vor der Pylonen-Änderung (36 von 36 Vergleichsrennen mit gleichem Zufall). Fahrphysik und Fahren der Bots sind also unverändert, anders ist nur, was sie bauen.
 
 Selbst nachmessen: `index.html?sim=200` öffnen (dauert einige Minuten). Die Siegquote pro Auto zeigt diese Seite noch nicht an, sie stammt aus meiner Mess-Reihe.
 
@@ -262,9 +268,10 @@ Ein «Schwer»-Bot fährt wie ein Profi: perfekte Linie ohne Zufallsfehler, spä
 
 **Siege eines «Schwer»-Bots gegen 7 «Mittel»-Bots** (je 200 Rennen pro Strecke, Autos jedes Mal neu zugelost, mit Bauen):
 
-| Kiesgrube | Bergpass | Paris | Himalaya | Ägypten | New York |
-|---|---|---|---|---|---|
-| 100 % | 95 % | 100 % | 99 % | 97 % | 100 % |
+| Stand | Kiesgrube | Bergpass | Paris | Himalaya | Ägypten | New York |
+|---|---|---|---|---|---|---|
+| bis 17.11.2026 (viele Pylonen) | 100 % | 95 % | 100 % | 99 % | 97 % | 100 % |
+| seit 17.11.2026 (Pylonen 3 BP) | 98 % | 97 % | 100 % | 99 % | 99 % | 99 % |
 
 **Vergleich mit einem Optimierer** (`tools/optimierer.js`): Er sucht pro Strecke mit 160 Versuchen die Fahr-Einstellungen (Kurventempo, Bremspunkte, Drift) mit der schnellsten fliegenden Runde, mit derselben Fahrphysik wie der Spieler und ohne Tempo-Vorteil. Gleiches Auto für alle Messungen.
 
@@ -279,6 +286,33 @@ Ein «Schwer»-Bot fährt wie ein Profi: perfekte Linie ohne Zufallsfehler, spä
 
 Mit seinem Tempo-Vorteil ist der «Schwer»-Bot also auf jeder Strecke schneller als die beste Runde des Optimierers. Nur am Fahrkönnen gemessen (ohne Vorteil) liegt er 0,7 bis 2,5 % dahinter; am Bergpass etwas über dem Ziel von 2 %.
 
+## «Ultra»-Bots
+
+«Ultra» ist die Stufe über «Schwer», wählbar gegen Bots, im Split-Screen und online («Ultra · unschlagbar»). Ein «Ultra»-Bot fährt mit derselben Fahrphysik wie der Spieler, so gut es diese erlaubt: Kurventempo, Bremspunkte und Drift sind pro Strecke mit dem Optimierer gesucht (`tools/ultra.js`, mit vier verschiedenen Autos geprüft, damit sie für jedes Auto passen). Er macht keine Fehler, nimmt jedes Boost-Feld mit, sieht jedes Hindernis und hat 8 % mehr Höchsttempo (`CONFIG.bots.stufen.ultra.tempo`, höchstens erlaubt sind 8 %). Er holt nicht künstlich auf. Seine Baupunkte gibt er vor allem für sich selbst aus (Abkürzung, Rampe), Hindernisse baut er selten und Pylonen nie.
+
+**Schnellste Runde** (Sportwagen, beste fliegende Runde ohne andere Fahrer; der Optimierer hat hier 200 Versuche, darum weichen seine Zeiten leicht von der Tabelle bei «Schwer» ab):
+
+| Strecke | Optimierer | «Ultra» im Spiel | Abstand | «Ultra» ohne Tempo-Vorteil | Abstand |
+|---|---|---|---|---|---|
+| Kiesgrube | 42,50 s | 39,87 s | −6,2 % | 42,50 s | 0,0 % |
+| Bergpass | 41,17 s | 39,01 s | −5,3 % | 41,30 s | +0,3 % |
+| Paris | 43,46 s | 41,04 s | −5,6 % | 43,81 s | +0,8 % |
+| Himalaya | 43,86 s | 41,77 s | −4,8 % | 44,34 s | +1,1 % |
+| Ägypten | 46,07 s | 43,24 s | −6,1 % | 46,17 s | +0,2 % |
+| New York | 42,36 s | 39,27 s | −7,3 % | 42,37 s | 0,0 % |
+
+Ziel war: mindestens 4 % schneller als der Optimierer. Das ist auf allen Strecken erreicht.
+
+**Siege eines «Ultra»-Bots gegen 7 «Schwer»-Bots** (je 200 Rennen pro Strecke, Autos jedes Mal neu zugelost, mit Bauen):
+
+| Kiesgrube | Bergpass | Paris | Himalaya | Ägypten | New York |
+|---|---|---|---|---|---|
+| 99,5 % | 99,5 % | 99,5 % | 91 % | 100 % | 100 % |
+
+Dabei stand «Ultra» nie länger als 0,23 s still und musste nie zurückgesetzt werden. Pro Rennen baute er 0,26 bis 0,66 Mal etwas für sich selbst und 0,04 bis 0,24 Mal ein Hindernis für andere.
+
+**Himalaya (91 %, Ziel 99 %):** Die «Schwer»-Bots bauen jedes Hindernis vor alle Fahrer, die vor ihnen liegen, also immer auch vor den Führenden. In der letzten Runde stehen darum oft mehrere Hindernisse hintereinander vor «Ultra». Am Himalaya liegen zwei Bauplätze an heiklen Stellen: einer in der S-Kurve kurz nach der Schanze, wo «Ultra» mit seinem Tempo noch in der Luft ist, und einer in der holprigen Kehre vor dem Ziel, durch die er rutscht. Dort trifft er oft ein Schlammloch oder eine Absperrung. Ich habe sechs Arten ausprobiert, wie er dort vorsichtiger fahren kann (früher ausweichen, in der Mitte der Lücke bleiben, vor der Schanze bremsen, in der Luft ruhiger lenken, langsamer in Kurven, nicht driften). Jede kostete mehr Zeit, als sie sparte (71 bis 90 % Siege). Geholfen hat nur, vor einer Umleitung früh auf die Seite des Nebenwegs zu fahren. Mit mehr Tempo-Vorteil würde es reichen: Mit 10 % gewinnt er am Himalaya 97 %, mit 12 % 99 % der Rennen (je 100 Rennen). Das ist mehr als die erlaubten 8 %, darum ist es bei 8 % geblieben. Ein eigener Wert nur für den Himalaya liesse sich mit `tempo` in `CONFIG.bots.stufen.ultra.strecken.himalaya` eintragen.
+
 ## Wichtigste CONFIG-Werte
 
 Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
@@ -291,13 +325,16 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `bp.rangVerfall` | 15 s | Lohn nur für neu gewonnene Plätze, ein verlorener Platz zählt erst nach 15 s wieder voll |
 | `bp.startPause` | 8 s | keine Punkte im Startgedränge |
 | `bp.erkauftZeit`, `bp.geschenktZeit` | 4 s, 6 s | keine Punkte für Plätze durch die eigene Rampe oder Abkürzung und für Fahrer, die gerade in eine Baustelle gefahren sind |
-| `bau.preise` | 3, 6, 2, 3, 4, 6 | Rampe, Abkürzung, Pylonen, Schlamm, Absperrung, Umleitung |
+| `bau.preise` | 3, 6, 3, 3, 4, 6 | Rampe, Abkürzung, Pylonen, Schlamm, Absperrung, Umleitung (Pylonen bis 17.11.2026: 2 BP) |
 | `bau.minVorlauf`, `bau.schutzZeit` | 3 s, 3 s | Vorwarnzeit und Schutz nach einem Treffer |
 | `bau.maxProSpieler`, `bau.maxGesamt`, `bau.wartezeit` | 2, 6, 4 s | Grenzen für Hindernisse |
 | `bau.maxSchlenker` | 4 m | Sperren stehen so, dass die Ideallinie höchstens so weit im gesperrten Teil liegt |
 | `windschatten.bonus` | 0,02 | 2 % mehr Höchsttempo im Windschatten |
-| `bots.stufen` | Mut 0,76 / 0,83 / 1,04 | Fahrkönnen der Bots leicht, mittel, schwer |
+| `bots.stufen` | Mut 0,76 / 0,83 / 1,04 / 1,18 bis 1,30 | Fahrkönnen der Bots leicht, mittel, schwer, ultra («Ultra» je Strecke eigene Werte) |
 | `bots.stufen.schwer` | `profi`, `bremsen` 34, `driftAb` 0,5, `tempo` 1,03 | Profi ohne Fehler, spätere Bremspunkte, früher Drift, 3 % Tempo-Vorteil (höchstens erlaubt) |
+| `bots.stufen.ultra` | `tempo` 1,08, `strecken`, `hindernisse` 0,15, `pylonen` 0, `umsichtig` | 8 % Tempo-Vorteil (höchstens erlaubt), Fahr-Einstellungen pro Strecke vom Optimierer, baut nur selten Hindernisse und nie Pylonen, weicht vorausschauend aus |
+| `bots.pylonen` | 0,4 | so oft wie früher setzen Bots Pylonen (1 = wie bis 17.11.2026, 0 = nie) |
+| `bots.schlammSparen` | 0,5 | so oft sparen Bots ihre Punkte, statt ein Schlammloch zu bauen (0 = nie, wie bis 17.11.2026) |
 | `grafik.auto` | 3,5 / 8 / 16 ms | so schnell muss ein Bild auf «Hoch» sein für «Ultra», «Hoch», «Mittel» |
 | `grafik.leben` | Gras 6000 / 14000 / 26000 | Gras, Blumen, Steine und Vögel pro Grafik-Stufe |
 | `grafik.leben.passanten` | 50 / 90 / 140 | Fussgänger in Paris und New York ab «Mittel» |
@@ -324,6 +361,11 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Die Mindestzeit ist bewusst grosszügig (die besten Bots brauchen rund 40 % länger), damit keine echte Runde abgelehnt wird, auch nicht mit Abkürzung, Rampe und Windschatten. Unsinn wie eine 5-Sekunden-Runde lehnt die Datenbank ab, eine erfundene Zeit knapp über der Grenze nicht.
 - Bei Online-Rennen vor dieser Version hat jedes Gerät die Zeiten aller Mitspieler gespeichert, ohne sich zu merken, wer an welchem Gerät sass. Davon lädt ein Gerät beim ersten Hochladen nur die Zeiten mit dem eigenen Namen hoch, Bot-Zeiten aus solchen Rennen gar nicht.
 - Beim Öffnen lädt das Spiel die Liste höchstens einmal pro Minute neu, damit Blättern nicht jedes Mal lädt. «Aktualisieren» lädt sofort.
+- «Ultra» hat den grösstmöglichen Tempo-Vorteil von 8 %. Den Rest holt er nur mit Fahrkönnen: Die Einstellungen pro Strecke stammen aus derselben Suche wie beim Optimierer, nur mit Tempo-Vorteil und mit vier Autos geprüft.
+- «Ultra» baut fast nur für sich selbst (Abkürzung, Rampe). Hindernisse für andere baut er in rund jedem siebten Fall, in dem ein anderer Bot eines bauen würde, Pylonen nie.
+- Pylonen: Bots setzen sie noch in 40 % der Fälle wie früher (`CONFIG.bots.pylonen` 0,4). Mit dem höheren Preis von 3 BP kommt das zusammen auf rund 0,2 Pylonen pro Rennen statt 14 bis 16. Menschen bauen wie bisher.
+- Ohne weitere Regel hätten die Bots die gesparten Punkte fast ganz in Schlammlöcher gesteckt (doppelt so viele wie vorher). Darum heben sie in der Hälfte dieser Fälle ihre Punkte auf (`CONFIG.bots.schlammSparen`).
+- In der Bestenliste steht pro Liste nur der schnellste Bot. Das ist jetzt meistens ein «Ultra»-Bot («Bot · Ultra»), so ist es gewollt.
 
 ## Bekannte Grenzen
 
@@ -337,6 +379,8 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Einen Grand-Prix-Modus gibt es nicht.
 - Bots bauen selten Umleitungen und Abkürzungen, weil die Punkte knapp sind.
 - three.js 0.160.0 schreibt eine harmlose Warnung in die Browser-Konsole.
+- **«Ultra» am Himalaya:** Er gewinnt dort gegen 7 «Schwer»-Bots 91 % statt der angestrebten 99 % der Rennen (siehe «Ultra»-Bots). Für Menschen ist er trotzdem praktisch nicht zu schlagen, er fährt auch dort fast 5 % schneller als der Optimierer.
+- **Umleitung kurz nach der Abzweigung:** Wird eine Umleitung gebaut, wenn ein Bot gerade an ihrer Abzweigung vorbei ist, lenkt er bei «Leicht», «Mittel» und «Schwer» trotzdem noch in den Nebenweg und fährt in die Wand. Das kostet einige Sekunden und kommt selten vor. Bei «Ultra» ist es behoben, bei den anderen Stufen nicht, damit sie genau gleich fahren wie vorher.
 - **Gemeinsame Bestenliste:** Solange keine Datenbank eingetragen ist, hat jedes Gerät nur seine eigene Liste (wie bisher). Die Anbindung an Firebase ist nur gegen einen nachgebauten Ersatz-Server mit denselben Regeln getestet, weil die Test-Umgebung das Internet nicht erreicht. Der echte Test sind zwei Geräte (siehe «Gemeinsame Bestenliste einrichten», Schritt 6). Schummeln lässt sich ohne eigenen Server nicht ganz verhindern: Wer sich auskennt, kann eine erfundene Zeit über der Mindestzeit schicken. Solche Einträge löschst du in der Firebase-Konsole. Gleicher Name heisst gleiche Person, auch auf verschiedenen Geräten: Zwei Leute mit demselben Namen teilen sich einen Platz. Die Liste kann jeder lesen, der die Adresse kennt, darum besser Spitznamen statt voller Namen. Wer die Website-Daten im Browser löscht, löscht die Liste des Geräts und noch nicht hochgeladene Zeiten, die gemeinsame Liste bleibt.
 
 ## Für Bastler
