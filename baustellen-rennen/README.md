@@ -118,7 +118,72 @@ Jede Strecke hat eine Bestenliste mit der schnellsten Runde: eine Gesamtliste un
 - **Bots:** Pro Liste steht nur ein einziger Bot drin, der schnellste aller Zeiten: in der Gesamtliste der schnellste Bot auf dieser Strecke, in der Liste eines Autos der schnellste Bot mit diesem Auto. Er ist mit einem Symbol und «Bot» markiert und steht auf dem Platz, der zu seiner Zeit passt. Fährt ein Bot schneller, ersetzt er den alten.
 - **Anzeige:** Die ersten drei Plätze sind in Gold, Silber und Bronze markiert, zu jedem Eintrag stehen Auto und Datum. In der Streckenwahl stehen der Rundenrekord und die ersten drei, im Rennen steht der Rekord unter der Rundenzeit. Bei einer neuen Bestzeit erscheint kurz «Neuer Rekord!», «Rekord mit dem Rennwagen!» oder «Platz 3 in der Bestenliste». Im Ergebnis steht, wer neu in der Liste ist, die neuen Einträge sind hervorgehoben.
 - **Name:** Heisst man noch «Spieler», fragt das Spiel nach dem ersten Eintrag einmal nach dem Namen. Ändern geht wie bisher im Menü. Ein neuer Name gilt für neue Einträge, alte behalten ihren Namen.
-- **Speichern:** im Browser des Geräts, getrennt von den Einstellungen. Jedes Gerät hat seine eigene Liste, online gefahrene Rennen tragen die Zeiten aller Mitspieler auf jedem beteiligten Gerät ein. In einem privaten Fenster gilt die Liste nur bis zum Neuladen. Unter «Einstellungen» löscht «Bestenliste löschen» eine Strecke oder alle.
+- **Alle Spieler:** Ist eine Datenbank eingetragen (siehe «Gemeinsame Bestenliste einrichten»), zeigt die Bestenliste die Zeiten von allen Geräten. Jedes Gerät lädt nur die Zeiten seiner eigenen Spieler hoch: gegen Bots und im Split-Screen alle am Gerät, online jeder seine eigenen. Bot-Zeiten lädt das Gerät hoch, das das Rennen leitet (online der Host). Hochgeladen werden nur Name, Rundenzeit, Auto, Strecke, Bot-Stärke und Datum, sonst nichts. Den Namen «Spieler» lädt das Spiel nicht hoch, es fragt zuerst nach dem richtigen Namen.
+- **Gleiche Regeln für alle Geräte:** Jeder Name steht pro Liste einmal mit seiner besten Zeit, egal auf welchem Gerät sie gefahren wurde (gleicher Name heisst gleiche Person). Pro Liste steht ein Bot, der schnellste von allen Geräten.
+- **Aktualisieren:** Die Liste wird beim Öffnen der Bestenliste und der Streckenwahl frisch geladen (höchstens einmal pro Minute), der Knopf «Aktualisieren» lädt sofort. Die Zeile über der Liste zeigt den Stand, zum Beispiel «Alle Spieler · Stand 14:05» oder «Keine Verbindung: nur dieses Gerät». Mit «Zeigen: Alle Spieler / Dieses Gerät» wechselt man zwischen der gemeinsamen Liste und der Liste des Geräts. Eigene neue Zeiten stehen sofort drin, auch bevor sie hochgeladen sind, und bleiben hervorgehoben. Den Rekord in der Streckenwahl und im Rennen nimmt das Spiel aus der gemeinsamen Liste, geladen vor dem Rennstart, nie während des Rennens.
+- **Ohne Verbindung:** Das Spiel läuft wie gewohnt mit der Liste des Geräts. Zeiten, die noch nicht hochgeladen sind, merkt sich das Gerät und lädt sie beim nächsten Mal hoch, die Stand-Zeile zeigt, wie viele warten. Langsame, fehlende oder kaputte Antworten führen nie zu einem Fehler: Nach 6 s gilt «Keine Verbindung».
+- **Bisherige Zeiten:** Beim ersten Start mit eingetragener Datenbank lädt jedes Gerät seine bisherigen eigenen Zeiten einmal hoch.
+- **Schutz:** Namen erscheinen immer als Text. Namen mit unerwünschten Wörtern (Liste in `CONFIG.bestenliste.verboten`) werden weder hochgeladen noch gezeigt. Runden unter der Mindestzeit einer Strecke (Streckenlänge geteilt durch das doppelte Höchsttempo, zum Beispiel 23,2 s in der Kiesgrube) lehnt die Datenbank ab und das Spiel zeigt sie nicht. Ganz verhindern lässt sich Schummeln ohne eigenen Server nicht (siehe «Bekannte Grenzen»), falsche Einträge kannst du in der Datenbank löschen.
+- **Speichern:** Die Liste des Geräts liegt im Browser, getrennt von den Einstellungen. Online gefahrene Rennen tragen dort die Zeiten aller Mitspieler ein. In einem privaten Fenster gilt sie nur bis zum Neuladen. Unter «Einstellungen» löscht «Bestenliste löschen» eine Strecke oder alle, aber nur auf diesem Gerät, die gemeinsame Liste bleibt. Ohne eingetragene Datenbank verhält sich alles wie bisher: Jedes Gerät hat nur seine eigene Liste.
+
+## Gemeinsame Bestenliste einrichten
+
+Damit alle Geräte dieselbe Liste sehen, braucht das Spiel eine kleine Online-Datenbank. Gewählt habe ich die **Firebase Realtime Database** von Google: Der Gratis-Tarif «Spark» braucht keine Kreditkarte und pausiert nicht, wenn eine Woche niemand spielt. Das Spiel erreicht die Datenbank direkt mit `fetch`, ohne zusätzliche Bibliothek, von GitHub Pages, itch.io, Netlify und per Doppelklick. Regeln in der Datenbank legen fest, was erlaubt ist, und in der Firebase-Konsole kannst du Einträge löschen. Der Gratis-Tarif reicht weit (1 GB Speicher, 10 GB Download pro Monat, ein Eintrag hat rund 100 Byte). Nicht gewählt habe ich Supabase, weil Gratis-Projekte nach einer Woche ohne Nutzung pausieren, und einfache JSON-Speicher ohne Regeln, weil dort jeder alles löschen könnte.
+
+Das machst du einmal, es dauert rund 10 Minuten:
+
+1. **Konto:** https://console.firebase.google.com öffnen und mit einem Google-Konto anmelden.
+2. **Projekt:** «Projekt erstellen» (englisch «Create a project») wählen, als Namen zum Beispiel `baustellen-rennen` eingeben und den Bedingungen zustimmen. Google Analytics brauchst du nicht, schalte es aus. Dann «Projekt erstellen» und warten, bis es fertig ist.
+3. **Datenbank:** Links im Menü unter «Build» (oder «Erstellen») auf «Realtime Database» klicken, dann «Datenbank erstellen». Als Standort «Belgien (europe-west1)» wählen, dann «Im gesperrten Modus starten» und «Aktivieren». Wichtig: «Realtime Database», nicht «Firestore».
+4. **Regeln:** Oben den Reiter «Regeln» öffnen, den ganzen Text dort löschen, den Text unten («Regeln zum Kopieren») einfügen und auf «Veröffentlichen» klicken.
+5. **Adresse:** Im Reiter «Daten» steht oben die Adresse der Datenbank, zum Beispiel `https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app/`. Schick mir diese Adresse, dann trage ich sie ein. Sie ist nicht geheim: Sie steht später im Spiel, so wie die Zugangsdaten des Umweg-Servers, geschützt wird die Datenbank durch die Regeln. Selbst eintragen geht auch: `index.html` mit einem Texteditor öffnen, nach `server: ''` suchen und die Adresse zwischen die beiden Anführungszeichen schreiben, also `server: 'https://…firebasedatabase.app',`. Speichern und die Datei wie gewohnt hochladen.
+6. **Prüfen:** Das Spiel öffnen und «Bestenlisten» wählen. Über der Liste steht nach einem Moment «Alle Spieler · Stand …». Steht dort «Keine Verbindung», stimmt die Adresse nicht oder die Regeln fehlen. Nach einer gefahrenen Runde erscheint in Firebase im Reiter «Daten» unter `bestenliste` → `v1` → Strecke ein neuer Eintrag. Dann auf einem zweiten Gerät (zum Beispiel dem Handy) eine Runde auf derselben Strecke fahren: Nach «Aktualisieren» müssen auf beiden Geräten beide Namen stehen.
+7. **Einträge löschen:** Im Reiter «Daten» `bestenliste` → `v1` → die Strecke aufklappen. Jeder Eintrag hat eine lange Kennung (zum Beispiel `-NxYz…`) und darin `n` (Name), `z` (Zeit in Sekunden), `a` (Auto), `b` (Bot ja oder nein), `s` (Bot-Stärke) und `d` (Datum). Mit der Maus auf den Eintrag zeigen und auf das Löschen-Zeichen (✕ oder Papierkorb) klicken. Jede Verbesserung ist ein eigener Eintrag, ein Name kann also mehrmals vorkommen: Bei einem Schummler alle seine Einträge löschen. In der Konsole darfst du löschen, die Regeln gelten nur für das Spiel. Auf dem Gerät, auf dem die Zeit gefahren wurde, bleibt sie in dessen eigener Liste, bis man sie dort unter «Einstellungen» löscht.
+
+**Regeln zum Kopieren** (die Mindestzeit jeder Strecke rechnet das Spiel selbst aus):
+
+```json
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "bestenliste": {
+      "v1": {
+        "$strecke": {
+          ".read": true,
+          "$eintrag": {
+            ".write": "!data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['n', 'z', 'a', 'b', 'd'])",
+            "n": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && (newData.val().length <= 14 || (newData.val().length <= 20 && newData.parent().child('b').val() === true))"
+            },
+            "z": {
+              ".validate": "newData.isNumber() && newData.val() <= 600 && (($strecke === 'kiesgrube' && newData.val() >= 23.2) || ($strecke === 'bergpass' && newData.val() >= 21.5) || ($strecke === 'paris' && newData.val() >= 23.4) || ($strecke === 'himalaya' && newData.val() >= 22.8) || ($strecke === 'aegypten' && newData.val() >= 24.6) || ($strecke === 'newyork' && newData.val() >= 22.7))"
+            },
+            "a": {
+              ".validate": "newData.isString() && newData.val().matches(/^(sport|limo|panzer|transporter|gelaende|pickup|renn|rallye)$/)"
+            },
+            "b": {
+              ".validate": "newData.isBoolean()"
+            },
+            "s": {
+              ".validate": "newData.isString() && newData.val().matches(/^(leicht|mittel|schwer|ultra)?$/)"
+            },
+            "d": {
+              ".validate": "newData.val() === now"
+            },
+            "$anderes": {
+              ".validate": false
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+Was die Regeln erlauben: Lesen darf jeder, schreiben nur neue Einträge, ändern und löschen niemand (ausser dir in der Konsole). Ein Eintrag braucht genau diese Felder: Name mit 1 bis 14 Zeichen (Bots bis 20), Zeit als Zahl zwischen der Mindestzeit der Strecke und 600 s, eines der 8 Autos, Bot ja oder nein, die Bot-Stärke und das Datum vom Server. Alles andere lehnt die Datenbank ab. Kommt eine neue Strecke dazu, braucht es neue Regeln, die liefere ich dann mit.
 
 ## Online spielen
 
@@ -239,6 +304,9 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `grafik.lod` | 30 / 45 / 70 m | ab dieser Entfernung zeigen Autos ihre einfache Fassung («Mittel», «Hoch», «Ultra») |
 | `grafik.delle` | ab 3 m/s, höchstens 0,13 m | Dellen nach Stössen |
 | `bestenliste` | `proName` 1, `zeigen` 10, `speichern` 50, `minRunde` 8 s | Zeiten pro Name und Liste, sichtbare und gespeicherte Plätze, kürzeste gültige Runde |
+| `bestenliste.server` | leer | Adresse der gemeinsamen Datenbank, leer heisst: jedes Gerät hat nur seine eigene Liste |
+| `bestenliste.zeitlimit`, `frisch`, `nochmals` | 6 s, 60 s, 15 s | Wartezeit auf die Datenbank, so lange gilt eine geladene Liste, neuer Versuch nach einem Fehler |
+| `bestenliste.mindestTempo`, `verboten` | 2, 10 Wörter | Mindestzeit = Streckenlänge ÷ (2 × Höchsttempo), unerwünschte Wörter in Namen |
 
 ## Entscheidungen, die ich getroffen habe
 
@@ -251,6 +319,11 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Wer an die Spitze überholt, bekommt die Punkte noch, kann sie aber erst wieder ausgeben, wenn er nicht mehr führt.
 - Bestenliste: Gewertet wird die schnellste Runde, weil die Rundenzahl einstellbar ist. Die Zeiten stehen im selben Format wie im übrigen Spiel (0:41.23). Ein Name, den es in der Liste schon gibt, gilt als dieselbe Person, es bleibt die bessere Zeit.
 - Nach dem Namen fragt das Spiel nur im Modus «Gegen Bots». Im Split-Screen und online gibt jeder seinen Namen ohnehin vor dem Rennen ein.
+- Gemeinsame Bestenliste: Die Datenbank ist ein Protokoll. Jede Verbesserung ist ein neuer Eintrag, nichts wird überschrieben. So reicht die Regel «nur hinzufügen», und das Spiel sucht beim Laden pro Name die beste Zeit und pro Liste den schnellsten Bot heraus.
+- Den Standardnamen «Spieler» lädt das Spiel nicht hoch, sonst stünden alle, die keinen Namen eingegeben haben, als eine Person in der Liste.
+- Die Mindestzeit ist bewusst grosszügig (die besten Bots brauchen rund 40 % länger), damit keine echte Runde abgelehnt wird, auch nicht mit Abkürzung, Rampe und Windschatten. Unsinn wie eine 5-Sekunden-Runde lehnt die Datenbank ab, eine erfundene Zeit knapp über der Grenze nicht.
+- Bei Online-Rennen vor dieser Version hat jedes Gerät die Zeiten aller Mitspieler gespeichert, ohne sich zu merken, wer an welchem Gerät sass. Davon lädt ein Gerät beim ersten Hochladen nur die Zeiten mit dem eigenen Namen hoch, Bot-Zeiten aus solchen Rennen gar nicht.
+- Beim Öffnen lädt das Spiel die Liste höchstens einmal pro Minute neu, damit Blättern nicht jedes Mal lädt. «Aktualisieren» lädt sofort.
 
 ## Bekannte Grenzen
 
@@ -264,7 +337,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Einen Grand-Prix-Modus gibt es nicht.
 - Bots bauen selten Umleitungen und Abkürzungen, weil die Punkte knapp sind.
 - three.js 0.160.0 schreibt eine harmlose Warnung in die Browser-Konsole.
-- Die Bestenliste liegt im Browser des jeweiligen Geräts. Eine gemeinsame Liste für alle Geräte bräuchte einen Online-Dienst mit Server, den das Spiel bewusst nicht hat. Wer die Website-Daten im Browser löscht, löscht auch die Bestenliste.
+- **Gemeinsame Bestenliste:** Solange keine Datenbank eingetragen ist, hat jedes Gerät nur seine eigene Liste (wie bisher). Die Anbindung an Firebase ist nur gegen einen nachgebauten Ersatz-Server mit denselben Regeln getestet, weil die Test-Umgebung das Internet nicht erreicht. Der echte Test sind zwei Geräte (siehe «Gemeinsame Bestenliste einrichten», Schritt 6). Schummeln lässt sich ohne eigenen Server nicht ganz verhindern: Wer sich auskennt, kann eine erfundene Zeit über der Mindestzeit schicken. Solche Einträge löschst du in der Firebase-Konsole. Gleicher Name heisst gleiche Person, auch auf verschiedenen Geräten: Zwei Leute mit demselben Namen teilen sich einen Platz. Die Liste kann jeder lesen, der die Adresse kennt, darum besser Spitznamen statt voller Namen. Wer die Website-Daten im Browser löscht, löscht die Liste des Geräts und noch nicht hochgeladene Zeiten, die gemeinsame Liste bleibt.
 
 ## Für Bastler
 

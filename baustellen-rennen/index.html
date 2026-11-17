@@ -202,6 +202,7 @@ input[type=range]{accent-color:var(--gold)}
 .bl-name{overflow-wrap:anywhere}
 .bl-handy{display:none}
 .bl-neu{margin:.2em 0 .7em;color:var(--gold);font-weight:600;line-height:1.45}
+.bl-stand{margin:0 0 6px;font-size:.78rem;color:var(--leise);min-height:1em}
 .sk-rekord{list-style:none;margin:6px 0 0;padding:0;font-size:.78rem;color:var(--leise);line-height:1.4}
 .sk-text .sk-rekord li{display:block;font-size:inherit}
 .sk-rekord li:first-child{color:var(--text)}
@@ -470,6 +471,15 @@ const CONFIG = {
     speichern: 50,         // so viele Plätze pro Auto und Strecke bleiben gespeichert (die Gesamtliste ergibt sich daraus)
     minRunde: 8,           // kürzere Runden (s) sind auf keiner Strecke möglich und zählen nicht (Schutz vor Messfehlern)
     schluessel: 'baustellenrennen-bestenliste',   // Name im Speicher des Browsers (getrennt von den Einstellungen)
+    // Gemeinsame Liste für alle Geräte über eine kostenlose Online-Datenbank (Firebase Realtime Database, einrichten: README
+    // «Gemeinsame Bestenliste einrichten»). Leer = jedes Gerät hat nur seine eigene Liste, wie bisher.
+    server: '',            // Adresse der Datenbank, z. B. 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app'
+    pfad: 'bestenliste/v1',// Ordner in der Datenbank (v1 = Aufbau der Einträge, passt zu den Regeln in der README)
+    zeitlimit: 6,          // s: so lange wird auf die Datenbank gewartet, danach gilt «keine Verbindung»
+    frisch: 60,            // s: so lange gilt eine geladene Liste, danach wird sie beim Öffnen neu geladen («Aktualisieren» lädt sofort)
+    nochmals: 15,          // s: nach einem Fehler frühestens so spät wieder versuchen (ausser mit «Aktualisieren»)
+    mindestTempo: 2,       // Mindestzeit = Streckenlänge ÷ (Höchsttempo × 2); die besten Bots brauchen rund 40 % länger. Schnellere Runden zeigt das Spiel nicht, die Regeln der Datenbank lehnen sie ab (tools/regeln.js)
+    verboten: ['arsch', 'fick', 'fotze', 'hure', 'nazi', 'hitler', 'wichser', 'schlampe', 'penis', 'idiot'],   // Namen mit diesen Wörtern werden weder hochgeladen noch gezeigt
   },
 
   // ── Netzwerk ────────────────────────────────────────────────────────────
@@ -9700,6 +9710,7 @@ const Dialog = {
 const Bestenliste = {
   daten: null, aktiv: false, fahrer: [], modus: '', streckenId: '', neu: [], rekordText: '', ohneSpeicher: false,
   blStrecke: '', blAuto: '', kartenId: null,
+  netz: {}, quelle: 'alle', sendet: false, schlangeMem: null, erstesFertig: false,   // gemeinsame Liste (siehe unten)
 
   // ── Speicher ───────────────────────────────────────────────────────────
   laden() {
@@ -9716,9 +9727,10 @@ const Bestenliste = {
     for (const id of Object.keys(d.strecken)) {
       const s = d.strecken[id];
       if (!s || typeof s !== 'object') continue;
-      const menschen = Array.isArray(s.menschen) ? s.menschen.filter(gut).map((e) => ({ n: e.n.trim().slice(0, 14), z: e.z, a: e.a, d: +e.d || 0, m: String(e.m || '') })) : [];
+      const eigen = (e, x) => ((e.o === 0 || e.o === 1) ? Object.assign(x, { o: e.o }) : x);   // o: 1 = auf diesem Gerät gefahren (fehlt bei alten Einträgen)
+      const menschen = Array.isArray(s.menschen) ? s.menschen.filter(gut).map((e) => eigen(e, { n: e.n.trim().slice(0, 14), z: e.z, a: e.a, d: +e.d || 0, m: String(e.m || '') })) : [];
       const bots = {};
-      if (s.bots && typeof s.bots === 'object') for (const a of Object.keys(s.bots)) { const e = s.bots[a]; if (gut(e)) bots[e.a] = { n: e.n.trim().slice(0, 20), z: e.z, a: e.a, s: String(e.s || ''), d: +e.d || 0, m: String(e.m || '') }; }
+      if (s.bots && typeof s.bots === 'object') for (const a of Object.keys(s.bots)) { const e = s.bots[a]; if (gut(e)) bots[e.a] = eigen(e, { n: e.n.trim().slice(0, 20), z: e.z, a: e.a, s: String(e.s || ''), d: +e.d || 0, m: String(e.m || '') }); }
       neu.strecken[id] = { menschen, bots };
     }
     return neu;
@@ -9738,15 +9750,25 @@ const Bestenliste = {
 
   // ── Listen ─────────────────────────────────────────────────────────────
   // Sortierte Liste einer Kategorie: auto = '' für die Gesamtliste, sonst die id eines Autos
-  liste(id, auto) {
-    const S = this.strecke(id), proName = Math.max(1, CONFIG.bestenliste.proName | 0);
-    const menschen = S.menschen.filter((e) => !auto || e.a === auto).sort((x, y) => x.z - y.z);
+  // quelle: 'alle' = dieses Gerät und die gemeinsame Liste (sobald geladen), 'geraet' = nur dieses Gerät
+  liste(id, auto, quelle) {
+    const proName = Math.max(1, CONFIG.bestenliste.proName | 0);
+    // stabil sortiert: Bei gleicher Zeit kommt der Eintrag dieses Geräts vor dem gleichen aus der gemeinsamen Liste
+    const alle = this.eintraege(id, quelle).filter((e) => !auto || e.a === auto).sort((x, y) => x.z - y.z);
     const zahl = {}, aus = [];
-    for (const e of menschen) { const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName) aus.push(e); }
     let bot = null;
-    for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if ((!auto || e.a === auto) && (!bot || e.z < bot.z)) bot = e; }
-    if (bot) aus.push(Object.assign({ bot: true }, bot));
+    for (const e of alle) {
+      if (e.bot) { if (!bot) bot = e; continue; }
+      const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName) aus.push(e);
+    }
+    if (bot) aus.push(bot);
     return aus.sort((x, y) => x.z - y.z);
+  },
+  eintraege(id, quelle) {
+    const S = this.strecke(id), l = S.menschen.slice(), N = this.netz[id];
+    for (const a of Object.keys(S.bots)) l.push(Object.assign({ bot: true }, S.bots[a]));
+    if (quelle !== 'geraet' && N && N.eintraege) for (const e of N.eintraege) l.push(e);
+    return l;
   },
   platz(id, auto, e) { const i = this.liste(id, auto).indexOf(e); return i + 1; },     // 0 = nicht (mehr) in der Liste
   // Liste eines Autos aufräumen: pro Name höchstens proName Zeiten, höchstens CONFIG.bestenliste.speichern Plätze
@@ -9773,6 +9795,7 @@ const Bestenliste = {
       return { kart: i, name: String(k.name || f.name || '').trim() || (bot ? 'Bot' : 'Spieler'), auto: k.fahrzeug, stufe: f.stufe || '', bot, lokal: f.typ === 'mensch' };
     });
     this.merkeRekord();
+    if (this.aktiv) this.ladeNetz(this.streckenId);         // Rekord aus der gemeinsamen Liste, kommt während des Countdowns
   },
   // Jede fertig gefahrene Runde (Ereignis «runde»: e.k = Fahrer, e.b = Rundenzeit). Gibt für Menschen die Meldung zurück.
   runde(R, e) {
@@ -9787,7 +9810,9 @@ const Bestenliste = {
     if (f.bot) {                                                    // Bots: pro Auto nur der schnellste aller Zeiten
       const alt = S.bots[f.auto];
       if (alt && alt.z <= z) return null;
-      S.bots[f.auto] = { n: f.name.slice(0, 20), z, a: f.auto, s: f.stufe, d: jetzt, m: this.modus };
+      const eigen = this.modus !== 'online' || Online.host;          // Bot-Zeiten lädt nur das Gerät hoch, das das Rennen leitet
+      S.bots[f.auto] = { n: f.name.slice(0, 20), z, a: f.auto, s: f.stufe, d: jetzt, m: this.modus, o: eigen ? 1 : 0 };
+      if (eigen) this.vormerken(id, S.bots[f.auto], true);
       this.sichern(); this.merkeRekord();
       return null;
     }
@@ -9795,8 +9820,9 @@ const Bestenliste = {
     const vorG = meine(''), vorA = meine(f.auto);
     if (vorA.length >= proName && z >= vorA[vorA.length - 1].z) return null;      // nicht besser als die eigenen Zeiten mit diesem Auto
     const besserG = vorG.length < proName || z < vorG[vorG.length - 1].z;
-    const e = { n: f.name.slice(0, 14), z, a: f.auto, d: jetzt, m: this.modus };
+    const e = { n: f.name.slice(0, 14), z, a: f.auto, d: jetzt, m: this.modus, o: f.lokal ? 1 : 0 };
     S.menschen.push(e);
+    if (f.lokal) this.vormerken(id, e, false);                     // online lädt jeder nur seine eigenen Zeiten hoch
     this.ordne(id, f.auto); this.sichern(); this.merkeRekord();
     this.neu.push({ id, e, kart: f.kart, lokal: f.lokal });
     const r = { besserG, platzG: this.platz(id, '', e), platzA: this.platz(id, f.auto, e), auto: f.auto, persoenlich: vorG.length > 0 && besserG };
@@ -9834,6 +9860,7 @@ const Bestenliste = {
   nachRennen() {
     const D = Speicher.daten, ich = this.neu.filter((x) => x.lokal);
     if (this.aktiv && this.modus === 'bots' && ich.length && this.schluessel(D.name) === 'spieler' && !D.nameGefragt) this.frageName(ich);
+    if (this.aktiv) this.sende();
   },
   frageName(eintraege) {
     const D = Speicher.daten;
@@ -9844,6 +9871,8 @@ const Bestenliste = {
         const n = String(wert || '').trim().slice(0, 14);
         if (!n) return;
         D.name = n; Speicher.sichern(); this.umbenennen(eintraege, n);
+        for (const x of eintraege) this.vormerken(x.id, x.e, false);   // erst mit richtigem Namen in die gemeinsame Liste
+        this.sende();
       } },
       { text: 'Später', klasse: 'zweit', abbruch: true },
     ]);
@@ -9855,6 +9884,125 @@ const Bestenliste = {
     this.sichern(); this.merkeRekord();
     const el = document.querySelector('.bl-ergebnis');
     if (el) el.outerHTML = this.ergebnisHtml();
+  },
+
+  // ── Gemeinsame Liste für alle Geräte (Online-Datenbank) ──────────────────
+  // Gelesen wird pro Strecke die ganze Liste. Hochgeladen wird nur, was auf diesem Gerät gefahren wurde (online jeder seine
+  // eigenen Zeiten, Bot-Zeiten nur der Host). Ohne Verbindung warten die Zeiten in einer Schlange im Browser.
+  mitNetz() { return !!(CONFIG.bestenliste.server || '').trim() && typeof fetch === 'function'; },
+  adresse(id) { const C = CONFIG.bestenliste; return C.server.trim().replace(/\/+$/, '') + '/' + C.pfad + '/' + encodeURIComponent(id) + '.json'; },
+  // Anfrage mit Zeitlimit; nie ein Fehler nach aussen: { ok, status, j } (status 0 = keine Verbindung)
+  async anfrage(url, opt) {
+    const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+    const uhr = setTimeout(() => { if (ctl) ctl.abort(); }, CONFIG.bestenliste.zeitlimit * 1000);
+    try {
+      const r = await fetch(url, Object.assign({ cache: 'no-store', signal: ctl ? ctl.signal : undefined }, opt));
+      let j; try { j = JSON.parse(await r.text()); } catch (e) { j = undefined; }
+      return { ok: r.ok, status: r.status, j };
+    } catch (e) { return { ok: false, status: 0, j: undefined }; }
+    finally { clearTimeout(uhr); }
+  },
+  verboten(n) { const k = this.schluessel(n); return (CONFIG.bestenliste.verboten || []).some((w) => w && k.includes(w)); },
+  mindestZeit(id) {
+    let L = 0; try { L = holeStrecke(id).laenge || 0; } catch (e) { L = 0; }
+    return Math.max(CONFIG.bestenliste.minRunde, L / (CONFIG.fahren.vmax * CONFIG.bestenliste.mindestTempo));
+  },
+  // Antwort der Datenbank prüfen: nur gültige, mögliche Zeiten mit bekanntem Auto und erlaubtem Namen
+  ausNetz(id, j) {
+    const aus = [], min = this.mindestZeit(id);
+    if (!j || typeof j !== 'object') return aus;
+    for (const v of Object.values(j)) {
+      if (!v || typeof v !== 'object' || typeof v.n !== 'string' || typeof v.z !== 'number' || !isFinite(v.z) || typeof v.a !== 'string') continue;
+      const bot = v.b === true, n = v.n.trim();
+      if (!n || n.length > (bot ? 20 : 14) || v.z < min || v.z > 600 || !FAHRZEUGE.some((f) => f.id === v.a) || this.verboten(n)) continue;
+      aus.push({ n, z: Math.round(v.z * 1000) / 1000, a: v.a, d: +v.d || 0, s: bot ? String(v.s || '').slice(0, 10) : '', bot, netz: true });
+    }
+    return aus;
+  },
+  // Liste einer Strecke laden: höchstens alle CONFIG.bestenliste.frisch Sekunden (nach einem Fehler alle «nochmals» Sekunden),
+  // sofort mit «Aktualisieren». Vorher wartende Zeiten hochladen. Ergebnis: true, wenn eine Antwort (oder ein Fehler) neu da ist.
+  ladeNetz(id, sofort) {
+    if (!this.mitNetz() || !STRECKEN[id]) return Promise.resolve(false);
+    const C = CONFIG.bestenliste, N = this.netz[id] || (this.netz[id] = { ok: false, zeit: 0, versuch: 0, eintraege: null });
+    if (N.laedt) return N.laedt;
+    if (!sofort && N.versuch && Date.now() - N.versuch < (N.ok ? C.frisch : C.nochmals) * 1000) return Promise.resolve(false);
+    this.erstesHochladen();
+    N.versuch = Date.now();
+    N.laedt = this.sende().then(() => this.anfrage(this.adresse(id))).then((r) => {
+      if (r.ok && (r.j === null || typeof r.j === 'object')) { N.ok = true; N.zeit = Date.now(); N.eintraege = this.ausNetz(id, r.j); }
+      else N.ok = false;                                        // alte Liste bleiben lassen, Stand-Zeile sagt «keine Verbindung»
+      N.laedt = null;
+      if (id === this.streckenId) this.merkeRekord();
+      return true;
+    });
+    return N.laedt;
+  },
+  aktualisieren() {
+    const id = this.blStrecke;
+    this.ladeNetz(id, true).then(() => { if (this.blStrecke === id && $('bl-liste')) this.zeichneSeite(); });
+    this.zeigeStand();
+  },
+  zeigeStand() {
+    const el = $('bl-stand');
+    if (!el) return;
+    if (!this.mitNetz()) { el.textContent = ''; return; }
+    const N = this.netz[this.blStrecke] || {}, n = this.schlange().length;
+    const uhr = (t) => new Date(t).toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
+    let t = this.quelle === 'geraet' ? 'Nur die Zeiten auf diesem Gerät' : N.laedt ? 'Alle Spieler · wird geladen …' :
+      N.ok ? 'Alle Spieler · Stand ' + uhr(N.zeit) : N.zeit ? 'Keine Verbindung · Stand ' + uhr(N.zeit) : 'Keine Verbindung: nur dieses Gerät';
+    if (n) t += ' · ' + n + (n === 1 ? ' Zeit wartet' : ' Zeiten warten') + ' aufs Hochladen';
+    el.textContent = t;
+  },
+  // Warteschlange zum Hochladen (im Browser gespeichert, ohne Speicher bis zum Neuladen)
+  schlange() {
+    if (this.schlangeMem) return this.schlangeMem;
+    let l = [];
+    try { const j = JSON.parse(localStorage.getItem(CONFIG.bestenliste.schluessel + '-senden') || '[]'); if (Array.isArray(j)) l = j; } catch (e) { l = []; }
+    this.schlangeMem = l.filter((x) => x && typeof x === 'object' && typeof x.id === 'string' && typeof x.n === 'string' && typeof x.z === 'number' && isFinite(x.z) && typeof x.a === 'string');
+    return this.schlangeMem;
+  },
+  schlangeSichern() { try { localStorage.setItem(CONFIG.bestenliste.schluessel + '-senden', JSON.stringify(this.schlange())); } catch (e) { /* ohne Speicher */ } },
+  // «Spieler» (noch kein eigener Name) und unerwünschte Namen kommen nicht in die gemeinsame Liste
+  vormerken(id, e, bot) {
+    if (!this.mitNetz() || (!bot && this.schluessel(e.n) === 'spieler') || this.verboten(e.n)) return;
+    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '' });
+    this.schlangeSichern();
+  },
+  // Beim ersten Start mit eingetragener Datenbank die bisherigen eigenen Zeiten dieses Geräts einmal hochladen
+  erstesHochladen() {
+    const C = CONFIG.bestenliste, merker = C.schluessel + '-hochgeladen';
+    if (this.erstesFertig) return;
+    this.erstesFertig = true;
+    let war = ''; try { war = localStorage.getItem(merker) || ''; } catch (e) { war = ''; }
+    if (war === C.server.trim()) return;
+    const D = Speicher.daten, ich = new Set([this.schluessel(D.name)].concat((D.lokal || []).map((p) => this.schluessel(p && p.name))));
+    const daten = this.daten || this.laden();
+    for (const id of Object.keys(daten.strecken)) {
+      const S = daten.strecken[id];
+      // ältere Einträge ohne Merker: alles ausser Online-Rennen, dort nur die eigenen Namen
+      for (const e of S.menschen) if (e.o === 1 || (e.o === undefined && (e.m !== 'online' || ich.has(this.schluessel(e.n))))) this.vormerken(id, e, false);
+      for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (e.o === 1 || (e.o === undefined && e.m !== 'online')) this.vormerken(id, e, true); }
+    }
+    try { localStorage.setItem(merker, C.server.trim()); } catch (e) { /* egal */ }
+  },
+  // Schlange abarbeiten: angenommene und von den Regeln abgelehnte Einträge fallen weg, ohne Verbindung später nochmals.
+  // Ohne «Content-Type» ist es eine einfache Anfrage (keine Vorab-Anfrage nötig); die Datenbank liest den Text als JSON.
+  async sende() {
+    if (!this.mitNetz() || this.sendet) return;
+    const l = this.schlange();
+    if (!l.length) return;
+    this.sendet = true;
+    try {
+      while (l.length) {
+        const x = l[0];
+        const r = await this.anfrage(this.adresse(x.id), { method: 'POST', body: JSON.stringify({ n: x.n, z: x.z, a: x.a, b: x.b, s: x.s, d: { '.sv': 'timestamp' } }) });
+        if (!r.ok && (r.status === 0 || r.status === 429 || r.status >= 500)) break;
+        l.splice(0, 1); this.schlangeSichern();
+        const N = this.netz[x.id];
+        if (r.ok && N && N.eintraege) N.eintraege.push({ n: x.n, z: x.z, a: x.a, d: Date.now(), s: x.s, bot: x.b, netz: true });
+      }
+    } finally { this.sendet = false; }
+    this.zeigeStand();
   },
 
   // ── Anzeige ────────────────────────────────────────────────────────────
@@ -9874,6 +10022,13 @@ const Bestenliste = {
   },
   // Steckbrief in der Streckenwahl: Rundenrekord mit Name und Auto, dazu die ersten drei
   steckbrief(id) {
+    if (this.mitNetz()) this.ladeNetz(id).then((neu) => {
+      const el = document.querySelector('#streckenkarte .sk-rekord');
+      if (neu && el && Speicher.daten.strecke === id) el.outerHTML = this.steckbriefHtml(id);
+    });
+    return this.steckbriefHtml(id);
+  },
+  steckbriefHtml(id) {
     const l = this.liste(id, '').slice(0, 3);
     if (!l.length) return '<div class="sk-rekord">Noch kein Rundenrekord: Fahr die erste Runde!</div>';
     return '<ol class="sk-rekord" aria-label="Rundenrekord und die ersten drei">' + l.map((e, i) => '<li>' + (i ? (i + 1) + '. ' : 'Rekord ') + '<b>' + zeitText(e.z) + '</b> ' + esc(e.n) +
@@ -9884,18 +10039,24 @@ const Bestenliste = {
     Menue.wahlen = {}; Menue.beiProfil = null;
     this.blStrecke = STRECKEN[id] ? id : Object.keys(STRECKEN)[0]; this.blAuto = auto || ''; this.kartenId = null;
     const kategorien = [{ wert: '', text: 'Gesamt' }].concat(FAHRZEUGE.map((f) => ({ wert: f.id, text: f.name })));
-    Menue.zeige('bestenliste', '<div class="tafel breit"><h2>Bestenlisten</h2><p class="hinweis">Schnellste Runde auf jeder Strecke, gesamt und für jedes Auto. Jeder Name steht einmal da. Von den Bots steht nur der schnellste aller Zeiten in der Liste.</p>' +
+    const netz = this.mitNetz();
+    Menue.zeige('bestenliste', '<div class="tafel breit"><h2>Bestenlisten</h2><p class="hinweis">Schnellste Runde auf jeder Strecke, gesamt und für jedes Auto' +
+      (netz ? ', von allen Spielern' : '') + '. Jeder Name steht einmal da. Von den Bots steht nur der schnellste aller Zeiten in der Liste.</p>' +
       Menue.wahlZeile('Strecke', 'blStrecke', Object.keys(STRECKEN).map((s) => ({ wert: s, text: STRECKEN[s].name })), this.blStrecke, (v) => { this.blStrecke = v; this.zeichneSeite(); }) +
       Menue.wahlZeile('Liste', 'blAuto', kategorien, this.blAuto, (v) => { this.blAuto = v; this.zeichneSeite(); }) +
-      '<div class="bl-kopf"><canvas id="bl-karte" width="236" height="236" aria-label="Karte der Strecke"></canvas><div id="bl-liste"></div></div>' +
-      '<div class="knoepfe" style="margin-top:14px"><button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>', { zurueck: () => Menue.haupt() }, 'mitte');
+      (netz ? Menue.wahlZeile('Zeigen', 'blQuelle', [{ wert: 'alle', text: 'Alle Spieler' }, { wert: 'geraet', text: 'Dieses Gerät' }], this.quelle, (v) => { this.quelle = v; this.zeichneSeite(); }) : '') +
+      '<div class="bl-kopf"><canvas id="bl-karte" width="236" height="236" aria-label="Karte der Strecke"></canvas><div><p class="bl-stand" id="bl-stand" aria-live="polite"></p><div id="bl-liste"></div></div></div>' +
+      '<div class="knoepfe" style="margin-top:14px">' + (netz ? '<button class="knopf zweit" data-a="aktualisieren">Aktualisieren</button>' : '') +
+      '<button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>', { zurueck: () => Menue.haupt(), aktualisieren: () => this.aktualisieren() }, 'mitte');
     this.zeichneSeite();
   },
   zeichneSeite() {
     const el = $('bl-liste'), id = this.blStrecke;
     if (!el) return;
-    const ich = this.schluessel(Speicher.daten.name);
-    el.innerHTML = this.tabelle(this.liste(id, this.blAuto).slice(0, CONFIG.bestenliste.zeigen), (e) => !e.bot && ich !== 'spieler' && this.schluessel(e.n) === ich);
+    const ich = this.schluessel(Speicher.daten.name), quelle = this.mitNetz() ? this.quelle : 'geraet';
+    el.innerHTML = this.tabelle(this.liste(id, this.blAuto, quelle).slice(0, CONFIG.bestenliste.zeigen), (e) => !e.bot && ich !== 'spieler' && this.schluessel(e.n) === ich);
+    this.zeigeStand();
+    if (quelle === 'alle') this.ladeNetz(id).then((neu) => { if (neu && this.blStrecke === id && $('bl-liste')) this.zeichneSeite(); });
     const c = $('bl-karte');
     if (c && this.kartenId !== id) {
       this.kartenId = id;
@@ -9906,9 +10067,11 @@ const Bestenliste = {
   // Einstellungen: eine Strecke oder alle löschen, mit Rückfrage
   loeschenDialog() {
     const id = Speicher.daten.strecke, name = STRECKEN[id] ? STRECKEN[id].name : id;
-    Dialog.zeige('<h2>Bestenliste löschen?</h2><p>Gelöschte Zeiten lassen sich nicht zurückholen.</p>', [
-      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[id]; this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
-      { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
+    const weg = (nur) => { const l = this.schlange(); for (let i = l.length - 1; i >= 0; i--) if (!nur || l[i].id === nur) l.splice(i, 1); this.schlangeSichern(); };
+    Dialog.zeige('<h2>Bestenliste löschen?</h2><p>Gelöschte Zeiten lassen sich nicht zurückholen.' +
+      (this.mitNetz() ? ' Gelöscht wird nur die Liste dieses Geräts, die gemeinsame Liste aller Spieler bleibt.' : '') + '</p>', [
+      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[id]; weg(id); this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
+      { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; weg(''); this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
       { text: 'Abbrechen', klasse: 'zweit', abbruch: true },
     ]);
   },
