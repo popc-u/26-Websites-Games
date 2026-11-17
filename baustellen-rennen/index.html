@@ -188,6 +188,30 @@ input[type=range]{accent-color:var(--gold)}
 .h-platz{font-style:normal;font-weight:700;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55)}
 .h-bau .bw{background:rgba(16,19,24,.72);border:1px solid var(--linie);border-radius:12px;box-shadow:none}
 .h-bp b{color:var(--gold)}
+/* Bestenliste (Teil 93): Tabelle mit Gold, Silber, Bronze, Bot-Zeile, Steckbrief, Anzeige im Rennen und Fenster */
+.bl-kopf{display:grid;grid-template-columns:150px 1fr;gap:14px;align-items:start;margin-top:6px}
+.bl-kopf canvas{width:150px;height:150px;display:block;border-radius:12px;background:radial-gradient(circle at 40% 35%,rgba(120,140,110,.28),rgba(0,0,0,.3))}
+.bl-tabelle td,.bl-tabelle th{padding:5px 8px;vertical-align:middle}
+.bl-rang{display:inline-flex;align-items:center;justify-content:center;min-width:24px;height:24px;border-radius:12px;font-weight:700;font-size:.82rem;background:rgba(255,255,255,.08)}
+.bl-p1 .bl-rang{background:linear-gradient(180deg,#f3d27a,#c9a03f);color:#1a1408}
+.bl-p2 .bl-rang{background:linear-gradient(180deg,#eef0f2,#a9b0b7);color:#15181b}
+.bl-p3 .bl-rang{background:linear-gradient(180deg,#e7ab7c,#a8693f);color:#1b0f06}
+.bl-bot td{color:#cdd5dd}
+.bl-bot small{color:var(--leise);font-size:.75rem}
+.bl-robo{width:16px;height:16px;fill:var(--gold);vertical-align:-3px;margin-right:6px}
+.bl-name{overflow-wrap:anywhere}
+.bl-neu{margin:.2em 0 .7em;color:var(--gold);font-weight:600;line-height:1.45}
+.sk-rekord{list-style:none;margin:6px 0 0;padding:0;font-size:.78rem;color:var(--leise);line-height:1.4}
+.sk-text .sk-rekord li{display:block;font-size:inherit}
+.sk-rekord li:first-child{color:var(--text)}
+.sk-rekord b{color:var(--gold);font-weight:600}
+.h-rekord{color:var(--gelb);font-size:.92em}
+.dialog{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,7,10,.55);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--text)}
+.dialog .tafel{width:min(440px,100%);margin:0}
+.dialog h2{font:650 1.45rem/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-style:normal;text-transform:none;letter-spacing:-.01em;text-shadow:none;color:var(--text);margin:0 0 8px}
+.dialog p{margin:0 0 10px;color:var(--leise)}
+.dialog .feld{display:block;width:100%;box-sizing:border-box;font-size:1.1rem;padding:10px 12px;margin:4px 0 14px}
+@media(max-width:560px){.bl-kopf{grid-template-columns:1fr}.bl-kopf canvas{width:110px;height:110px}.bl-datum{display:none}.bl-tabelle td,.bl-tabelle th{padding:4px 5px}.bl-bot small{display:block;margin-left:20px}.bl-robo{margin-right:4px}}
 </style>
 </head>
 <body>
@@ -434,6 +458,17 @@ const CONFIG = {
     lod: { niedrig: 0, mittel: 30, hoch: 45, ultra: 70 },
     // Dellen nach Stössen (ab «Mittel»): erst ab diesem Aufprall in m/s, jeder Punkt der Karosserie höchstens so weit eingedrückt (m)
     delle: { ab: 3, max: 0.13 },
+  },
+
+  // ── Bestenliste (Teil 93) ─────────────────────────────────────────────
+  // Pro Strecke eine Gesamtliste und eine Liste für jedes Auto. Gewertet wird die schnellste Runde (die Rundenzahl ist einstellbar,
+  // Gesamtzeiten wären nicht vergleichbar). Von den Bots steht pro Liste nur der schnellste aller Zeiten drin.
+  bestenliste: {
+    proName: 1,            // so viele Zeiten pro Name und Liste (1 = nur die beste)
+    zeigen: 10,            // so viele Plätze zeigt eine Liste
+    speichern: 50,         // so viele Plätze pro Auto und Strecke bleiben gespeichert (die Gesamtliste ergibt sich daraus)
+    minRunde: 8,           // kürzere Runden (s) sind auf keiner Strecke möglich und zählen nicht (Schutz vor Messfehlern)
+    schluessel: 'baustellenrennen-bestenliste',   // Name im Speicher des Browsers (getrennt von den Einstellungen)
   },
 
   // ── Netzwerk ────────────────────────────────────────────────────────────
@@ -8588,7 +8623,7 @@ const Online = {
   starteRennen(daten) {
     const ich = this.host ? 'host' : this.meineId;
     const fahrer = daten.fahrer.map((f) => ({ name: f.name, fahrzeug: f.fahrzeug, farbe: f.farbe, stufe: f.stufe, platz: f.platz, geraet: 'tasten',
-      typ: f.peer === ich ? 'mensch' : this.host && f.typ === 'bot' ? 'bot' : 'fern' }));
+      typ: f.peer === ich ? 'mensch' : this.host && f.typ === 'bot' ? 'bot' : 'fern', istBot: f.typ === 'bot' }));     // istBot: für die Bestenliste
     this.t0 = daten.t0; this.imRennen = true; this.schrittNr = 0; this.puffer = fahrer.map(() => []); this.bekannt = {}; this.endeGesendet = false;
     this.meinKart = daten.fahrer.findIndex((f) => f.peer === ich);
     this.letzterEmpfang = performance.now();
@@ -8715,7 +8750,7 @@ function tastenText(g) {
 // ── Einstellungen (bleiben im Browser gespeichert; ohne Speicher läuft das Spiel trotzdem) ──
 const Speicher = {
   daten: {
-    name: 'Spieler', fahrzeug: 0, farbe: 0, zufallsAuto: true, lautstaerke: 0.7, musik: 0.4, stumm: false, grafik: 'mittel', erklaert: false,
+    name: 'Spieler', fahrzeug: 0, farbe: 0, zufallsAuto: true, lautstaerke: 0.7, musik: 0.4, stumm: false, grafik: 'mittel', erklaert: false, nameGefragt: false,
     strecke: 'kiesgrube', runden: CONFIG.rennen.runden, bots: 7, stufe: 'mittel', lokalAnzahl: 2,
     lokal: [{ name: 'Spieler 1', geraet: 'tasten1', fahrzeug: 0, farbe: 0 }, { name: 'Spieler 2', geraet: 'tasten2', fahrzeug: 1, farbe: 3 },
       { name: 'Spieler 3', geraet: 'pad0', fahrzeug: 2, farbe: 5 }, { name: 'Spieler 4', geraet: 'pad1', fahrzeug: 3, farbe: 7 }],
@@ -8910,11 +8945,12 @@ const Hud = {
       const setze = (el, key, text) => { if (a[key] !== text) { a[key] = text; el.innerHTML = text; } };
       const zeige = (el, key, an) => { if (a[key] !== an) { a[key] = an; el.classList.toggle('versteckt', !an); } };
       setze(t.platz, 'platz', k.rang + '<small>/' + R.n + '</small>');
-      setze(t.runde, 'runde', 'Runde <b>' + clamp(k.runde, 1, R.runden) + '</b>/' + R.runden);
+      setze(t.runde, 'runde', 'Runde <b>' + clamp(k.runde + 1, 1, R.runden) + '</b>/' + R.runden);   // k.runde = fertige Runden
       const lauf = R.phase === 'countdown' ? 0 : (k.zielZeit != null ? k.zielZeit : R.zeit);
       const rz = k.rundenZeiten, beste = rz.length ? Math.min.apply(null, rz) : null;
       const runde = k.zielZeit != null ? rz[rz.length - 1] : R.phase === 'countdown' ? 0 : Math.max(0, R.zeit - k.rundeStart);
-      setze(t.zeit, 'zeit', 'Zeit ' + zeitText(lauf).slice(0, -1) + '<br>Runde ' + zeitText(runde).slice(0, -1) + (beste != null ? '<br>Beste ' + zeitText(beste) : ''));
+      setze(t.zeit, 'zeit', 'Zeit ' + zeitText(lauf).slice(0, -1) + '<br>Runde ' + zeitText(runde).slice(0, -1) + (beste != null ? '<br>Beste ' + zeitText(beste) : '') +
+        (Bestenliste.rekordText ? '<br><span class="h-rekord">Rekord ' + esc(Bestenliste.rekordText) + '</span>' : ''));
       setze(t.tempo, 'tempo', String(Math.round(Math.abs(k.v) * 3.6)));
       // Ladebalken: Drift-Aufladung (gelb → blau → orange) oder laufender Boost
       let lade = 0, farbe = '#ffc61a';
@@ -9064,6 +9100,7 @@ const Spiel = {
       this.spieler.push({ kart: i, geraet: g, e: Object.assign({}, LEERE_EINGABE), tasten: tastenText(g) });
     });
     this.eingaben = new Array(n).fill(null);
+    Bestenliste.beginne(R, konfig);                // wer fährt, Rekord der Strecke für die Anzeige
     Grafik.neuesRennen(R); Grafik.setzeAnsichten(this.spieler.length ? this.spieler.map((s) => s.kart) : [-1]);
     Hud.baue(R, this.spieler);
     this.losAn = !!konfig.zufall && this.spieler.length > 0;
@@ -9159,7 +9196,18 @@ const Spiel = {
         if (o && o !== t) Hud.meldung(o, name + ' fährt in deine Baustelle!', true);
         break;
       }
-      case 'runde': if (t && e.a > 1 && e.a <= R.runden) { Ton.jubel(0.5); if (e.a === R.runden) { Ton.spiele('letzte'); Ton.musikArt('final'); } else Ton.spiele('runde'); Hud.meldung(t, (e.a === R.runden ? 'Letzte Runde! ' : '') + 'Rundenzeit ' + zeitText(e.b), true); } break;
+      case 'runde': {
+        const bl = Bestenliste.runde(R, e);           // jede fertige Runde zählt für die Bestenliste
+        if (!t) break;
+        // e.a = Zahl der fertigen Runden: nach der vorletzten beginnt die letzte Runde, nach der letzten ist das Ziel erreicht
+        if (e.a >= 1 && e.a <= R.runden) {
+          const letzte = e.a === R.runden - 1;
+          if (e.a < R.runden) { Ton.jubel(0.5); if (letzte) { Ton.spiele('letzte'); Ton.musikArt('final'); } else Ton.spiele('runde'); }
+          Hud.meldung(t, (letzte ? 'Letzte Runde! ' : '') + 'Rundenzeit ' + zeitText(e.b), true);
+        }
+        if (bl && bl.text) { Ton.jubel(1); Hud.meldung(t, bl.text + ' ' + zeitText(e.b), true); }
+        break;
+      }
       case 'ziel': if (t) { Ton.spiele('ziel'); Ton.jubel(1.2); Hud.gross(t, 'Ziel! Platz ' + R.karts[e.k].rang, true, 999); } break;
     }
   },
@@ -9168,6 +9216,7 @@ const Spiel = {
     Ton.motorAus(); Ton.musikArt('menue');
     $('pauseknopf').classList.add('versteckt'); $('hud').classList.add('versteckt');
     Menue.ergebnis(this.R, this.konfig);
+    Bestenliste.nachRennen();                      // beim ersten Eintrag einmal nach dem Namen fragen
   },
 };
 /* ══════════════════════════════════════════════════════════════════════════
@@ -9246,7 +9295,7 @@ const Menue = {
     const fakt = (sym, text) => '<li>' + symbol(sym) + '<span>' + text + '</span></li>';
     el.innerHTML = '<canvas width="236" height="236" aria-label="Karte der Strecke ' + esc(def.name) + '"></canvas><div class="sk-text"><b>' + esc(def.name) + '</b><span>' + esc(def.text || '') + '</span><ul>' +
       fakt('laenge', (S.laenge / 1000).toFixed(2).replace('.', ',') + ' km') + fakt(tz[0], tz[1]) + fakt('belag', arten.map((a) => BELAG_NAMEN[a] || a).join(', ')) +
-      (abk ? fakt('abkuerzung', abk + (abk > 1 ? ' Abkürzungen' : ' Abkürzung')) : '') + (boost ? fakt('boost', boost + ' Boost-Felder') : '') + '</ul></div>';
+      (abk ? fakt('abkuerzung', abk + (abk > 1 ? ' Abkürzungen' : ' Abkürzung')) : '') + (boost ? fakt('boost', boost + ' Boost-Felder') : '') + '</ul>' + Bestenliste.steckbrief(id) + '</div>';
     const k = {}; Hud.zeichneKartenGrund.call(k, S);                // eigene Leinwand: die Karte im Rennen bleibt unberührt
     el.querySelector('canvas').getContext('2d').drawImage(k.grund, 0, 0, 236, 236);
     el.classList.remove('neu'); void el.offsetWidth; el.classList.add('neu');          // kleine Einblend-Animation bei jedem Wechsel
@@ -9303,12 +9352,12 @@ const Menue = {
     }
     html += '<div class="knoepfe"><button class="knopf los" data-a="bots">Gegen Bots</button><button class="knopf" data-a="lokal">Lokal am selben Gerät</button>' +
       '<button class="knopf" data-a="erstellen">Online: Raum erstellen</button><button class="knopf" data-a="beitreten">Online: Raum beitreten</button>' +
-      '<button class="knopf zweit" data-a="steuerung">Steuerung</button><button class="knopf zweit" data-a="einstellungen">Einstellungen</button></div></div>';
+      '<button class="knopf zweit" data-a="bestenliste">Bestenlisten</button><button class="knopf zweit" data-a="steuerung">Steuerung</button><button class="knopf zweit" data-a="einstellungen">Einstellungen</button></div></div>';
     const online = (f) => { if (typeof Online !== 'undefined') f(); else App.toast('Der Online-Modus ist in dieser Version noch nicht eingebaut.'); };
     this.zeige('haupt', html, {
       bots: () => this.bots(), lokal: () => this.lokal(),
       erstellen: () => online(() => Online.erstellen()), beitreten: () => online(() => Online.beitretenDialog()),
-      steuerung: () => this.steuerung(() => this.haupt()), einstellungen: () => this.einstellungen(),
+      steuerung: () => this.steuerung(() => this.haupt()), einstellungen: () => this.einstellungen(), bestenliste: () => Bestenliste.seite(D.strecke, ''),
     });
   },
 
@@ -9392,7 +9441,9 @@ const Menue = {
       this.wahlZeile('Ton', 'stumm', [{ wert: false, text: 'An' }, { wert: true, text: 'Stumm' }], D.stumm, (v) => { D.stumm = v; App.tonSetzen(); }) +
       this.wahlZeile('Grafik', 'grafik', Object.keys(GRAFIK_NAMEN).map((q) => ({ wert: q, text: GRAFIK_NAMEN[q] })), D.grafik, (v) => { D.grafik = v; D.grafikGemessen = true; Grafik.setzeQualitaet(v); Spiel.starteDemo(D.strecke); }) +
       '<p class="hinweis">Beim ersten Start wählt das Spiel die Stufe nach einer kurzen Messung selbst. Ruckelt es, nimm eine tiefere Stufe. «Ultra» braucht eine starke Grafikkarte. Die Einstellungen bleiben in diesem Browser gespeichert.</p>' +
-      '<div class="knoepfe"><button class="knopf" data-a="zurueck">Fertig</button></div></div>', { zurueck: () => { this.nameLesen(); Speicher.sichern(); this.haupt(); } });
+      '<div class="knoepfe"><button class="knopf" data-a="zurueck">Fertig</button><button class="knopf zweit" data-a="loeschen">Bestenliste löschen</button></div></div>', {
+        zurueck: () => { this.nameLesen(); Speicher.sichern(); this.haupt(); }, loeschen: () => Bestenliste.loeschenDialog(),
+      });
     $('f-laut').oninput = (ev) => { D.lautstaerke = ev.target.value / 100; App.tonSetzen(); };
     $('f-musik').oninput = (ev) => { D.musik = ev.target.value / 100; App.tonSetzen(); };
   },
@@ -9431,7 +9482,7 @@ const Menue = {
     this.zeige('ergebnis', '<div class="tafel breit"><h2>' + titel + '</h2><p class="hinweis">' + esc(R.S.def.name) + ' · ' + R.runden + (R.runden === 1 ? ' Runde' : ' Runden') + '</p>' +
       '<div class="schau podest"><canvas id="schau" aria-label="Siegerpodest"></canvas></div>' +
       '<div class="karte" style="overflow:auto"><table><tr><th class="zahl">Platz</th><th>Fahrer</th><th class="zahl">Zeit</th><th class="zahl">Beste Runde</th><th class="zahl">BP verdient / ausgegeben</th><th class="zahl">Überholt</th><th class="zahl">Bauwerke</th><th class="zahl">Treffer</th></tr>' + zeilen + '</table></div>' +
-      '<div>' + preise + '</div><div class="zeile" style="margin-top:14px">' + (online && !konfig.host ? '' : '<button class="knopf los" data-a="revanche">Revanche</button>') +
+      '<div>' + preise + '</div>' + Bestenliste.ergebnisHtml() + '<div class="zeile" style="margin-top:14px">' + (online && !konfig.host ? '' : '<button class="knopf los" data-a="revanche">Revanche</button>') +
       '<button class="knopf" data-a="lobby">Lobby</button><button class="knopf zweit" data-a="menue">Menü</button></div></div>', {
       revanche: () => { if (online) Online.revanche(); else Spiel.starte(konfig); },
       lobby: () => { if (online) { Online.zurLobby(); return; } Spiel.starteDemo(konfig.strecke); if (konfig.modus === 'lokal') this.lokal(); else this.bots(); },
@@ -9607,6 +9658,256 @@ const App = {
     for (let i = 0; i <= H.n; i++) { H.ort((i % H.n) * H.ds, S.ideal[i % H.n], o); pkt.push(new THREE.Vector3(o.x, o.y + 0.35, -o.z)); }
     Grafik.debugLinie = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pkt), new THREE.LineBasicMaterial({ color: 0xff00ff }));
     Grafik.welt.add(Grafik.debugLinie);
+  },
+};
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 13: Bestenliste – schnellste Runden pro Strecke, gesamt und für jedes Auto
+   ══════════════════════════════════════════════════════════════════════════ */
+// Gespeichert wird im Browser unter einem eigenen Schlüssel (CONFIG.bestenliste.schluessel), mit Versionsnummer:
+//   { v: 1, strecken: { kiesgrube: { menschen: [{ n, z, a, d, m }], bots: { renn: { n, z, a, s, d, m } } } } }
+//   n = Name, z = Rundenzeit in s, a = Auto (id), d = Datum (ms seit 1970), m = Modus (bots, lokal, online), s = Stärke des Bots.
+// Menschen: pro Name und Auto die besten Zeiten (CONFIG.bestenliste.proName). Bots: pro Auto nur der schnellste Bot aller Zeiten.
+// Die Liste eines Autos zeigt dessen Zeiten und den schnellsten Bot mit diesem Auto. Die Gesamtliste nimmt pro Name die beste
+// Zeit über alle Autos und genau einen Bot: den schnellsten, der je auf dieser Strecke gefahren ist.
+const BL_VERSION = 1;
+const BL_STUFE = { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer' };
+const BL_ARTIKEL = { limo: 'der' };                 // «mit der Limousine», sonst «mit dem …»
+const BL_ROBOTER = '<svg class="bl-robo" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2h2v3h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h4zM8.5 9.5a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm7 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM9 15h6v1.6H9zM1 10h2v5H1zm20 0h2v5h-2z"/></svg>';
+
+// Kleines Fenster im Stil des Spiels (statt Browser-Dialog): Text, Knöpfe, auf Wunsch ein Eingabefeld
+const Dialog = {
+  // knoepfe: [{ text, klasse, f(wertDesFeldes), abbruch }] – der erste Knopf gilt bei Enter im Feld, «abbruch» bei Escape
+  zeige(html, knoepfe) {
+    this.zu();
+    const d = document.createElement('div'); d.id = 'dialog'; d.className = 'dialog';
+    d.innerHTML = '<div class="tafel" role="dialog" aria-modal="true">' + html + '<div class="knoepfe">' +
+      knoepfe.map((k, i) => '<button class="knopf ' + (k.klasse || '') + '" data-i="' + i + '">' + esc(k.text) + '</button>').join('') + '</div></div>';
+    const waehle = (k) => { const feld = d.querySelector('input'), wert = feld ? feld.value : null; this.zu(); if (k && k.f) k.f(wert); };
+    d.addEventListener('keydown', (ev) => {
+      ev.stopPropagation();                                       // Tasten gehören dem Fenster, nicht dem Spiel dahinter
+      if (ev.key === 'Escape') waehle(knoepfe.find((k) => k.abbruch));
+      else if (ev.key === 'Enter' && ev.target.tagName === 'INPUT') waehle(knoepfe[0]);
+    });
+    d.querySelectorAll('[data-i]').forEach((b) => { b.onclick = () => { Ton.start(); Ton.spiele('klick'); waehle(knoepfe[+b.dataset.i]); }; });
+    document.body.appendChild(d);
+    const fokus = d.querySelector('input') || d.querySelector('.knopf.zweit') || d.querySelector('.knopf');
+    if (fokus) fokus.focus();
+  },
+  zu() { const d = $('dialog'); if (d) d.remove(); },
+};
+
+const Bestenliste = {
+  daten: null, aktiv: false, fahrer: [], modus: '', streckenId: '', neu: [], rekordText: '', ohneSpeicher: false,
+  blStrecke: '', blAuto: '', kartenId: null,
+
+  // ── Speicher ───────────────────────────────────────────────────────────
+  laden() {
+    let d = null;
+    try { const t = localStorage.getItem(CONFIG.bestenliste.schluessel); if (t) d = JSON.parse(t); } catch (e) { d = null; }
+    this.daten = this.pruefe(d);
+    return this.daten;
+  },
+  // Alte oder kaputte Daten führen nie zu einem Fehler: nur gültige Einträge bleiben, sonst beginnt die Liste leer
+  pruefe(d) {
+    const neu = { v: BL_VERSION, strecken: {} };
+    if (!d || typeof d !== 'object' || d.v !== BL_VERSION || !d.strecken || typeof d.strecken !== 'object') return neu;
+    const gut = (e) => e && typeof e === 'object' && typeof e.n === 'string' && e.n.trim() !== '' && typeof e.a === 'string' && typeof e.z === 'number' && isFinite(e.z) && e.z > 0;
+    for (const id of Object.keys(d.strecken)) {
+      const s = d.strecken[id];
+      if (!s || typeof s !== 'object') continue;
+      const menschen = Array.isArray(s.menschen) ? s.menschen.filter(gut).map((e) => ({ n: e.n.trim().slice(0, 14), z: e.z, a: e.a, d: +e.d || 0, m: String(e.m || '') })) : [];
+      const bots = {};
+      if (s.bots && typeof s.bots === 'object') for (const a of Object.keys(s.bots)) { const e = s.bots[a]; if (gut(e)) bots[e.a] = { n: e.n.trim().slice(0, 20), z: e.z, a: e.a, s: String(e.s || ''), d: +e.d || 0, m: String(e.m || '') }; }
+      neu.strecken[id] = { menschen, bots };
+    }
+    return neu;
+  },
+  sichern() {
+    try { localStorage.setItem(CONFIG.bestenliste.schluessel, JSON.stringify(this.daten)); this.ohneSpeicher = false; }
+    catch (e) { this.ohneSpeicher = true; }               // privates Fenster o. Ä.: Die Liste gilt dann bis zum Neuladen
+  },
+  strecke(id) {
+    if (!this.daten) this.laden();
+    return this.daten.strecken[id] || (this.daten.strecken[id] = { menschen: [], bots: {} });
+  },
+  schluessel(n) { return String(n == null ? '' : n).trim().toLowerCase(); },     // gleicher Name: Gross/klein und Leerzeichen am Rand egal
+  autoName(a) { const f = FAHRZEUGE.find((x) => x.id === a); return f ? f.name : String(a); },
+  mitAuto(a) { return 'mit ' + (BL_ARTIKEL[a] || 'dem') + ' ' + this.autoName(a); },
+  datum(d) { return d ? new Date(d).toLocaleDateString('de-CH', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '–'; },
+
+  // ── Listen ─────────────────────────────────────────────────────────────
+  // Sortierte Liste einer Kategorie: auto = '' für die Gesamtliste, sonst die id eines Autos
+  liste(id, auto) {
+    const S = this.strecke(id), proName = Math.max(1, CONFIG.bestenliste.proName | 0);
+    const menschen = S.menschen.filter((e) => !auto || e.a === auto).sort((x, y) => x.z - y.z);
+    const zahl = {}, aus = [];
+    for (const e of menschen) { const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName) aus.push(e); }
+    let bot = null;
+    for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if ((!auto || e.a === auto) && (!bot || e.z < bot.z)) bot = e; }
+    if (bot) aus.push(Object.assign({ bot: true }, bot));
+    return aus.sort((x, y) => x.z - y.z);
+  },
+  platz(id, auto, e) { const i = this.liste(id, auto).indexOf(e); return i + 1; },     // 0 = nicht (mehr) in der Liste
+  // Liste eines Autos aufräumen: pro Name höchstens proName Zeiten, höchstens CONFIG.bestenliste.speichern Plätze
+  ordne(id, auto) {
+    const S = this.strecke(id), C = CONFIG.bestenliste, proName = Math.max(1, C.proName | 0);
+    const andere = S.menschen.filter((e) => e.a !== auto), diese = S.menschen.filter((e) => e.a === auto).sort((x, y) => x.z - y.z);
+    const zahl = {}, bleiben = [];
+    for (const e of diese) { const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName && bleiben.length < C.speichern) bleiben.push(e); }
+    S.menschen = andere.concat(bleiben);
+  },
+  merkeRekord() {
+    const l = this.streckenId ? this.liste(this.streckenId, '') : [];
+    this.rekordText = l.length ? zeitText(l[0].z) + ' ' + l[0].n + (l[0].bot ? ' (Bot)' : '') : '';
+  },
+
+  // ── Rennen ─────────────────────────────────────────────────────────────
+  // Beim Start: wer fährt (Mensch oder Bot, Name, Auto)? Simulationen, Vorführrennen und der Debug-Modus zählen nicht.
+  beginne(R, konfig) {
+    this.laden();
+    this.neu = []; this.modus = (konfig && konfig.modus) || ''; this.streckenId = R.S.id;
+    this.aktiv = !App.debug && ['bots', 'lokal', 'online'].includes(this.modus);
+    this.fahrer = R.karts.map((k, i) => {
+      const f = (konfig && konfig.fahrer[i]) || {}, bot = f.typ === 'bot' || !!f.istBot;   // online kommen Bots beim Gast als «fern» mit istBot
+      return { kart: i, name: String(k.name || f.name || '').trim() || (bot ? 'Bot' : 'Spieler'), auto: k.fahrzeug, stufe: f.stufe || '', bot, lokal: f.typ === 'mensch' };
+    });
+    this.merkeRekord();
+  },
+  // Jede fertig gefahrene Runde (Ereignis «runde»: e.k = Fahrer, e.b = Rundenzeit). Gibt für Menschen die Meldung zurück.
+  runde(R, e) {
+    if (!this.aktiv || Spiel.demo || !R || R !== Spiel.R) return null;
+    const f = this.fahrer[e.k], z = +e.b;
+    if (!f || !isFinite(z) || z < CONFIG.bestenliste.minRunde) return null;
+    return this.trage(this.streckenId, f, z);
+  },
+  trage(id, f, z) {
+    const S = this.strecke(id), proName = Math.max(1, CONFIG.bestenliste.proName | 0), jetzt = Date.now();
+    z = Math.round(z * 1000) / 1000;
+    if (f.bot) {                                                    // Bots: pro Auto nur der schnellste aller Zeiten
+      const alt = S.bots[f.auto];
+      if (alt && alt.z <= z) return null;
+      S.bots[f.auto] = { n: f.name.slice(0, 20), z, a: f.auto, s: f.stufe, d: jetzt, m: this.modus };
+      this.sichern(); this.merkeRekord();
+      return null;
+    }
+    const k = this.schluessel(f.name), meine = (auto) => this.liste(id, auto).filter((x) => !x.bot && this.schluessel(x.n) === k);
+    const vorG = meine(''), vorA = meine(f.auto);
+    if (vorA.length >= proName && z >= vorA[vorA.length - 1].z) return null;      // nicht besser als die eigenen Zeiten mit diesem Auto
+    const besserG = vorG.length < proName || z < vorG[vorG.length - 1].z;
+    const e = { n: f.name.slice(0, 14), z, a: f.auto, d: jetzt, m: this.modus };
+    S.menschen.push(e);
+    this.ordne(id, f.auto); this.sichern(); this.merkeRekord();
+    this.neu.push({ id, e, kart: f.kart, lokal: f.lokal });
+    const r = { besserG, platzG: this.platz(id, '', e), platzA: this.platz(id, f.auto, e), auto: f.auto, persoenlich: vorG.length > 0 && besserG };
+    r.text = this.meldung(r);
+    return r;
+  },
+  meldung(r) {
+    const C = CONFIG.bestenliste;
+    if (r.besserG && r.platzG === 1) return 'Neuer Rekord!';
+    if (r.platzA === 1) return 'Rekord ' + this.mitAuto(r.auto) + '!';
+    if (r.besserG && r.platzG > 0 && r.platzG <= C.zeigen) return 'Platz ' + r.platzG + ' in der Bestenliste';
+    if (r.platzA > 0 && r.platzA <= C.zeigen) return 'Platz ' + r.platzA + ' ' + this.mitAuto(r.auto);
+    if (r.persoenlich) return 'Persönliche Bestzeit!';
+    return '';
+  },
+
+  // ── Nach dem Rennen: Abschnitt im Ergebnis und einmal nach dem Namen fragen ──
+  ergebnisHtml() {
+    if (!this.aktiv) return '';
+    const id = this.streckenId, def = STRECKEN[id], neuGesetzt = new Set(this.neu.map((x) => x.e)), zeilen = [];
+    for (const f of this.fahrer) {
+      if (f.bot) continue;
+      const eig = this.neu.filter((x) => x.kart === f.kart && this.platz(id, x.e.a, x.e) > 0);
+      if (!eig.length) continue;
+      const best = eig.reduce((a, b) => (b.e.z < a.e.z ? b : a)).e;
+      const pG = this.platz(id, '', best), pA = this.platz(id, best.a, best);
+      zeilen.push('<span class="bl-name">' + esc(best.n) + '</span>: ' + zeitText(best.z) + ' ' + esc(this.mitAuto(best.a)) + ' · ' +
+        (pG ? 'Platz ' + pG + ' gesamt · ' : '') + 'Platz ' + pA + ' in der Liste «' + esc(this.autoName(best.a)) + '»');
+    }
+    return '<div class="karte bl-ergebnis"><h3>Bestenliste ' + esc(def ? def.name : id) + ' · schnellste Runde</h3>' +
+      (zeilen.length ? '<p class="bl-neu">Neu in der Liste: ' + zeilen.join('<br>') + '</p>' : '') +
+      this.tabelle(this.liste(id, '').slice(0, 5), (e) => neuGesetzt.has(e)) +
+      (this.ohneSpeicher ? '<p class="hinweis">Dieser Browser speichert nichts: Die Liste gilt nur bis zum Neuladen.</p>' : '') + '</div>';
+  },
+  nachRennen() {
+    const D = Speicher.daten, ich = this.neu.filter((x) => x.lokal);
+    if (this.aktiv && this.modus === 'bots' && ich.length && this.schluessel(D.name) === 'spieler' && !D.nameGefragt) this.frageName(ich);
+  },
+  frageName(eintraege) {
+    const D = Speicher.daten;
+    D.nameGefragt = true; Speicher.sichern();                       // nur einmal fragen
+    Dialog.zeige('<h2>Neu in der Bestenliste!</h2><p>Wie heisst du? Dein Name steht dann bei deinen Zeiten.</p>' +
+      '<input class="feld" id="dlg-name" maxlength="14" autocomplete="off" placeholder="Dein Name" aria-label="Dein Name">', [
+      { text: 'Speichern', klasse: 'los', f: (wert) => {
+        const n = String(wert || '').trim().slice(0, 14);
+        if (!n) return;
+        D.name = n; Speicher.sichern(); this.umbenennen(eintraege, n);
+      } },
+      { text: 'Später', klasse: 'zweit', abbruch: true },
+    ]);
+  },
+  // Die Einträge aus diesem Rennen bekommen den neuen Namen (ältere Einträge behalten ihren)
+  umbenennen(eintraege, n) {
+    for (const x of eintraege) { x.e.n = n; const f = this.fahrer[x.kart]; if (f) f.name = n; }
+    for (const x of eintraege) this.ordne(x.id, x.e.a);
+    this.sichern(); this.merkeRekord();
+    const el = document.querySelector('.bl-ergebnis');
+    if (el) el.outerHTML = this.ergebnisHtml();
+  },
+
+  // ── Anzeige ────────────────────────────────────────────────────────────
+  // Tabelle: Platz (die ersten drei in Gold, Silber, Bronze), Name (Bots mit Symbol), Zeit, Auto, Datum
+  tabelle(l, hervor) {
+    if (!l.length) return '<p class="hinweis">Noch keine Zeiten. Fahr die erste Runde!</p>';
+    let h = '<table class="bl-tabelle"><tr><th class="zahl">Platz</th><th>Name</th><th class="zahl">Runde</th><th>Auto</th><th class="bl-datum">Datum</th></tr>';
+    l.forEach((e, i) => {
+      const p = i + 1, cls = [p <= 3 ? 'bl-p' + p : '', e.bot ? 'bl-bot' : '', hervor && hervor(e) ? 'ich' : ''].filter(Boolean).join(' ');
+      h += '<tr class="' + cls + '"><td class="zahl"><span class="bl-rang">' + p + '</span></td><td>' + (e.bot ? BL_ROBOTER : '') + '<span class="bl-name">' + esc(e.n) + '</span>' +
+        (e.bot ? ' <small>Bot' + (BL_STUFE[e.s] ? ' · ' + BL_STUFE[e.s] : '') + '</small>' : '') + '</td><td class="zahl">' + zeitText(e.z) + '</td><td>' + esc(this.autoName(e.a)) +
+        '</td><td class="bl-datum">' + this.datum(e.d) + '</td></tr>';
+    });
+    return h + '</table>';
+  },
+  // Steckbrief in der Streckenwahl: Rundenrekord mit Name und Auto, dazu die ersten drei
+  steckbrief(id) {
+    const l = this.liste(id, '').slice(0, 3);
+    if (!l.length) return '<div class="sk-rekord">Noch kein Rundenrekord: Fahr die erste Runde!</div>';
+    return '<ol class="sk-rekord" aria-label="Rundenrekord und die ersten drei">' + l.map((e, i) => '<li>' + (i ? (i + 1) + '. ' : 'Rekord ') + '<b>' + zeitText(e.z) + '</b> ' + esc(e.n) +
+      (e.bot ? ' (Bot)' : '') + ' · ' + esc(this.autoName(e.a)) + '</li>').join('') + '</ol>';
+  },
+  // Seite «Bestenlisten» im Hauptmenü: Strecke und Liste (gesamt oder ein Auto) mit ◀ ▶ wechseln
+  seite(id, auto) {
+    Menue.wahlen = {}; Menue.beiProfil = null;
+    this.blStrecke = STRECKEN[id] ? id : Object.keys(STRECKEN)[0]; this.blAuto = auto || ''; this.kartenId = null;
+    const kategorien = [{ wert: '', text: 'Gesamt' }].concat(FAHRZEUGE.map((f) => ({ wert: f.id, text: f.name })));
+    Menue.zeige('bestenliste', '<div class="tafel breit"><h2>Bestenlisten</h2><p class="hinweis">Schnellste Runde auf jeder Strecke, gesamt und für jedes Auto. Jeder Name steht einmal da. Von den Bots steht nur der schnellste aller Zeiten in der Liste.</p>' +
+      Menue.wahlZeile('Strecke', 'blStrecke', Object.keys(STRECKEN).map((s) => ({ wert: s, text: STRECKEN[s].name })), this.blStrecke, (v) => { this.blStrecke = v; this.zeichneSeite(); }) +
+      Menue.wahlZeile('Liste', 'blAuto', kategorien, this.blAuto, (v) => { this.blAuto = v; this.zeichneSeite(); }) +
+      '<div class="bl-kopf"><canvas id="bl-karte" width="236" height="236" aria-label="Karte der Strecke"></canvas><div id="bl-liste"></div></div>' +
+      '<div class="knoepfe" style="margin-top:14px"><button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>', { zurueck: () => Menue.haupt() }, 'mitte');
+    this.zeichneSeite();
+  },
+  zeichneSeite() {
+    const el = $('bl-liste'), id = this.blStrecke;
+    if (!el) return;
+    const ich = this.schluessel(Speicher.daten.name);
+    el.innerHTML = this.tabelle(this.liste(id, this.blAuto).slice(0, CONFIG.bestenliste.zeigen), (e) => !e.bot && ich !== 'spieler' && this.schluessel(e.n) === ich);
+    const c = $('bl-karte');
+    if (c && this.kartenId !== id) {
+      this.kartenId = id;
+      const k = {}; Hud.zeichneKartenGrund.call(k, holeStrecke(id));         // eigene Leinwand: die Karte im Rennen bleibt unberührt
+      const g = c.getContext('2d'); g.clearRect(0, 0, c.width, c.height); g.drawImage(k.grund, 0, 0, c.width, c.height);
+    }
+  },
+  // Einstellungen: eine Strecke oder alle löschen, mit Rückfrage
+  loeschenDialog() {
+    const id = Speicher.daten.strecke, name = STRECKEN[id] ? STRECKEN[id].name : id;
+    Dialog.zeige('<h2>Bestenliste löschen?</h2><p>Gelöschte Zeiten lassen sich nicht zurückholen.</p>', [
+      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[id]; this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
+      { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
+      { text: 'Abbrechen', klasse: 'zweit', abbruch: true },
+    ]);
   },
 };
 App.start();

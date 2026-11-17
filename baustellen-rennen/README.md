@@ -109,6 +109,17 @@ Baupunkte gibt es nur fürs Aufholen: +3 pro überholtem Fahrer und +1 pro 15 m,
 
 Baustellen gelten nur für Fahrer, die beim Bauen vor dir lagen. Für alle anderen sind sie durchsichtig. Sie bauen sich 2 s lang sichtbar auf, stehen nie näher als 3 s Fahrzeit vor einem Betroffenen und lassen immer eine Lücke. Ein Treffer bremst, hält aber nie an, danach ist man 3 s geschützt.
 
+## Bestenliste
+
+Jede Strecke hat eine Bestenliste mit der schnellsten Runde: eine Gesamtliste und eine Liste für jedes der 8 Autos. Im Hauptmenü unter «Bestenlisten» wechselt man mit ◀ ▶ die Strecke und die Liste.
+
+- **Was zählt:** die schnellste Runde, nicht die Gesamtzeit, weil die Rundenzahl einstellbar ist. Jede fertig gefahrene Runde zählt, auch wenn das Rennen danach abgebrochen wird. Alle Modi zählen: gegen Bots, Split-Screen und online. Simulationen und der Debug-Modus (`?debug=1`) zählen nicht.
+- **Menschen:** Jeder steht mit dem Namen da, den er für sich eingegeben hat, und zwar nur einmal pro Liste mit seiner besten Zeit (Gross- und Kleinschreibung zählt nicht). In der Liste eines Autos steht die beste Zeit mit diesem Auto.
+- **Bots:** Pro Liste steht nur ein einziger Bot drin, der schnellste aller Zeiten: in der Gesamtliste der schnellste Bot auf dieser Strecke, in der Liste eines Autos der schnellste Bot mit diesem Auto. Er ist mit einem Symbol und «Bot» markiert und steht auf dem Platz, der zu seiner Zeit passt. Fährt ein Bot schneller, ersetzt er den alten.
+- **Anzeige:** Die ersten drei Plätze sind in Gold, Silber und Bronze markiert, zu jedem Eintrag stehen Auto und Datum. In der Streckenwahl stehen der Rundenrekord und die ersten drei, im Rennen steht der Rekord unter der Rundenzeit. Bei einer neuen Bestzeit erscheint kurz «Neuer Rekord!», «Rekord mit dem Rennwagen!» oder «Platz 3 in der Bestenliste». Im Ergebnis steht, wer neu in der Liste ist, die neuen Einträge sind hervorgehoben.
+- **Name:** Heisst man noch «Spieler», fragt das Spiel nach dem ersten Eintrag einmal nach dem Namen. Ändern geht wie bisher im Menü. Ein neuer Name gilt für neue Einträge, alte behalten ihren Namen.
+- **Speichern:** im Browser des Geräts, getrennt von den Einstellungen. Jedes Gerät hat seine eigene Liste, online gefahrene Rennen tragen die Zeiten aller Mitspieler auf jedem beteiligten Gerät ein. In einem privaten Fenster gilt die Liste nur bis zum Neuladen. Unter «Einstellungen» löscht «Bestenliste löschen» eine Strecke oder alle.
+
 ## Online spielen
 
 1. Der Host wählt «Online: Raum erstellen» und bekommt einen Code mit 5 Zeichen.
@@ -227,6 +238,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `grafik.leben.passanten` | 50 / 90 / 140 | Fussgänger in Paris und New York ab «Mittel» |
 | `grafik.lod` | 30 / 45 / 70 m | ab dieser Entfernung zeigen Autos ihre einfache Fassung («Mittel», «Hoch», «Ultra») |
 | `grafik.delle` | ab 3 m/s, höchstens 0,13 m | Dellen nach Stössen |
+| `bestenliste` | `proName` 1, `zeigen` 10, `speichern` 50, `minRunde` 8 s | Zeiten pro Name und Liste, sichtbare und gespeicherte Plätze, kürzeste gültige Runde |
 
 ## Entscheidungen, die ich getroffen habe
 
@@ -237,6 +249,8 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Absperrung und Schlammloch stehen auf der Seite, auf der ein aufmerksamer Fahrer nur einen kleinen Schlenker braucht. Ausweichen kostet rund 0,1 s, ein Treffer 0,3 bis 0,7 s.
 - Die Umleitung ist eine schräge Leitwand, die auf den langen Weg lenkt. Niemand wird angehalten.
 - Wer an die Spitze überholt, bekommt die Punkte noch, kann sie aber erst wieder ausgeben, wenn er nicht mehr führt.
+- Bestenliste: Gewertet wird die schnellste Runde, weil die Rundenzahl einstellbar ist. Die Zeiten stehen im selben Format wie im übrigen Spiel (0:41.23). Ein Name, den es in der Liste schon gibt, gilt als dieselbe Person, es bleibt die bessere Zeit.
+- Nach dem Namen fragt das Spiel nur im Modus «Gegen Bots». Im Split-Screen und online gibt jeder seinen Namen ohnehin vor dem Rennen ein.
 
 ## Bekannte Grenzen
 
@@ -250,6 +264,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Einen Grand-Prix-Modus gibt es nicht.
 - Bots bauen selten Umleitungen und Abkürzungen, weil die Punkte knapp sind.
 - three.js 0.160.0 schreibt eine harmlose Warnung in die Browser-Konsole.
+- Die Bestenliste liegt im Browser des jeweiligen Geräts. Eine gemeinsame Liste für alle Geräte bräuchte einen Online-Dienst mit Server, den das Spiel bewusst nicht hat. Wer die Website-Daten im Browser löscht, löscht auch die Bestenliste.
 
 ## Für Bastler
 
