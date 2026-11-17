@@ -473,7 +473,7 @@ const CONFIG = {
     schluessel: 'baustellenrennen-bestenliste',   // Name im Speicher des Browsers (getrennt von den Einstellungen)
     // Gemeinsame Liste für alle Geräte über eine kostenlose Online-Datenbank (Firebase Realtime Database, einrichten: README
     // «Gemeinsame Bestenliste einrichten»). Leer = jedes Gerät hat nur seine eigene Liste, wie bisher.
-    server: '',            // Adresse der Datenbank, z. B. 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app'
+    server: 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app',            // Adresse der Datenbank, z. B. 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app'
     pfad: 'bestenliste/v1',// Ordner in der Datenbank (v1 = Aufbau der Einträge, passt zu den Regeln in der README)
     zeitlimit: 6,          // s: so lange wird auf die Datenbank gewartet, danach gilt «keine Verbindung»
     frisch: 60,            // s: so lange gilt eine geladene Liste, danach wird sie beim Öffnen neu geladen («Aktualisieren» lädt sofort)
