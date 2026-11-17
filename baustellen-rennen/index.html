@@ -415,7 +415,7 @@ const CONFIG = {
     auto: { ultra: 3.5, hoch: 8, mittel: 16 },
     // Richtwerte pro Stufe mit 8 Fahrern: höchstens so viele Dreiecke und Zeichenaufrufe pro Bild (anzeigen mit ?debug=1).
     // «Niedrig» hat keine Schatten und weniger Dekoration; ab «Mittel» kommen Schatten und die Nachbearbeitung dazu.
-    budget: { niedrig: [150000, 80], mittel: [330000, 380], hoch: [330000, 380], ultra: [330000, 380] },
+    budget: { niedrig: [160000, 160], mittel: [460000, 370], hoch: [560000, 390], ultra: [570000, 370] },   // gemessen am 17.11.2026 («Ultra» nur Kiesgrube und Bergpass)
     // Leben in der Landschaft (Teil 7d): Grasbüschel pro Stufe, davon dieser Anteil Blumen, Abstand zur Strecke in m,
     // ab welcher Entfernung zur Kamera Gras verschwindet (m), Vögel pro Stufe (nicht nachts, nicht auf Strecken mit eigenen Vögeln)
     leben: {
@@ -5892,12 +5892,28 @@ const Orte = {
     const na = G.stimmung && G.stimmung.nacht;
     if (!na) return;
     if (!this._kegel) {
-      const c = document.createElement('canvas'); c.width = 128; c.height = 64;
-      const x = c.getContext('2d');
-      for (const yy of [20, 44]) { const g = x.createRadialGradient(8, yy, 2, 46, yy, 84); g.addColorStop(0, 'rgba(255,244,214,.85)'); g.addColorStop(0.35, 'rgba(255,240,205,.34)'); g.addColorStop(1, 'rgba(255,240,205,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 64); }
-      this._kegel = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+      // Zwei Lichtkegel, die nach vorn breiter und schwächer werden und an allen Rändern weich auslaufen (keine sichtbaren Kanten).
+      // Zwei Fassungen: für das normale Bild und für die Nachbearbeitung, die in linearen Farben rechnet (dort Helligkeit hoch 2,2).
+      const bild = (hoch) => {
+        const c = document.createElement('canvas'); c.width = 128; c.height = 64;
+        const x = c.getContext('2d'), d = x.createImageData(128, 64), glatt = (a, b, t) => { const q = Math.min(1, Math.max(0, (t - a) / (b - a))); return q * q * (3 - 2 * q); };
+        for (let j = 0; j < 64; j++) for (let i = 0; i < 128; i++) {
+          const u = (i + 0.5) / 128, v = (j + 0.5) / 64, w = 0.07 + u * 0.3;   // u: nach vorn, v: quer, w: halbe Breite des Kegels
+          let h = 0;
+          for (const m of [0.36, 0.64]) h += Math.exp(-(((v - m) / w) ** 2));
+          h *= glatt(0, 0.1, u) * (1 - u) ** 1.5 * glatt(0, 0.16, v) * glatt(1, 0.84, v);
+          const a = Math.pow(Math.min(1, h), hoch), o = (j * 128 + i) * 4;
+          d.data[o] = 255; d.data[o + 1] = 242; d.data[o + 2] = 210; d.data[o + 3] = Math.round(a * 255);
+        }
+        x.putImageData(d, 0, 0);
+        return new THREE.CanvasTexture(c);
+      };
+      this._kegelBild = [bild(1), bild(2.2)];
+      this._kegel = new THREE.MeshBasicMaterial({ map: this._kegelBild[0], transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
     }
-    this._kegel.opacity = (Nach.an ? 0.2 : 0.34) * na;                 // mit Nachbearbeitung wirkt Licht stärker, darum schwächer
+    const welches = this._kegelBild[Nach.an ? 1 : 0];
+    if (this._kegel.map !== welches) { this._kegel.map = welches; this._kegel.needsUpdate = true; }
+    this._kegel.opacity = (Nach.an ? 0.17 : 0.3) * na;                 // mit Nachbearbeitung wirkt Licht stärker, darum schwächer
     const m = new THREE.Mesh(new THREE.PlaneGeometry(12, 6.4), this._kegel);
     m.rotation.x = -Math.PI / 2; m.position.set(7.6, 0.07, 0); m.renderOrder = 0.4;
     o.gruppe.add(m);
