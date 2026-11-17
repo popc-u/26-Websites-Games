@@ -76,12 +76,25 @@ kbd { display: inline-block; min-width: 26px; text-align: center; background: va
 .h-runde { left: calc(var(--m) * 18px); top: calc(var(--m) * 86px); font-size: calc(var(--m) * 22px); }
 .h-runde b { font-weight: 400; color: var(--gelb); }
 .h-zeit { left: calc(var(--m) * 18px); top: calc(var(--m) * 114px); font: 600 calc(var(--m) * 14px) var(--text); letter-spacing: 0; font-variant-numeric: tabular-nums; line-height: 1.35; }
-.h-karte { right: calc(var(--m) * 12px); top: calc(var(--m) * 10px); width: calc(var(--m) * 190px); height: calc(var(--m) * 190px); background: rgba(16,18,20,.5); border: 2px solid rgba(0,0,0,.7); border-radius: 10px; }
+.h-karte { right: calc(var(--m) * 12px); top: calc(var(--m) * 10px); width: calc(var(--m) * 190px); height: calc(var(--m) * 190px); background: radial-gradient(circle at 50% 45%, rgba(38,44,52,.72), rgba(10,12,15,.72)); border: 1.5px solid rgba(255,255,255,.2); border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.6); }
 .h-karte canvas { width: 100%; height: 100%; display: block; }
-.h-tempo { right: calc(var(--m) * 14px); bottom: calc(var(--m) * 14px); font-size: calc(var(--m) * 40px); text-align: right; line-height: 1; }
-.h-tempo small { font-size: .4em; color: #d6d2c4; }
-.h-tempo .lade { display: block; margin: 4px 0 0 auto; width: calc(var(--m) * 120px); height: calc(var(--m) * 9px); background: rgba(0,0,0,.55); border: 2px solid #000; border-radius: 6px; overflow: hidden; }
-.h-tempo .lade i { display: block; height: 100%; width: 0; background: var(--gelb); }
+.h-tempo { right: calc(var(--m) * 10px); bottom: calc(var(--m) * 8px); width: calc(var(--m) * 150px); height: calc(var(--m) * 150px); text-align: center; line-height: 1; }
+.h-tempo svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+.h-tempo .scheibe { fill: rgba(12,14,17,.6); stroke: rgba(255,255,255,.16); stroke-width: 1.2; }
+.h-tempo .bogen { fill: none; stroke: rgba(255,255,255,.8); stroke-width: 2.2; stroke-linecap: round; }
+.h-tempo .rot { fill: none; stroke: #ff7a1a; stroke-width: 3.4; stroke-linecap: round; }
+.h-tempo .strich { stroke: #fff; stroke-width: 1.7; }
+.h-tempo .strich.fein { stroke: rgba(255,255,255,.55); stroke-width: 1; }
+.h-tempo text { fill: #d6d2c4; font: 600 7px var(--text); text-anchor: middle; dominant-baseline: middle; letter-spacing: 0; }
+.h-tempo .ladegrund { fill: none; stroke: rgba(0,0,0,.5); stroke-width: 5.5; stroke-linecap: round; }
+.h-tempo .lade { fill: none; stroke: var(--gelb); stroke-width: 4.2; stroke-linecap: round; stroke-dasharray: 0 200; opacity: 0; }
+.h-tempo .nadel { transform-origin: 60px 60px; transform: rotate(140deg); transition: transform .08s linear; }
+.h-tempo .nadel path { fill: #ff3b30; stroke: rgba(0,0,0,.5); stroke-width: .5; }
+.h-tempo .nabe { fill: #e9e6dc; stroke: #000; stroke-width: 1; }
+.h-tempo > span { position: absolute; left: 0; right: 0; top: 65%; font-size: calc(var(--m) * 26px); }
+.h-tempo small { position: absolute; left: 0; right: 0; top: 85%; font-size: calc(var(--m) * 11px); color: #d6d2c4; }
+.hud.mit-touch .h-tempo { transform: scale(.72); transform-origin: right bottom; }
+.h-abstand b { font-weight: 700; color: var(--gelb); font-variant-numeric: tabular-nums; }
 .h-mitte { left: 50%; top: calc(var(--m) * 8px + 38px); transform: translateX(-50%); text-align: center; white-space: nowrap; }
 .h-warnung { display: inline-block; background: var(--gelb); color: #000; text-shadow: none; border: 3px solid #000; border-radius: 8px; padding: 3px 14px 2px; font-size: calc(var(--m) * 24px); box-shadow: 0 4px 0 #000; animation: blink .5s steps(2) infinite; }
 .h-warnung .pf { display: inline-block; font-size: 1.25em; line-height: .8; vertical-align: -0.08em; margin: 0 4px; }
@@ -155,6 +168,23 @@ input[type=range]{accent-color:var(--gold)}
 .schirm h1,.schirm h2{font-style:normal!important;text-transform:none!important}
 .h-gross{font-style:normal;font-weight:800;letter-spacing:.02em;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,.6)}
 @media(max-height:780px){.schau canvas{height:118px}.tafel{padding:14px 18px}}
+/* Siegerpodest im Ergebnis */
+.schau.podest{display:block;margin:6px 0 10px;background:radial-gradient(ellipse at 50% 30%,#2b323b,#0b0d10 75%)}
+.schau.podest canvas{height:200px}
+@media(max-height:780px){.schau.podest canvas{height:150px}}
+/* Steckbrief der Strecke in der Streckenwahl */
+.streckenkarte{display:grid;grid-template-columns:118px 1fr;gap:12px;align-items:center;margin:4px 0 10px;padding:10px 12px 10px 10px;background:linear-gradient(135deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--linie);border-radius:12px}
+.streckenkarte:empty{display:none}
+.streckenkarte.neu{animation:skEin .35s ease}
+.streckenkarte canvas{width:118px;height:118px;display:block;border-radius:9px;background:radial-gradient(circle at 40% 35%,rgba(120,140,110,.28),rgba(0,0,0,.3))}
+.sk-text{display:flex;flex-direction:column;gap:3px;font-size:.84rem;color:var(--text);min-width:0;text-align:left}
+.sk-text b{font-size:1.02rem;font-weight:650}
+.sk-text>span{color:var(--leise);line-height:1.3}
+.sk-text ul{list-style:none;margin:5px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px 12px}
+.sk-text li{display:flex;align-items:center;gap:5px;font-size:.8rem}
+.sk-text svg{width:15px;height:15px;flex:none;stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+@keyframes skEin{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(max-width:560px),(max-height:780px){.streckenkarte{grid-template-columns:84px 1fr}.streckenkarte canvas{width:84px;height:84px}}
 .h-platz{font-style:normal;font-weight:700;color:#fff;text-shadow:0 2px 12px rgba(0,0,0,.55)}
 .h-bau .bw{background:rgba(16,19,24,.72);border:1px solid var(--linie);border-radius:12px;box-shadow:none}
 .h-bp b{color:var(--gold)}
@@ -364,7 +394,10 @@ const CONFIG = {
       //            bauen: Bau-Freude (0–1)                  fehler: Fahrfehler pro Minute
       leicht: { mut: 0.76, linie: 1.5, drift: 0.50, sehen: 0.75, bauen: 0.45, fehler: 1.6 },
       mittel: { mut: 0.83, linie: 0.9, drift: 0.90, sehen: 0.92, bauen: 0.75, fehler: 0.8 },
-      schwer: { mut: 0.96, linie: 0.45, drift: 1.00, sehen: 0.98, bauen: 1.0, fehler: 0.25 },
+      // «Schwer» ist ein Profi und fast unschlagbar: perfekte Linie, keine Fehler, sieht jedes Hindernis, trifft jedes Boost-Feld,
+      // bremst spät (bremsen: Verzögerung in m/s², mit der er rechnet; die anderen rechnen vorsichtig mit 22) und driftet
+      // schon in sanfteren Kurven (driftAb). tempo: Tempo-Vorteil auf das Höchsttempo (1.03 = 3 %, mehr ist nicht erlaubt).
+      schwer: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.03 },
     },
     zielVordermann: 0.8,   // Anteil der Hindernisse, die Bots ihrem direkten Gegner statt dem Führenden in den Weg bauen
     streuung: 0.02,        // zufällige Tagesform: ± so viel Unterschied im Mut zwischen gleich starken Bots
@@ -373,6 +406,34 @@ const CONFIG = {
     vorausZeit: 0.42,      // Bots zielen auf einen Punkt, der so viele Sekunden voraus liegt
     sichtweite: 75,        // so weit voraus beachten Bots Hindernisse (m)
     boostSicht: 40,        // so weit vor einem Boost-Feld ziehen Bots langsam zu ihm hin (m)
+  },
+
+  // ── Grafik-Stufen ───────────────────────────────────────────────────────
+  grafik: {
+    // Beim ersten Start misst das Spiel, wie viele Millisekunden dieses Gerät für ein Bild auf «Hoch» braucht.
+    // Schneller als … ms → diese Stufe; langsamer als «mittel» → «Niedrig». Software-Grafik bekommt immer «Niedrig».
+    auto: { ultra: 3.5, hoch: 8, mittel: 16 },
+    // Richtwerte pro Stufe mit 8 Fahrern: höchstens so viele Dreiecke und Zeichenaufrufe pro Bild (anzeigen mit ?debug=1).
+    // «Niedrig» hat keine Schatten und weniger Dekoration; ab «Mittel» kommen Schatten und die Nachbearbeitung dazu.
+    budget: { niedrig: [160000, 160], mittel: [460000, 370], hoch: [560000, 390], ultra: [570000, 370] },   // gemessen am 17.11.2026 («Ultra» nur Kiesgrube und Bergpass)
+    // Leben in der Landschaft (Teil 7d): Grasbüschel pro Stufe, davon dieser Anteil Blumen, Abstand zur Strecke in m,
+    // ab welcher Entfernung zur Kamera Gras verschwindet (m), Vögel pro Stufe (nicht nachts, nicht auf Strecken mit eigenen Vögeln)
+    leben: {
+      gras: { niedrig: 0, mittel: 6000, hoch: 14000, ultra: 26000 },
+      blumen: 0.14,
+      steine: { niedrig: 0, mittel: 1200, hoch: 2500, ultra: 4500 },   // kleine Steine auf Kies, Erde und Fels neben der Strecke (nicht in den Städten)
+      ohneSteine: ['paris', 'newyork'],
+      band: [4.5, 48],
+      weit: 95,
+      voegel: { niedrig: 0, mittel: 10, hoch: 16, ultra: 24 },
+      ohneVoegel: ['aegypten'],
+      passanten: { niedrig: 0, mittel: 50, hoch: 90, ultra: 140, nur: ['paris', 'newyork'] },   // Fussgänger auf den Gehsteigen der Städte
+      fahnen: true,          // wehende Fahnen auf dem Start/Ziel-Bogen (Zielflaggen) und auf den Tribünen (ab «Mittel»)
+    },
+    // Ab dieser Entfernung (m) zur nächsten Kamera zeigt ein Auto seine einfache Fassung (weniger Dreiecke und Zeichenaufrufe); 0 = immer fein
+    lod: { niedrig: 0, mittel: 30, hoch: 45, ultra: 70 },
+    // Dellen nach Stössen (ab «Mittel»): erst ab diesem Aufprall in m/s, jeder Punkt der Karosserie höchstens so weit eingedrückt (m)
+    delle: { ab: 3, max: 0.13 },
   },
 
   // ── Netzwerk ────────────────────────────────────────────────────────────
@@ -412,6 +473,7 @@ const CONFIG = {
    TEIL 2: Hilfsfunktionen
    ══════════════════════════════════════════════════════════════════════════ */
 const TAU = Math.PI * 2;
+const GRAFIK_NAMEN = { niedrig: 'Niedrig', mittel: 'Mittel', hoch: 'Hoch', ultra: 'Ultra' };      // Grafik-Stufen in dieser Reihenfolge
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
 const lerp = (a, b, t) => a + (b - a) * t;
 const hyp = Math.hypot;
@@ -1499,6 +1561,7 @@ class Rennen {
 
     // erlaubtes Höchsttempo je nach Auto, Untergrund und Zustand
     let vmax = F.vmax * w.vmax;
+    if (k.typ === 'bot' && k.bot && k.bot.p.tempo) vmax *= k.bot.p.tempo;      // nur «Schwer»: kleiner Tempo-Vorteil (CONFIG.bots)
     if (boost) vmax *= k.boostStaerke;
     if (k.windAktiv) vmax *= 1 + W.bonus * w.wind;
     if (!k.aufStrasse) vmax *= boost ? CONFIG.boost.offroadFaktor : Math.min(1, F.offroadFaktor * w.offroad);
@@ -1755,7 +1818,7 @@ class Rennen {
     const tempo = Math.abs(k.v);
     const aufprall = clamp(-vn / Math.max(tempo, 1), 0, 1);     // 0 = streifen, 1 = frontal
     k.wandZeit = 0.25;
-    if (aufprall * tempo > 3) this.melde('wand', k.idx, aufprall * tempo);
+    if (aufprall * tempo > 3) this.melde('wand', k.idx, aufprall * tempo, Math.atan2(-nz, -nx));      // b: Richtung zur Wand (nur für die Grafik: Delle)
     if (aufprall > 0.8) {
       // frontal: zurückprallen, Blickrichtung bleibt
       k.v = -k.v * 0.25;
@@ -2257,8 +2320,9 @@ class Rennen {
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 6: Bots
    Ein Bot «drückt» dieselben Tasten wie ein Mensch (Lenken, Gas, Bremse, Drift,
-   Bauen) und fährt mit derselben Physik. Er wird nie heimlich schneller.
-   Die Stufen unterscheiden sich nur im Können (siehe CONFIG.bots).
+   Bauen) und fährt mit derselben Physik. Die Stufen unterscheiden sich im Können
+   (siehe CONFIG.bots). Einzige Ausnahme: «Schwer» darf ein paar Prozent mehr
+   Höchsttempo haben (CONFIG.bots.stufen.schwer.tempo), damit er fast unschlagbar ist.
    ══════════════════════════════════════════════════════════════════════════ */
 const BOT_VORAUS = [4, 12, 22, 34, 48, 64];      // in diesen Abständen schaut ein Bot auf die Krümmung voraus
 
@@ -2268,11 +2332,12 @@ class Bot {
     const z = R.zufall;
     this.p = p;
     this.stufe = stufe;
-    this.mut = p.mut * (1 + (z() * 2 - 1) * CONFIG.bots.streuung);   // Tagesform
+    this.mut = p.mut * (1 + (z() * 2 - 1) * CONFIG.bots.streuung * (p.profi ? 0 : 1));   // Tagesform (Profis haben keine schlechten Tage)
     this.versatz = (z() * 2 - 1) * p.linie * 0.5;                    // persönliche Abweichung von der Ideallinie
     this.rausch = 0; this.rauschZiel = 0; this.rauschUhr = 0;
     this.ausweich = 0;
     this.boostLust = clamp(0.7 + z() * 0.6, 0, 1);                    // wie entschlossen der Bot Boost-Felder ansteuert
+    if (p.profi) this.boostLust = 1;                                  // Profis treffen jedes Feld
     this.fehlerUhr = 0;
     this.driftAn = false; this.driftAusUhr = 0; this.driftLust = z() < p.drift; this.lustUhr = 0;
     this.bauUhr = 1 + z() * 2;
@@ -2476,7 +2541,7 @@ class Bot {
       const bl = CONFIG.belag[R.S.belagArt[Math.floor((((k.s + dist) % R.S.laenge) + R.S.laenge) % R.S.laenge / R.S.haupt.ds) % R.S.haupt.n]];      // Belag dort vorn
       const l1 = lr1 * (bl ? bl.lenk : 1), l2 = lr2 * (bl ? bl.lenk : 1);
       const vKurve = (c * l1) / (kr + (c * (l1 - l2)) / F.vmax);
-      const vJetzt = Math.sqrt(vKurve * vKurve + 2 * 22 * Math.max(0, dist - 4));
+      const vJetzt = Math.sqrt(vKurve * vKurve + 2 * (this.p.bremsen || 22) * Math.max(0, dist - 4));      // bremsen: mit so viel Verzögerung rechnet der Bot (später Bremspunkt = höherer Wert)
       if (vJetzt < vZiel) vZiel = vJetzt;
     }
     e.gas = k.v < vZiel ? 1 : 0;
@@ -2491,7 +2556,8 @@ class Bot {
       this.lustUhr -= dt;
       if (Math.abs(krNah) < 0.004 && this.lustUhr <= 0) { this.lustUhr = 1.5; this.driftLust = z() < this.p.drift; }
       const bedarf = (Math.abs(krNah) * k.v) / omegaMax;
-      if (this.driftLust && k.zielZeit == null && k.v > D.minTempo + 4 && bedarf > 0.6 && krNah * krWeit > 0 && (Math.abs(krWeit) * k.v) / omegaMax > 0.5
+      const dAb = this.p.driftAb || 0.6;      // ab so viel Lenkbedarf (Anteil der vollen Drehrate) lohnt sich für den Bot ein Drift
+      if (this.driftLust && k.zielZeit == null && k.v > D.minTempo + 4 && bedarf > dAb && krNah * krWeit > 0 && (Math.abs(krWeit) * k.v) / omegaMax > dAb - 0.1
           && !k.luft && k.aufStrasse && !k.driftGesperrt && e.lenk * krNah > 0 && Math.abs(e.lenk) > 0.3) this.driftAn = true;
     } else {
       if (driftAnteil < D.lenkMitte - D.lenkBereich - 0.12) this.driftAusUhr += dt; else this.driftAusUhr = 0;
@@ -2758,6 +2824,7 @@ const Grafik = {
   init(canvas) {
     const R = (this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
     R.setClearColor(0x8fc7ea);
+    R.info.autoReset = false;                  // die Zähler (Dreiecke, Zeichenaufrufe) gelten für das ganze Bild samt Nachbearbeitung
     this.szene = new THREE.Scene();
     this.mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
     this.matGlatt = new THREE.MeshLambertMaterial({ vertexColors: true });
@@ -2781,25 +2848,43 @@ const Grafik = {
     if (!this.bereit) return;
     const R = this.renderer;
     const dpr = window.devicePixelRatio || 1;
+    const ultra = q === 'ultra', hoch = q === 'hoch' || ultra;
     R.setPixelRatio(q === 'niedrig' ? Math.min(dpr, 1) * 0.75 : q === 'mittel' ? Math.min(dpr, 1.25) : Math.min(dpr, 2));
+    // Nachbearbeitung: ab «Mittel» Leuchten, Farbabstimmung und 4-fache Kantenglättung, auf «Ultra» zusätzlich Umgebungsverdeckung
+    Nach.setze(q !== 'niedrig', 4, ultra, ultra ? 6 : hoch ? 5 : 4);
+    this.matLicht().color.setScalar(Nach.an ? 1.35 : 1);      // Lampen und Leuchtflächen etwas über Weiss: Dann strahlen sie im Leuchten
+    if (this.blendung) this.blendung.visible = false;
     const schatten = q !== 'niedrig';
     R.shadowMap.enabled = schatten;
     R.shadowMap.type = THREE.PCFSoftShadowMap;
     R.toneMapping = q === 'niedrig' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.25;     // natürlichere Helligkeit
     this.sonne.castShadow = schatten;
     if (schatten) {
-      const g = q === 'hoch' ? 2048 : 1024;
+      const g = ultra ? 4096 : hoch ? 2048 : 1024;
       if (this.sonne.shadow.mapSize.x !== g) { this.sonne.shadow.mapSize.set(g, g); if (this.sonne.shadow.map) { this.sonne.shadow.map.dispose(); this.sonne.shadow.map = null; } }
       const c = this.sonne.shadow.camera;
-      const w = q === 'hoch' ? 70 : 55;
+      const w = ultra ? 80 : hoch ? 70 : 55;
       c.left = -w; c.right = w; c.top = w; c.bottom = -w; c.near = 10; c.far = 320; c.updateProjectionMatrix();
       this.sonne.shadow.bias = -0.0015; this.sonne.shadow.normalBias = 0.6;
     }
-    Teilchen.grenze = q === 'niedrig' ? 120 : q === 'mittel' ? 260 : 420;
-    Dunst.grenze = q === 'niedrig' ? 160 : q === 'mittel' ? 420 : 900;
+    Teilchen.grenze = q === 'niedrig' ? 120 : q === 'mittel' ? 260 : ultra ? 640 : 420;
+    Dunst.grenze = q === 'niedrig' ? 160 : q === 'mittel' ? 420 : ultra ? 1400 : 900;
     this._stoff = {}; this._flocken = null; this._belag = null; this._ort = null;
     this.szene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
     this.groesse();
+  },
+
+  // Erster Start: misst, wie lange dieses Gerät für ein Bild der Vorschau-Szene auf «Hoch» braucht, und wählt danach die Stufe
+  // (Grenzen in CONFIG.grafik.auto). readPixels wartet, bis die Grafikkarte wirklich fertig gezeichnet hat.
+  messeStufe() {
+    const R = this.renderer, gl = R.getContext(), G = CONFIG.grafik.auto, px = new Uint8Array(4);
+    let name = '';
+    try { const e = gl.getExtension('WEBGL_debug_renderer_info'); name = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)) : ''; } catch (e) { /* egal */ }
+    if (/swiftshader|llvmpipe|software|basic render/i.test(name)) return 'niedrig';      // Software-Grafik ohne Grafikkarte
+    const lauf = (n) => { const t = performance.now(); for (let i = 0; i < n; i++) this.zeichne(Spiel.R); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); return (performance.now() - t) / n; };
+    lauf(2);                                   // Aufwärmen: Shader übersetzen, Texturen hochladen
+    const ms = (this.messung = Math.min(lauf(4), lauf(4)));
+    return ms < G.ultra ? 'ultra' : ms < G.hoch ? 'hoch' : ms < G.mittel ? 'mittel' : 'niedrig';
   },
 
   groesse() {
@@ -2876,8 +2961,9 @@ const Grafik = {
     Boostfelder.baue(this, S, W);
 
     // 4. Wasser
+    Leben.seenLeeren();
     for (const ws of def.wasser || []) {
-      const m = ws.eis ? Orte.eisflaeche(this, ws) : new THREE.Mesh(new THREE.CircleGeometry(ws.r, 18), new THREE.MeshStandardMaterial({ color: 0x2f6f9a, transparent: true, opacity: 0.86, roughness: 0.08, metalness: 0.6 }));
+      const m = ws.eis ? Orte.eisflaeche(this, ws) : this.qualitaet !== 'niedrig' ? Leben.see(ws) : new THREE.Mesh(new THREE.CircleGeometry(ws.r, 18), new THREE.MeshStandardMaterial({ color: 0x2f6f9a, transparent: true, opacity: 0.86, roughness: 0.08, metalness: 0.6 }));
       m.rotation.x = -Math.PI / 2; m.position.set(ws.x, ws.y, -ws.z); W.add(m);
     }
     for (const fl of def.fluesse || []) {
@@ -2930,6 +3016,7 @@ const Grafik = {
     }
     W.add(deko.netz(this.mat, true));
     bk.fertig(W);
+    Leben.baue(this, S, W, bk);                                                         // Gras, Blumen, Vögel (Teil 7d)
 
     // 6. Slot-Schilder am Streckenrand
     const schild = new Geo();
@@ -2947,6 +3034,7 @@ const Grafik = {
 // ── Deko-Bausteine (alles aus Quadern, Zylindern und Kegeln) ──────────────
 const Deko = {
   baum(g, x, y, z, zuf) {
+    if (Grafik.qualitaet !== 'niedrig') return Leben.pflanze('fichte', x, y, z, zuf);     // ab «Mittel»: Fichte mit Astschichten, die im Wind wiegt (Teil 7d)
     const h = 4.5 + zuf() * 4, f = Geo.farbe;
     g.zyl(x, y + h * 0.15, z, 0.35, 0.28, h * 0.3, 5, f(0x6b4a2b));
     const gruen = [0x3d7a3a, 0x4c8c3f, 0x2f6b3a][Math.floor(zuf() * 3)];
@@ -2978,6 +3066,8 @@ const Deko = {
   },
   kran(g, x, y, z, dreh) {
     const f = Geo.farbe, gelb = f(0xffc61a), h = 34;
+    if (Grafik.qualitaet !== 'niedrig') Leben.bauarbeiter(x, z, dreh, 3, zufallsGenerator(Math.round(x * 13 + z * 7)));   // Arbeiter am Fuss des Krans (Teil 7d)
+    if (Grafik.qualitaet !== 'niedrig') return Leben.kran(g, x, y, z, dreh);                // ab «Mittel»: Gittermast und drehender Ausleger (Teil 7d)
     g.box(x, y + 0.6, z, 5, 1.2, 5, f(0x8d8472));
     for (let q = 0; q < 9; q++) g.box(x, y + 1.2 + (q + 0.5) * (h / 9), z, 1.5, h / 9 - 0.3, 1.5, q % 2 ? gelb : f(0xffc61a, 0.85));
     const c = Math.cos(dreh), s = Math.sin(dreh);
@@ -2988,6 +3078,8 @@ const Deko = {
     g.box(x + c * 17, y + h - 11.5, z - s * 17, 1.4, 1, 1.4, f(0xe0362c), dreh); // Haken mit Last
   },
   bagger(g, x, y, z, dreh) {
+    if (Grafik.qualitaet !== 'niedrig') Leben.bauarbeiter(x, z, dreh, 2, zufallsGenerator(Math.round(x * 11 + z * 5)));
+    if (Grafik.qualitaet !== 'niedrig') return Leben.baggerFein(g, x, y, z, dreh);          // ab «Mittel»: Raupen, Führerhaus, Ausleger gräbt (Teil 7d)
     const f = Geo.farbe, c = Math.cos(dreh), s = Math.sin(dreh), ge = f(0xffc61a);
     g.box(x, y + 0.5, z, 5, 1, 3.4, f(0x2a2d31), dreh);
     g.box(x, y + 1.9, z, 3.6, 1.8, 3, ge, dreh);
@@ -3020,11 +3112,13 @@ const Deko = {
     for (let q = 0; q < 4; q++) g.box(x, y + 0.5 + q * 0.9, z + q * 1.4, 26, 1.0, 1.5, f(q % 2 ? 0xc2beb2 : 0xa7a49b), dreh);
     g.box(x, y + 5.6, z + 2.4, 27, 0.25, 7, f(0xff7a1a), dreh, 0, -0.12);
     for (const q of [-12.5, 12.5]) g.box(x + q, y + 2.8, z + 5, 0.3, 5.6, 0.3, f(0x55595f));
+    if (Grafik.qualitaet !== 'niedrig' && CONFIG.grafik.leben.fahnen) for (let q = 0; q < 4; q++) Leben.fahne(x - 12 + q * 8, y, z + 6.4, [0xd8322e, 0x2f6fd6, 0xf2c530, 0x3aa655][q], 8.8);   // Fahnenmasten hinter der Tribüne (Teil 7d)
   },
   // Start/Ziel-Bogen quer über die Fahrbahn
   bogen(g, x, y, z, dreh, d, S) {
     const f = Geo.farbe, hb = S.haupt.hb[0] + 1.2, c = Math.cos(dreh), s = Math.sin(dreh);
     for (const q of [1, -1]) g.box(x - s * q * hb, y + 3.6, z - c * q * hb, 0.8, 7.2, 0.8, f(0xffc61a));
+    if (Grafik.qualitaet !== 'niedrig' && CONFIG.grafik.leben.fahnen) for (const q of [1, -1]) Leben.fahne(x - s * q * hb, y + 8.15, z - c * q * hb, 'ziel', 3.6, 1.7);   // Zielflaggen auf den Pfeilern (Teil 7d)
     for (let q = 0; q < 10; q++) {
       const a = -hb + (q + 0.5) * (hb / 5);
       g.box(x - s * a, y + 7.4, z - c * a, 0.9, 1.5, hb / 5, f(q % 2 ? 0x17181a : 0xffc61a), dreh);
@@ -3064,8 +3158,9 @@ const STIMMUNG = {
 };
 
 // Malt ein Rundum-Bild des Himmels (Verlauf, Sonne mit Schein, Wolken). Es dient als Hintergrund und für die Spiegelungen auf Lack und Glas.
-function himmelBild(st) {
-  const B = 1024, H = 512, c = document.createElement('canvas'); c.width = B; c.height = H;
+// fein: doppelte Auflösung (ab «Hoch»), dann sind Wolken und Sonne auch auf grossen Bildschirmen scharf
+function himmelBild(st, fein) {
+  const s = fein ? 2 : 1, B = 1024 * s, H = 512 * s, c = document.createElement('canvas'); c.width = B; c.height = H;
   const x = c.getContext('2d'), zuf = zufallsGenerator(77);
   let g = x.createLinearGradient(0, 0, 0, H / 2);
   g.addColorStop(0, hexCss(st.zenit)); g.addColorStop(0.6, hexCss(st.mitte)); g.addColorStop(1, hexCss(st.horizont));
@@ -3075,7 +3170,7 @@ function himmelBild(st) {
   x.fillStyle = g; x.fillRect(0, H / 2, B, H / 2);
   const p = st.sonnePos, l = Math.hypot(p[0], p[1], p[2]);
   const sx = (Math.atan2(p[2] / l, p[0] / l) / TAU + 0.5) * B, sy = (0.5 - Math.asin(p[1] / l) / Math.PI) * H;
-  const sr = st.scheinGr || 190;                 // Grösse des Sonnenscheins im Himmelsbild (hoch stehende Sonne: kleiner)
+  const sr = (st.scheinGr || 190) * s;                 // Grösse des Sonnenscheins im Himmelsbild (hoch stehende Sonne: kleiner)
   for (const dx of [-B, 0, B]) {
     g = x.createRadialGradient(sx + dx, sy, 0, sx + dx, sy, sr);
     g.addColorStop(0, 'rgba(255,252,240,1)'); g.addColorStop(0.05, 'rgba(255,246,214,.96)'); g.addColorStop(0.16, hexCss(st.schein) + '77'); g.addColorStop(1, hexCss(st.schein) + '00');
@@ -3083,25 +3178,39 @@ function himmelBild(st) {
   }
   if (st.sterne) {                             // Sterne im oberen Himmel
     x.fillStyle = '#fff';
-    for (let q = 0; q < st.sterne; q++) { const yy = Math.pow(zuf(), 1.6) * H * 0.4; x.globalAlpha = (0.35 + zuf() * 0.65) * (1 - yy / (H * 0.42)); x.fillRect(zuf() * B, yy, zuf() < 0.15 ? 2 : 1, 1); }
+    for (let q = 0; q < st.sterne; q++) { const yy = Math.pow(zuf(), 1.6) * H * 0.4; x.globalAlpha = (0.35 + zuf() * 0.65) * (1 - yy / (H * 0.42)); x.fillRect(zuf() * B, yy, (zuf() < 0.15 ? 2 : 1) * s, s); }
     x.globalAlpha = 1;
   }
   if (st.mond) {
     const mx2 = st.mond[0] * B, my2 = st.mond[1] * H;
-    g = x.createRadialGradient(mx2, my2, 0, mx2, my2, 46);
+    const mr = 46 * s;
+    g = x.createRadialGradient(mx2, my2, 0, mx2, my2, mr);
     g.addColorStop(0, 'rgba(255,250,235,1)'); g.addColorStop(0.2, 'rgba(255,248,230,.95)'); g.addColorStop(0.24, 'rgba(240,235,255,.22)'); g.addColorStop(1, 'rgba(240,235,255,0)');
-    x.fillStyle = g; x.fillRect(mx2 - 46, my2 - 46, 92, 92);
+    x.fillStyle = g; x.fillRect(mx2 - mr, my2 - mr, 2 * mr, 2 * mr);
   }
+  // Wolken: Haufenwolken aus vielen weichen Bällchen mit flachem Boden und gewölbter Oberseite. Erst die Unterseite im Schatten
+  // (Wolkenfarbe mit Himmelsfarbe gemischt), dann die beleuchtete Oberseite. Am Tag dazu feine Schleierwolken weit oben.
+  const rgb = (h) => hexRgb(h), wl = rgb(st.wolke), hm = rgb(st.mitte);
+  const hell = 'rgba(' + wl.map((v) => Math.round(v * 0.65 + 255 * 0.35)).join(',') + ',', schatten = 'rgba(' + wl.map((v, i) => Math.round((v * 0.5 + hm[i] * 0.5) * 0.7)).join(',') + ',';   // Oberseite heller als der Himmel, Unterseite dunkler
+  const puff = (px, py, r, farbe, a) => {
+    const gr2 = x.createRadialGradient(px, py, 0, px, py, r);
+    gr2.addColorStop(0, farbe + a + ')'); gr2.addColorStop(0.62, farbe + (a * 0.5).toFixed(3) + ')'); gr2.addColorStop(1, farbe + '0)');
+    x.fillStyle = gr2; x.fillRect(px - r, py - r, 2 * r, 2 * r);
+  };
   for (let q = 0; q < st.wolken; q++) {
-    const wx = zuf() * B, wy = 40 + zuf() * 175, gr = 26 + zuf() * 46;
-    for (let t = 0; t < 7; t++) {
-      const ox = (zuf() - 0.5) * gr * 3.4, oy = (zuf() - 0.5) * gr * 0.5, r = gr * (0.5 + zuf() * 0.7);
-      for (const dx of [-B, 0, B]) {
-        g = x.createRadialGradient(wx + ox + dx, wy + oy, 0, wx + ox + dx, wy + oy, r);
-        g.addColorStop(0, hexCss(st.wolke) + 'cc'); g.addColorStop(0.55, hexCss(st.wolke) + '55'); g.addColorStop(1, hexCss(st.wolke) + '00');
-        x.fillStyle = g; x.save(); x.translate(wx + ox + dx, wy + oy); x.scale(1.7, 0.6); x.translate(-(wx + ox + dx), -(wy + oy)); x.fillRect(wx + ox + dx - r, wy + oy - r, 2 * r, 2 * r); x.restore();
-      }
+    const wx = zuf() * B, wy = (105 + zuf() * 118) * s, gr = (18 + zuf() * 36) * s * (st.wolken > 10 ? 0.8 : 1), n = 10 + Math.floor(zuf() * 10), flach = 0.5 + zuf() * 0.3, baelle = [];
+    for (let t = 0; t < n; t++) { const u = (zuf() * 2 - 1) * 0.9; baelle.push([u * gr * 2.2, -(1 - u * u) * gr * flach * (0.6 + zuf() * 0.8), gr * (0.45 + (1 - Math.abs(u)) * 0.45 + zuf() * 0.2)]); }
+    for (const dx of [-B, 0, B]) {
+      if (wx + dx < -gr * 6 || wx + dx > B + gr * 6) continue;
+      x.save(); x.translate(wx + dx, wy); x.scale(1.5, 0.78);
+      for (const b of baelle) puff(b[0], b[1] + b[2] * 0.35, b[2] * 1.05, schatten, 0.55);
+      for (const b of baelle) puff(b[0], b[1] - b[2] * 0.14, b[2] * 0.9, hell, 0.8);
+      x.restore();
     }
+  }
+  if (!st.nacht) for (let q = 0; q < Math.round(st.wolken * 0.5); q++) {
+    const cx = zuf() * B, cy = (24 + zuf() * 60) * s, l = (90 + zuf() * 170) * s, w = (zuf() - 0.5) * 0.16, d = 0.05 + zuf() * 0.05;
+    for (const dx of [-B, 0, B]) { x.save(); x.translate(cx + dx, cy); x.rotate(w); x.scale(1, d); puff(0, 0, l, hell, 0.28); x.restore(); }
   }
   return c;
 }
@@ -3123,7 +3232,7 @@ Object.assign(Grafik, {
     const st = (this.stimmung = STIMMUNG[id] || STIMMUNG.kiesgrube);
     if (this.himmelTex) this.himmelTex.dispose();
     if (this.umgebung) this.umgebung.dispose();
-    const tex = (this.himmelTex = new THREE.CanvasTexture(himmelBild(st)));
+    const tex = (this.himmelTex = new THREE.CanvasTexture(himmelBild(st, this.qualitaet === 'hoch' || this.qualitaet === 'ultra')));
     tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
     this.szene.background = tex;
     const pm = new THREE.PMREMGenerator(this.renderer);
@@ -3132,6 +3241,21 @@ Object.assign(Grafik, {
     this.licht.color.setHex(st.himmelLicht); this.licht.groundColor.setHex(st.bodenLicht); this.licht.intensity = st.licht;
     this.sonne.color.setHex(st.sonne); this.sonne.intensity = st.sonneKraft;
     this.sonneVersatz = st.sonnePos;
+    Nach.setzeStil(id);
+    // Blendung der Sonne: ein sehr heller Fleck in Sonnenrichtung, den die Nachbearbeitung weich überstrahlen lässt (ab «Hoch»)
+    if (!this.blendung) {
+      const c = document.createElement('canvas'); c.width = c.height = 64;
+      const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.16, 'rgba(255,255,255,0.7)'); g.addColorStop(0.45, 'rgba(255,255,255,0.1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+      this.blendung = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, depthWrite: false, fog: false, transparent: true }));
+      this.blendung.scale.set(120, 120, 1); this.blendung.renderOrder = 5;
+      this.szene.add(this.blendung);
+    }
+    const sp = st.sonnePos, sl = Math.hypot(sp[0], sp[1], sp[2]);
+    this.sonnenRichtung = new THREE.Vector3(sp[0] / sl, sp[1] / sl, sp[2] / sl);
+    this.blendung.material.color.setHex(st.sonne).multiplyScalar(3.2);
+    this.blendung.visible = Nach.an && !st.nacht && !st.schneefall && (this.qualitaet === 'hoch' || this.qualitaet === 'ultra');
   },
 });
 
@@ -3162,9 +3286,15 @@ const Schauraum = {
       const b = canvas.clientWidth, h = canvas.clientHeight;
       if (!b || !h) return;
       if (canvas.width !== Math.round(b * R.getPixelRatio()) || canvas.height !== Math.round(h * R.getPixelRatio())) { R.setSize(b, h, false); this.kam.aspect = b / h; this.kam.updateProjectionMatrix(); }
-      const ab = b / h < 1.2 ? 9.2 : 7.2;
-      this.kam.position.set(ab * 0.72, ab * 0.3, ab * 0.62); this.kam.lookAt(0, 0.55, 0);
-      this.teller.rotation.y += Math.min(0.05, (jetzt - zuletzt) / 1000) * 0.45; zuletzt = jetzt;
+      if (this.podestGr) {                                          // Siegerpodest: Kamera schwenkt langsam hin und her
+        const ab = clamp(8.2 / (0.268 * (b / h)), 6.8, 34), w = Math.sin(jetzt / 1000 * 0.35) * 0.22;     // breites Bild: näher heran
+        this.kam.position.set(Math.sin(w) * ab, 2.2 + ab * 0.16, Math.cos(w) * ab); this.kam.lookAt(0, 1.1, 0);
+      } else {
+        const ab = b / h < 1.2 ? 9.2 : 7.2;
+        this.kam.position.set(ab * 0.72, ab * 0.3, ab * 0.62); this.kam.lookAt(0, 0.55, 0);
+        this.teller.rotation.y += Math.min(0.05, (jetzt - zuletzt) / 1000) * 0.45;
+      }
+      zuletzt = jetzt;
       R.render(S, this.kam);
     };
     this.lauf = requestAnimationFrame(bild);
@@ -3176,8 +3306,37 @@ const Schauraum = {
     this.auto = baueFahrzeug(typ, f.hex, f.lack);
     this.teller.add(this.auto.gruppe);
   },
+  // Siegerpodest nach dem Rennen: die drei Ersten mit ihren echten Autos und Lackfarben (1 in der Mitte, 2 links, 3 rechts)
+  podest(liste) {
+    if (!this.r) return;
+    if (this.auto) { this.teller.remove(this.auto.gruppe); this.auto.frei(); this.auto = null; }
+    this.teller.visible = false;
+    const G = (this.podestGr = new THREE.Group()); this.szene.add(G);
+    const ziffer = (n) => {
+      const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+      const x = c.getContext('2d'), v = x.createLinearGradient(0, 0, 0, 128); v.addColorStop(0, '#2a3038'); v.addColorStop(1, '#14181d');
+      x.fillStyle = v; x.fillRect(0, 0, 256, 128); x.fillStyle = '#d8b46a'; x.fillRect(0, 0, 256, 7);
+      x.font = '700 92px system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillStyle = n === 1 ? '#f0d08c' : '#e9edf2'; x.fillText(String(n), 128, 70);
+      const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+    };
+    const seite = new THREE.MeshStandardMaterial({ color: 0x1b2026, metalness: 0.4, roughness: 0.45 }), oben = new THREE.MeshStandardMaterial({ color: 0x2a3038, metalness: 0.6, roughness: 0.3 });
+    this.podestFrei = [seite, oben];
+    [[0, 1.1], [-5, 0.72], [5, 0.42]].forEach(([px, h], i) => {
+      const front = new THREE.MeshStandardMaterial({ map: ziffer(i + 1), metalness: 0.3, roughness: 0.5 }); this.podestFrei.push(front, front.map);
+      const block = new THREE.Mesh(new THREE.BoxGeometry(4.7, h, 3.6), [seite, seite, oben, seite, front, seite]);
+      block.position.set(px, h / 2, 0); G.add(block); this.podestFrei.push(block.geometry);
+      const e = liste[i];
+      if (!e) return;
+      const f = FARBEN[e.farbe % FARBEN.length], a = baueFahrzeug(e.typ, f.hex, f.lack);
+      a.gruppe.position.set(px, h, 0.1); a.gruppe.rotation.y = -Math.PI / 2 + 0.55 - i * 0.08; G.add(a.gruppe); this.podestFrei.push(a);
+    });
+    const boden = new THREE.Mesh(new THREE.CircleGeometry(60, 48), new THREE.MeshStandardMaterial({ color: 0x15191e, metalness: 0.35, roughness: 0.5 }));
+    boden.rotation.x = -Math.PI / 2; G.add(boden); this.podestFrei.push(boden.geometry, boden.material);
+    this.szene.fog = new THREE.Fog(0x161a1f, 14, 40);                 // der Boden verliert sich im Dunkeln
+  },
   schliesse() {
     if (!this.r) return;
+    if (this.podestGr) { for (const o of this.podestFrei) { if (o.frei) o.frei(); else o.dispose(); } this.podestGr = null; this.podestFrei = null; }
     cancelAnimationFrame(this.lauf);
     try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { /* egal */ }
     this.r = null; this.auto = null; this.canvas = null;
@@ -3187,11 +3346,13 @@ const Schauraum = {
 // ── Mehr Abwechslung am Streckenrand ───────────────────────────────────────
 Object.assign(Deko, {
   laubbaum(g, x, y, z, zuf) {
+    if (Grafik.qualitaet !== 'niedrig') return Leben.pflanze('laub', x, y, z, zuf);       // ab «Mittel»: Krone aus Blätterbüscheln (Teil 7d)
     const h = 4 + zuf() * 3.5, f = Geo.farbe, gr = [0x5f9a3c, 0x6fa646, 0x4f8a3a][Math.floor(zuf() * 3)];
     g.zyl(x, y + h * 0.25, z, 0.3, 0.22, h * 0.5, 5, f(0x5c4630));
     g.box(x, y + h * 0.7, z, h * 0.55, h * 0.45, h * 0.55, f(gr), zuf() * 3, 0.2, 0.2); g.box(x + 0.4, y + h * 0.95, z - 0.3, h * 0.38, h * 0.32, h * 0.38, f(gr, 1.12), zuf() * 3, 0.3);
   },
   busch(g, x, y, z, zuf) {
+    if (Grafik.qualitaet !== 'niedrig') return Leben.pflanze('busch', x, y, z, zuf);
     const r = 0.7 + zuf() * 0.9, f = Geo.farbe;
     g.box(x, y + r * 0.4, z, r * 1.6, r * 0.9, r * 1.3, f(0x4f7f3a, 0.85 + zuf() * 0.3), zuf() * 3, 0.15, 0.2); g.box(x + r * 0.5, y + r * 0.3, z + r * 0.3, r, r * 0.6, r, f(0x5f8f42), zuf() * 3);
   },
@@ -3217,6 +3378,7 @@ Deko.tribuene = function (g, x, y, z, dreh) {
   const c = Math.cos(dreh), s = Math.sin(dreh), f = Geo.farbe, bunt = [0xe0362c, 0x2f7fe6, 0xffd21f, 0xf2f0e6, 0x3fb54a, 0xf06cb5];
   for (let q = 0; q < 4; q++) for (let j = -12; j <= 12; j++) {
     if ((j * 7 + q * 3 + 70) % 5 === 0) continue;
+    if (Grafik.qualitaet !== 'niedrig') { Leben.zuschauer(x + c * j, y + 1.05 + q * 0.9, z + q * 1.4 - s * j, dreh, bunt[Math.abs(j * 3 + q * 5) % 6]); continue; }   // ab «Mittel»: Zuschauer, die jubeln (Teil 7d)
     g.box(x + c * j, y + 1.35 + q * 0.9, z + q * 1.4 - s * j, 0.45, 0.7, 0.4, f(bunt[Math.abs(j * 3 + q * 5) % 6]));
     g.box(x + c * j, y + 1.85 + q * 0.9, z + q * 1.4 - s * j, 0.28, 0.28, 0.28, f(0xe8b88a));
   }
@@ -3302,6 +3464,14 @@ Object.assign(Grafik, {
     this.truemmer = [];
     this.kartObjekte = R.karts.map((k) => {
       const o = baueFahrzeug(k.fahrzeug, FARBEN[k.farbe % FARBEN.length].hex, FARBEN[k.farbe % FARBEN.length].lack);
+      if (this.qualitaet !== 'niedrig' && CONFIG.grafik.lod[this.qualitaet]) {
+        // Fassung für die Ferne: einfaches Modell im selben Gestell; Brems- und Blinklichter teilen das Material mit dem feinen Modell
+        const f = FARBEN[k.farbe % FARBEN.length], gr = baueFahrzeug(k.fahrzeug, f.hex, f.lack, true);
+        gr.gruppe.traverse((m) => { if (m.material === gr.rueckMat) m.material = o.rueckMat; else if (m.material === gr.blinkMat) m.material = o.blinkMat; });
+        gr.gruppe.visible = false; o.gruppe.add(gr.gruppe);
+        o.grob = gr; o.fern = false; o.feinTeile = [...o.aufbau.children, ...o.raeder.map((r) => r.g)];
+        const frei = o.frei; o.frei = () => { frei(); gr.frei(); };
+      }
       o.schatten = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.7), this.schattenMat());
       Orte.scheinwerfer(this, o);
       o.schatten.rotation.x = -Math.PI / 2;
@@ -3327,6 +3497,20 @@ Object.assign(Grafik, {
     });
   },
 
+  // Weit weg von allen Kameras zeigt ein Auto seine einfache Fassung (spart pro Auto etwa 9000 Dreiecke und 15 Zeichenaufrufe).
+  // Die Grenze steht in CONFIG.grafik.lod; zurück zum feinen Modell geht es etwas früher, damit es an der Grenze nicht flackert.
+  lod(o) {
+    const p = o.gruppe.position, L = CONFIG.grafik.lod[this.qualitaet] || 1e9;
+    let d = 1e12;
+    for (const a of this.ansichten) { const c = a.kamera.position; d = Math.min(d, (c.x - p.x) ** 2 + (c.y - p.y) ** 2 + (c.z - p.z) ** 2); }
+    const fern = d > (o.fern ? L * 0.9 : L) ** 2;
+    if (fern !== o.fern) { o.fern = fern; for (const t of o.feinTeile) t.visible = !fern; o.grob.gruppe.visible = fern; }
+    if (!fern) return;
+    const g = o.grob;
+    g.aufbau.rotation.copy(o.aufbau.rotation); g.aufbau.position.copy(o.aufbau.position);        // Federung, Wanken, Nicken
+    o.raeder.forEach((r, i) => { const q = g.raeder[i]; if (q) { q.g.position.y = r.g.position.y; q.g.rotation.y = r.g.rotation.y; q.dreh.rotation.z = r.dreh.rotation.z; } });
+  },
+
   // Pro Bild: Fahrzeuge bewegen, Effekte, Bauwerke. alpha = Anteil zwischen zwei Rechenschritten.
   aktualisiere(R, alpha, dt) {
     this.zeit += dt;
@@ -3339,6 +3523,7 @@ Object.assign(Grafik, {
       const blick = k.pblick + winkelDiff(k.blick, k.pblick) * alpha;
       k.sx = x; k.sy = y; k.sz = z; k.sblick = blick;           // dargestellte Position (für Kamera und Anzeige)
       this.bewegeAuto(o, k, x, y, z, blick, dt, R);
+      if (o.grob) this.lod(o);
       this.effekte(o, k, x, y, z, blick, dt, R);
       const boost = k.boostZeit > 0;
       o.schatten.position.set(x, Math.max(k.bodenY, -50) + 0.06, -z);
@@ -3551,13 +3736,22 @@ Object.assign(Grafik, {
 
   zeichne(R) {
     const Re = this.renderer, Wd = window.innerWidth, Hh = window.innerHeight;
+    Re.info.reset();
+    if (Dunst.mat) Dunst.mat.uniforms.linear.value = Nach.an ? 1 : 0;           // Rauch und Lichtpunkte: in der Nachbearbeitung linear rechnen
+    // vor jeder Ansicht (w, h: ihre Grösse in Bildpunkten): Kamera, Teilchengrösse, Sonnen-Blendung, Sichtbarkeiten
+    const vor = (a, w, h) => {
+      a.kamera.aspect = w / h; a.kamera.updateProjectionMatrix();
+      Dunst.mat.uniforms.mass.value = h / (2 * Math.tan((a.kamera.fov * Math.PI) / 360));
+      if (this.blendung && this.blendung.visible) this.blendung.position.copy(a.kamera.position).addScaledVector(this.sonnenRichtung, 900);
+      if (R) this.fuerAnsicht(R, a);
+    };
+    if (Nach.an) { Nach.zeichne(this.szene, this.ansichten, vor); return; }      // mit Nachbearbeitung (ab «Mittel»)
+    Re.setRenderTarget(null);
     Re.setScissorTest(true);
     for (const a of this.ansichten) {
       const w = a.w * Wd, h = a.h * Hh, x = a.x * Wd, y = Hh - a.y * Hh - h;
       Re.setViewport(x, y, w, h); Re.setScissor(x, y, w, h);
-      a.kamera.aspect = w / h; a.kamera.updateProjectionMatrix();
-      Dunst.mat.uniforms.mass.value = (h * Re.getPixelRatio()) / (2 * Math.tan((a.kamera.fov * Math.PI) / 360));
-      if (R) this.fuerAnsicht(R, a);
+      vor(a, w * Re.getPixelRatio(), h * Re.getPixelRatio());
       Re.render(this.szene, a.kamera);
     }
   },
@@ -3567,6 +3761,13 @@ Object.assign(Grafik, {
     const k = e.k >= 0 ? R.karts[e.k] : null;
     const ko = k ? this.kartObjekte[k.idx] : null;
     if (ko && (e.typ === 'wand' || e.typ === 'treffer')) { this.beschmutze(ko, 'kratzer'); if (e.typ === 'treffer') ko.warnBis = this.zeit + 2.5; }
+    // Dellen: Wand (Richtung kommt im Ereignis mit), Bauwerk (vorne), Rempler (zum anderen Auto hin, beim anderen umgekehrt)
+    if (ko && e.typ === 'wand' && e.b != null) this.delle(ko, k, e.b, e.a);
+    else if (ko && e.typ === 'treffer') this.delle(ko, k, k.richtung, Math.max(5, Math.abs(k.v) * 0.45));
+    else if (ko && e.typ === 'rempler' && R.karts[e.a]) {
+      const k2 = R.karts[e.a], w = Math.atan2(k2.z - k.z, k2.x - k.x), o2 = this.kartObjekte[k2.idx];
+      this.delle(ko, k, w, e.b * 1.2); if (o2) this.delle(o2, k2, w + Math.PI, e.b * 1.2);
+    }
     if (e.typ === 'landung' && k) for (let q = 0; q < 7; q++) Dunst.neu(k.x + (Math.random() - 0.5) * 2, k.y + 0.2, k.z + (Math.random() - 0.5) * 2, (Math.random() - 0.5) * 5, 0.8, (Math.random() - 0.5) * 5, 1.0, 0.7, this.staubFarbe || 0xb9a886, 0.3, 2.2, 0);
     if (e.typ === 'landung' && k) Teilchen.wolke(k.x, k.y + 0.2, k.z, 10, 4 + e.a * 0.2, 0xc9b48a, 0.5, 0.5, 4);
     else if (e.typ === 'wand' && k) Teilchen.wolke(k.x, k.y + 0.5, k.z, 8, 6, 0xffd98a, 0.16, 0.3, 12);
@@ -3748,7 +3949,7 @@ const Struktur = {
     const t = new THREE.CanvasTexture(c);
     t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(wx || 1, wy || wx || 1);
     if (farbe) t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = Grafik.qualitaet === 'niedrig' ? 1 : Grafik.qualitaet === 'hoch' ? 8 : 4;
+    t.anisotropy = Grafik.qualitaet === 'niedrig' ? 1 : Grafik.qualitaet === 'ultra' ? 16 : Grafik.qualitaet === 'hoch' ? 8 : 4;
     return t;
   },
 };
@@ -3769,10 +3970,10 @@ const Dunst = {
     v.addColorStop(0, 'rgba(255,255,255,1)'); v.addColorStop(0.4, 'rgba(255,255,255,.8)'); v.addColorStop(0.75, 'rgba(255,255,255,.3)'); v.addColorStop(1, 'rgba(255,255,255,0)');
     x.fillStyle = v; x.fillRect(0, 0, 64, 64);
     this.mat = new THREE.ShaderMaterial({
-      uniforms: { bild: { value: new THREE.CanvasTexture(c) }, mass: { value: 600 }, licht: { value: new THREE.Vector3(1, 1, 1) } },
+      uniforms: { bild: { value: new THREE.CanvasTexture(c) }, mass: { value: 600 }, licht: { value: new THREE.Vector3(1, 1, 1) }, linear: { value: 0 }, dicht: { value: 1.8 } },   // linear = 1: Bild läuft durch die Nachbearbeitung, Farben dort linear; dicht: Deckkraft dort hoch dicht (linear gemischt wirkt Rauch sonst viel dichter)
       transparent: true, depthWrite: false,
       vertexShader: 'attribute vec4 farbe; attribute float gr; uniform float mass; varying vec4 vF;\nvoid main(){ vF = farbe; vec4 mv = modelViewMatrix * vec4(position, 1.0); gl_PointSize = gr * mass / max(0.4, -mv.z); gl_Position = projectionMatrix * mv; }',
-      fragmentShader: 'uniform sampler2D bild; uniform vec3 licht; varying vec4 vF;\nvoid main(){ float a = texture2D(bild, gl_PointCoord).a * vF.a; if (a < 0.004) discard; gl_FragColor = vec4(vF.rgb * licht, a); }',
+      fragmentShader: 'uniform sampler2D bild; uniform vec3 licht; uniform float linear; uniform float dicht; varying vec4 vF;\nvoid main(){ float a = texture2D(bild, gl_PointCoord).a * vF.a; if (a < 0.004) discard; vec3 c = vF.rgb * licht; if (linear > 0.5) { c = pow(c, vec3(2.2)); a = pow(a, dicht); } gl_FragColor = vec4(c, a); }',
     });
     this.netz = new THREE.Points(g, this.mat);
     this.netz.frustumCulled = false; this.netz.renderOrder = 4;
@@ -3913,7 +4114,7 @@ Object.assign(Grafik, {
     if (q === 'niedrig') return new THREE.MeshLambertMaterial(o);
     const w = { glanz: [0.2, 0.45, 1, 0.045], matt: [0.1, 0.78, 0, 0], metallic: [0.72, 0.4, 1, 0.04], tarn: [0, 0.9, 0, 0] }[art] || [0.2, 0.45, 1, 0.045];
     o.metalness = w[0]; o.roughness = w[1]; o.envMapIntensity = 1.1;
-    if (q !== 'hoch') { if (w[2]) o.roughness = art === 'metallic' ? 0.24 : 0.16; return new THREE.MeshStandardMaterial(o); }
+    if (q !== 'hoch' && q !== 'ultra') { if (w[2]) o.roughness = art === 'metallic' ? 0.24 : 0.16; return new THREE.MeshStandardMaterial(o); }
     const m = new THREE.MeshPhysicalMaterial(o);
     m.clearcoat = w[2]; m.clearcoatRoughness = w[3];
     if (art === 'metallic') { m.normalMap = this.flocken(); m.normalScale.set(0.22, 0.22); }
@@ -4029,7 +4230,7 @@ function haut(def, grob) {
   const ort = (x, j, seite) => { const P = prof(x), a = Math.floor(clamp(j, 0, 13.999)), t = clamp(j, 0, 14) - a; return [x, lerp(P[a][0], P[a + 1][0], t), lerp(P[a][1], P[a + 1][1], t) * (seite || 1)]; };
   // Höhe der Oberseite (Haube, Dach, Scheibe) an der Stelle x, seitlich bei z
   const oben = (x, z) => { const P = prof(x); z = Math.abs(z); for (let j = 14; j > 6; j--) if (z <= P[j - 1][1] || j === 7) { const t = clamp((z - P[j][1]) / Math.max(1e-6, P[j - 1][1] - P[j][1]), 0, 1); return lerp(P[j][0], P[j - 1][0], t); } return P[14][0]; };
-  return { geo, ort, oben, x0, x1 };
+  return { geo, ort, oben, x0, x1, basis };          // basis: alle Flächen zusammen (für Dellen: Normalen neu berechnen)
 }
 
 // Bild der Haut: Lackfarbe (oder Tarnmuster), Fugen von Türen, Haube und Klappen, Tankdeckel. Darauf sammelt sich später der Schmutz.
@@ -4297,7 +4498,8 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
   const leucht = (hex, e) => { const m = new THREE.MeshLambertMaterial({ color: hex, emissive: hex, emissiveIntensity: e, side: THREE.DoubleSide }); eigene.push(m); return m; };
   const rueckMat = leucht(0xd01208, 0.5), blinkMat = leucht(0xff9a14, 0.15), warnMat = leucht(0xff8a10, 1);
   const stoffe = { L: lackMat, G: Grafik.stoff(def.glas || 'glas'), S: Grafik.stoff('linse'), R: rueckMat, B: blinkMat, D: Grafik.stoff('unten'), C: Grafik.stoff('chrom') };
-  let koerper = null;
+  let koerper = null, kopf = null;
+  const lampen = [];                                                 // Lage der Scheinwerfer: Dort sitzt nachts die Blendung
   for (const a in H.geo) {
     const m = new THREE.Mesh(H.geo[a], a === 'C' ? new THREE.MeshStandardMaterial({ color: 0xe3e7eb, roughness: 0.13, metalness: 1, side: THREE.DoubleSide }) : stoffe[a]);
     m.castShadow = a === 'L'; m.receiveShadow = a === 'L' || a === 'D';
@@ -4342,6 +4544,7 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
       const xm = (z[1] + z[2]) / 2, p = H.ort(Math.min(xm, x1 - 0.05), (z[3] + z[4] + 1) / 2, s), l = (z[2] - z[1]) * 0.4;
       d.kugel(p[0] - 0.03, p[1] - 0.03, p[2] * 0.88, l * 1.5, 0.07, 0.09, F(0x0a0b0d), 8, 5, 3);                                  // dunkles Gehäuse
       for (const q of [-0.5, 0.5]) { ch.kugel(p[0] + q * l - 0.02, p[1] - 0.012, p[2] * 0.93, 0.05, 0.036, 0.045, CH, 8, 5); li.kugel(p[0] + q * l, p[1] - 0.006, p[2] * 0.95, 0.028, 0.022, 0.028, [1, 0.98, 0.9], 6, 4); }
+      lampen.push([p[0] + 0.5 * l + 0.03, p[1] - 0.006, p[2] * 0.95]);
       const a = H.ort(z[1] + 0.03, z[4] + 0.75, s), b = H.ort(Math.min(z[2], x1) - 0.04, z[4] + 0.75, s);                             // Tagfahrlicht als heller Strich
       li.rohr(a[0], a[1] - 0.012, a[2] * 0.985, b[0], b[1] - 0.012, b[2] * 0.985, 0.007, 0.007, [0.95, 0.97, 1], 4);
     });
@@ -4361,8 +4564,10 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
         inn.lage(sx - 0.2, sy + 0.25, z, 0, 0.2); inn.kugel(0, 0, 0, 0.055, 0.27, 0.19, stoff, 8, 6, 3.4); inn.kugel(0.01, 0.31, 0, 0.045, 0.07, 0.1, stoff, 6, 4, 3); inn.lage();
       }
       inn.lage(sx - 0.1, sy + 0.26, zf, 0, 0.14); inn.kugel(0, 0, 0, 0.1, 0.2, 0.155, overall, 8, 6, 2.8); inn.lage();                              // Rumpf
-      inn.kugel(sx - 0.05, sy + 0.565, zf, 0.118, 0.125, 0.115, F(0xf2f0ea), 12, 8); inn.kugel(sx + 0.035, sy + 0.575, zf, 0.065, 0.045, 0.098, F(0x0c0e11), 8, 5, 2.6);   // Helm mit Visier
-      inn.kugel(sx - 0.05, sy + 0.66, zf, 0.1, 0.03, 0.03, F(farbeHex), 8, 4);                                                                     // Streifen in Wagenfarbe
+      const kp = new Form();                                                                                                                       // Kopf als eigene Gruppe: Er dreht sich in die Kurve
+      kp.kugel(0, 0.065, 0, 0.118, 0.125, 0.115, F(0xf2f0ea), 12, 8); kp.kugel(0.085, 0.075, 0, 0.065, 0.045, 0.098, F(0x0c0e11), 8, 5, 2.6);       // Helm mit Visier
+      kp.kugel(0, 0.16, 0, 0.1, 0.03, 0.03, F(farbeHex), 8, 4);                                                                                     // Streifen in Wagenfarbe
+      kopf = new THREE.Group(); kopf.position.set(sx - 0.05, sy + 0.5, zf); kopf.add(kp.netz(Grafik.stoff('innen'), false)); auf.add(kopf);
       const lx = sx + 0.4, ly = sy + 0.3;
       for (const s of [1, -1]) inn.rohr(sx - 0.04, sy + 0.38, zf + s * 0.16, lx - 0.03, ly + 0.02, zf + s * 0.12, 0.038, 0.03, overall, 6);       // Arme
       const lr = new Form();
@@ -4417,7 +4622,7 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
   const schutz = new THREE.Mesh(new THREE.IcosahedronGeometry(2.1, 1), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.28, wireframe: true }));
   schutz.position.y = 0.8; schutz.visible = false; gr.add(schutz);
   return {
-    gruppe: gr, aufbau: auf, raeder, flammen, flamme: flammen[0], schutz, lenkrad, koerper, rueckMat, blinkMat, warnlicht, bild, def, hinten,
+    gruppe: gr, aufbau: auf, raeder, flammen, flamme: flammen[0], schutz, lenkrad, koerper, kopf, lampen, rueckMat, blinkMat, warnlicht, bild, def, hinten, haut: H.basis, delleZeit: -9,
     auspuff: def.auspuff || [[0, 0.4, 0.05]], radWinkel: 0, vAlt: 0, blickAlt: null, ax: 0, ay: 0, roll: 0, rollV: 0, nick: 0, nickV: 0, hub: 0, hubV: 0, schmutz: 0, kratzer: 0, spur: [[0, 0, 0, 0], [0, 0, 0, 0]], dreckZeit: 0, warnBis: 0,
     frei() { gr.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); for (const e of eigene) e.dispose(); },
   };
@@ -4425,6 +4630,34 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
 
 // ── Bewegung: Federung, Wanken, Nicken, Lenkrad, Lichter ──────────────────
 Object.assign(Grafik, {
+  // Delle nach einem Stoss: drückt die Haut dort ein, wo das Auto anstösst. phi = Richtung des Stosses (vom Auto aus, Spielkoordinaten),
+  // staerke = Aufprall in m/s. Alle Teile der Haut (Lack, Lichter, Scheiben) teilen dieselben Punkte und verformen sich darum gemeinsam.
+  // Weich auslaufend und leicht unregelmässig (zerknautscht); jeder Punkt höchstens CONFIG.grafik.delle.max von der ursprünglichen Form.
+  delle(o, k, phi, staerke) {
+    const H = o && o.haut, D = CONFIG.grafik.delle;
+    if (!H || this.qualitaet === 'niedrig' || staerke < D.ab || this.zeit - o.delleZeit < 0.3) return;
+    o.delleZeit = this.zeit;
+    const pa = H.attributes.position, A = pa.array, ur = o.hautUr || (o.hautUr = Float32Array.from(A));
+    if (o.hautY == null) { let lo = 1e9, hi = -1e9; for (let i = 1; i < ur.length; i += 3) { lo = Math.min(lo, ur[i]); hi = Math.max(hi, ur[i]); } o.hautY = [lo + (hi - lo) * 0.12, lo + (hi - lo) * 0.55]; }
+    const w = phi - (o.blickAlt != null ? o.blickAlt : k.richtung), dx = Math.cos(w), dz = -Math.sin(w);       // Stossrichtung im Auto (vorne +x)
+    let best = -1e9, px = 0, py = 0, pz = 0;
+    for (let i = 0; i < A.length; i += 3) {                      // Aufschlagpunkt: äusserster Punkt der Flanke in Stossrichtung
+      if (A[i + 1] < o.hautY[0] || A[i + 1] > o.hautY[1]) continue;
+      const d = A[i] * dx + A[i + 2] * dz;
+      if (d > best) { best = d; px = A[i]; py = A[i + 1]; pz = A[i + 2]; }
+    }
+    const R = clamp(0.26 + staerke * 0.018, 0.3, 0.62), R2 = R * R, tief = clamp(0.012 + (staerke - D.ab) * 0.007, 0.012, 0.08);
+    for (let i = 0; i < A.length; i += 3) {
+      const ex = A[i] - px, ey = (A[i + 1] - py) * 1.3, ez = A[i + 2] - pz, d2 = ex * ex + ey * ey + ez * ez;
+      if (d2 >= R2) continue;
+      const t = 1 - d2 / R2, f = tief * t * t * (0.75 + 0.25 * Math.sin(A[i] * 37 + A[i + 1] * 23 + A[i + 2] * 29));
+      let nx = A[i] - dx * f, ny = A[i + 1] - f * 0.2, nz = A[i + 2] - dz * f;
+      const ox = nx - ur[i], oy = ny - ur[i + 1], oz = nz - ur[i + 2], l = Math.hypot(ox, oy, oz);
+      if (l > D.max) { const q = D.max / l; nx = ur[i] + ox * q; ny = ur[i + 1] + oy * q; nz = ur[i + 2] + oz * q; }
+      A[i] = nx; A[i + 1] = ny; A[i + 2] = nz;
+    }
+    pa.needsUpdate = true; H.computeVertexNormals();
+  },
   bewegeAuto(o, k, x, y, z, blick, dt, R) {
     const A = o.aufbau, v = k.v, hop = k.hop > 0 ? Math.sin((1 - k.hop / 0.18) * Math.PI) * 0.22 : 0;
     if (o.blickAlt == null) { o.blickAlt = blick; o.vAlt = v; }
@@ -4459,8 +4692,9 @@ Object.assign(Grafik, {
       r.dreh.rotation.z = (r.seite < 0 ? 1 : -1) * o.radWinkel / r.r;
     }
     if (o.lenkrad) o.lenkrad.rotation.x = -k.lenk * 1.5;
+    if (o.kopf) { o.kopf.rotation.y += (k.lenk * 0.45 - o.kopf.rotation.y) * Math.min(1, 5 * dt); o.kopf.rotation.x = -o.roll * 0.8; }   // Fahrer schaut in die Kurve und hält den Kopf gerade
     const bremst = (o.ax < -3.5 && v > 1.5) || (k.eingabe && k.eingabe.bremse > 0);
-    o.rueckMat.emissiveIntensity = bremst ? 3.2 : this.nacht ? 1.1 : 0.45;
+    o.rueckMat.emissiveIntensity = bremst ? 3.2 : this.nacht ? (Nach.an ? 2 : 1.1) : 0.45;   // nachts so hell, dass die Rücklichter leuchten
     const an = Math.floor(this.zeit * 2.6) % 2 === 0;
     o.blinkMat.emissiveIntensity = (k.geistZeit > 0 || o.warnBis > this.zeit) && an ? 3 : 0.12;
     if (o.warnlicht) o.warnlicht.visible = Math.floor(this.zeit * 4) % 2 === 0;
@@ -4899,14 +5133,18 @@ Object.assign(Grafik, {
     const F = Geo.farbe, f = new Form(), fGras = F(B.gras || 0x8a9a4c), fKies = F(B.kies || 0xb9a886), fFels = F(B.fels || 0x8d8472), zuf = zufallsGenerator(4711), K = this.belag('boden'), N = nx + 1;
     const tief = B.schneeAb != null, gT = tief ? F(B.grasTief || 0x7d8a52) : fGras, kT = tief ? F(B.kiesTief || 0x9a8f78) : fKies, hl = B.hell || 1.5;      // unter der Schneegrenze Wiese und Erde
     const ras = B.rasen || [], fRas = F(B.rasenFarbe || 0x6c8a3e);
+    const farben = [], gruenAnteil = [];
     for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) {
       const a = raster[j * N + i], l = raster[j * N + Math.max(0, i - 1)], r = raster[j * N + Math.min(nx, i + 1)], o = raster[Math.max(0, j - 1) * N + i], u = raster[Math.min(nz, j + 1) * N + i];
       const steil = Math.max(Math.abs(l[1] - r[1]), Math.abs(o[1] - u[1])) / (2 * zelle);
       const t = clamp((steil - 0.3) / 0.25, 0, 1), k = clamp(1 - (a[3] - 4) / 9, 0, 1), hell = (0.9 + zuf() * 0.2) * hl, sl = tief ? clamp((a[1] - B.schneeAb) / 6 + (zuf() - 0.5) * 0.3, 0, 1) : 1;
       let gruen = 0;
       for (const r of ras) if (a[0] > r[0] && a[0] < r[2] && -a[2] > r[1] && -a[2] < r[3]) gruen = clamp((a[3] - 2.5) / 5, 0, 1);      // Rasen, an den Wegen läuft er aus
-      f.pkt(a[0], a[1], a[2], [0, 1, 2].map((q) => lerp(lerp(lerp(lerp(gT[q], fGras[q], sl), lerp(kT[q], fKies[q], sl), k), fRas[q], gruen), fFels[q], t) * hell), a[0] / K.kachel, a[2] / K.kachel);
+      const c = [0, 1, 2].map((q) => lerp(lerp(lerp(lerp(gT[q], fGras[q], sl), lerp(kT[q], fKies[q], sl), k), fRas[q], gruen), fFels[q], t) * hell);
+      f.pkt(a[0], a[1], a[2], c, a[0] / K.kachel, a[2] / K.kachel);
+      farben.push(c[0], c[1], c[2]); gruenAnteil.push(clamp((c[1] / Math.max(c[0], c[2], 0.001) - 1.03) * 6, 0, 1));   // wie grün ist der Boden hier? (für Gras und Blumen)
     }
+    this.bodenRaster = { raster, nx, nz, zelle, farben, gruen: gruenAnteil };
     for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) { const A = j * N + i; f.vier(A, A + 1, A + N + 1, A + N); }
     W.add(f.netz(K.mat));
   },
@@ -5136,7 +5374,7 @@ const Lichter = {
       farbe[i * 4] = ((hex >> 16) & 255) / 255; farbe[i * 4 + 1] = ((hex >> 8) & 255) / 255; farbe[i * 4 + 2] = (hex & 255) / 255; farbe[i * 4 + 3] = L[i * 6 + 5];
     }
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3)); g.setAttribute('farbe', new THREE.BufferAttribute(farbe, 4)); g.setAttribute('gr', new THREE.BufferAttribute(gr, 1));
-    if (!this.mat) this.mat = new THREE.ShaderMaterial({ uniforms: { bild: Dunst.mat.uniforms.bild, mass: Dunst.mat.uniforms.mass, licht: { value: new THREE.Vector3(1, 1, 1) } },
+    if (!this.mat) this.mat = new THREE.ShaderMaterial({ uniforms: { bild: Dunst.mat.uniforms.bild, mass: Dunst.mat.uniforms.mass, licht: { value: new THREE.Vector3(1, 1, 1) }, linear: Dunst.mat.uniforms.linear, dicht: { value: 1 } },
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, vertexShader: Dunst.mat.vertexShader, fragmentShader: Dunst.mat.fragmentShader });
     const p = new THREE.Points(g, this.mat);
     p.frustumCulled = false; p.renderOrder = 3;
@@ -5295,6 +5533,7 @@ function stadthaus(b, x, y, z, dreh, br, tf, stock, ton) {
 }
 // Platane: heller Stamm, runde Krone
 function platane(b, x, y, z, zuf, gr) {
+  if (b.G.qualitaet !== 'niedrig') return Leben.pflanze('platane', x, y, z, zuf, gr);     // ab «Mittel»: Krone aus Blätterbüscheln, wiegt im Wind (Teil 7d)
   const D = b.f('stein'), h = (5.5 + zuf() * 2.2) * (gr || 1), g = Geo.farbe([0x4f6b38, 0x5c7a3c, 0x46633a][Math.floor(zuf() * 3)], 0.8 + zuf() * 0.3);
   D.rohr(x, y - 0.4, z, x, y + h * 0.5, z, 0.26, 0.17, Geo.farbe(0x8a8272), 6);
   D.kugel(x, y + h * 0.72, z, h * 0.36, h * 0.3, h * 0.36, g, 8, 5);
@@ -5653,20 +5892,59 @@ const Orte = {
     const na = G.stimmung && G.stimmung.nacht;
     if (!na) return;
     if (!this._kegel) {
-      const c = document.createElement('canvas'); c.width = 128; c.height = 64;
-      const x = c.getContext('2d');
-      for (const yy of [20, 44]) { const g = x.createRadialGradient(8, yy, 2, 46, yy, 84); g.addColorStop(0, 'rgba(255,244,214,.85)'); g.addColorStop(0.35, 'rgba(255,240,205,.34)'); g.addColorStop(1, 'rgba(255,240,205,0)'); x.fillStyle = g; x.fillRect(0, 0, 128, 64); }
-      this._kegel = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
+      // Zwei Lichtkegel, die nach vorn breiter und schwächer werden und an allen Rändern weich auslaufen (keine sichtbaren Kanten).
+      // Zwei Fassungen: für das normale Bild und für die Nachbearbeitung, die in linearen Farben rechnet (dort Helligkeit hoch 2,2).
+      const bild = (hoch) => {
+        const c = document.createElement('canvas'); c.width = 128; c.height = 64;
+        const x = c.getContext('2d'), d = x.createImageData(128, 64), glatt = (a, b, t) => { const q = Math.min(1, Math.max(0, (t - a) / (b - a))); return q * q * (3 - 2 * q); };
+        for (let j = 0; j < 64; j++) for (let i = 0; i < 128; i++) {
+          const u = (i + 0.5) / 128, v = (j + 0.5) / 64, w = 0.07 + u * 0.3;   // u: nach vorn, v: quer, w: halbe Breite des Kegels
+          let h = 0;
+          for (const m of [0.36, 0.64]) h += Math.exp(-(((v - m) / w) ** 2));
+          h *= glatt(0, 0.1, u) * (1 - u) ** 1.5 * glatt(0, 0.16, v) * glatt(1, 0.84, v);
+          const a = Math.pow(Math.min(1, h), hoch), o = (j * 128 + i) * 4;
+          d.data[o] = 255; d.data[o + 1] = 242; d.data[o + 2] = 210; d.data[o + 3] = Math.round(a * 255);
+        }
+        x.putImageData(d, 0, 0);
+        return new THREE.CanvasTexture(c);
+      };
+      this._kegelBild = [bild(1), bild(2.2)];
+      this._kegel = new THREE.MeshBasicMaterial({ map: this._kegelBild[0], transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 });
     }
-    this._kegel.opacity = 0.34 * na;
+    const welches = this._kegelBild[Nach.an ? 1 : 0];
+    if (this._kegel.map !== welches) { this._kegel.map = welches; this._kegel.needsUpdate = true; }
+    this._kegel.opacity = (Nach.an ? 0.17 : 0.3) * na;                 // mit Nachbearbeitung wirkt Licht stärker, darum schwächer
     const m = new THREE.Mesh(new THREE.PlaneGeometry(12, 6.4), this._kegel);
     m.rotation.x = -Math.PI / 2; m.position.set(7.6, 0.07, 0); m.renderOrder = 0.4;
     o.gruppe.add(m);
+    // Blendung: helle Lichtscheibe vor jedem Scheinwerfer. Sie zeigt sich nur von vorn und strahlt im Leuchten der Nachbearbeitung.
+    if (!Nach.an || !o.lampen || !o.lampen.length) return;
+    if (!this._blendBild) {
+      const c = document.createElement('canvas'); c.width = c.height = 64;
+      const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, 'rgba(255,250,236,1)'); g.addColorStop(0.16, 'rgba(255,240,212,.6)'); g.addColorStop(0.5, 'rgba(255,226,182,.12)'); g.addColorStop(1, 'rgba(255,220,170,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+      const h = x.createLinearGradient(0, 0, 64, 0); h.addColorStop(0, 'rgba(255,240,220,0)'); h.addColorStop(0.5, 'rgba(255,240,220,.55)'); h.addColorStop(1, 'rgba(255,240,220,0)');
+      x.fillStyle = h; x.fillRect(0, 31, 64, 2);                                     // feiner waagrechter Strahl wie in einer Kameralinse
+      this._blendBild = new THREE.CanvasTexture(c);
+    }
+    const mat = new THREE.SpriteMaterial({ map: this._blendBild, color: new THREE.Color(1.7, 1.6, 1.4), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true });
+    const vor = new THREE.Vector3(), zu = new THREE.Vector3(), wo = new THREE.Vector3();
+    for (const p of o.lampen) {
+      const s = new THREE.Sprite(mat); s.position.set(p[0] + 0.05, p[1], p[2]); s.scale.set(1.15, 0.8, 1); s.renderOrder = 5;
+      s.onBeforeRender = (r, sc, kam) => {                                           // je mehr das Auto zur Kamera schaut, desto stärker
+        vor.setFromMatrixColumn(o.aufbau.matrixWorld, 0).normalize(); s.getWorldPosition(wo); zu.copy(kam.position).sub(wo).normalize();
+        mat.opacity = Math.max(0, Math.min(1, (vor.dot(zu) - 0.05) * 2.2)) * na;
+      };
+      o.aufbau.add(s);
+    }
+    const frei = o.frei; o.frei = () => { if (frei) frei(); mat.dispose(); };
   },
   // pro Bild: Schneefall rund um die Kamera
   proBild(G, R, dt) {
     const st = G.stimmung;
     Boostfelder.proBild(dt);
+    Leben.proBild(G, dt);
     NY.proBild(G, dt);
     if (this._wellen && dt > 0) { this._wellen.offset.x += dt * 0.012; this._wellen.offset.y += dt * 0.02; }
     if (!st || !st.schneefall || dt <= 0 || !G.ansichten.length) return;
@@ -6517,6 +6795,7 @@ function dampfrohr(b, x, y, z) {
 }
 // Laubbaum im Park: Stamm und dunkle, runde Krone
 function parkbaum(b, x, y, z, zuf) {
+  if (b.G.qualitaet !== 'niedrig') return Leben.pflanze('parkbaum', x, y, z, zuf);
   const D = b.f('stein'), h = 6 + zuf() * 4, g = Geo.farbe([0x2f4a2a, 0x36502c, 0x2a4228][Math.floor(zuf() * 3)], 0.85 + zuf() * 0.3);
   D.rohr(x, y - 0.4, z, x, y + h * 0.5, z, 0.3, 0.2, Geo.farbe(0x4a4038), 6);
   D.kugel(x, y + h * 0.7, z, h * 0.38, h * 0.32, h * 0.38, g, 9, 5);
@@ -6840,6 +7119,937 @@ Object.assign(Bauten, {
     b.licht(x, y + 3, z, 12, 0xffd890, 0.3);
   },
 });
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 8g: Nachbearbeitung des Bildes (ab Grafik «Mittel»)
+   Die Szene wird zuerst in ein Zwischenbild mit grossem Helligkeitsumfang
+   gezeichnet (mit Kantenglättung). Daraus entsteht das fertige Bild:
+   · Leuchten (Bloom): Helle Stellen wie Lampen, Fenster, Sonne und Glanzlichter
+     strahlen weich über ihre Ränder.
+   · Umgebungsverdeckung (nur «Ultra»): Ecken und Fugen werden leicht abgedunkelt.
+   · Farbabstimmung je Ort (BILDSTIL): Sättigung, Kontrast, Farbstich, dunkle Bildecken.
+   Alles sind eigene, kleine Shader; es braucht keine weitere Bibliothek.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+// Bildstil pro Ort. leuchten: Stärke des Leuchtens · schwelle: ab dieser Helligkeit leuchtet etwas (1 = weiss im Sonnenlicht)
+// saettigung/kontrast: 1 = unverändert · tonung: Farbstich [rot, grün, blau] · vignette: Abdunkeln der Bildecken (0 = aus)
+const BILDSTIL = {
+  standard:  { leuchten: 0.45, schwelle: 1.0,  saettigung: 1.08, kontrast: 1.05, tonung: [1.0, 1.0, 1.0],    vignette: 0.28 },
+  kiesgrube: { leuchten: 0.5,  schwelle: 1.0,  saettigung: 1.1,  kontrast: 1.06, tonung: [1.03, 1.0, 0.96],  vignette: 0.3 },    // warmes Abendlicht
+  bergpass:  { leuchten: 0.35, schwelle: 1.1,  saettigung: 1.14, kontrast: 1.05, tonung: [0.99, 1.0, 1.03],  vignette: 0.24 },   // klarer Morgen
+  paris:     { leuchten: 0.55, schwelle: 1.2,  saettigung: 1.08, kontrast: 1.06, tonung: [1.04, 0.99, 0.96], vignette: 0.34 },   // Abend mit Lichtern; hohe Schwelle, sonst glüht der angestrahlte Eisenturm
+  himalaya:  { leuchten: 0.22, schwelle: 1.9,  saettigung: 1.12, kontrast: 1.08, tonung: [0.98, 1.0, 1.04],  vignette: 0.3 },    // kalt und klar; Schnee ist sehr hell, darum hohe Schwelle (sonst überstrahlt er den Himmel)
+  aegypten:  { leuchten: 0.35, schwelle: 1.2,  saettigung: 1.12, kontrast: 1.08, tonung: [1.02, 1.0, 0.97],  vignette: 0.26 },   // Mittagshitze, nur leicht warm, damit der Himmel blau bleibt
+  newyork:   { leuchten: 0.8,  schwelle: 0.85,  saettigung: 1.16, kontrast: 1.08, tonung: [0.97, 1.0, 1.06],  vignette: 0.4 },    // Nacht mit Leuchtreklamen
+};
+
+const Nach = {
+  an: false, ao: false, glaetten: 0, stufen: 5, ziel: null, kette: [], aoZiel: null, breite: 0, hoehe: 0, stil: BILDSTIL.standard, bereit: false,
+
+  init() {
+    if (this.bereit) return;
+    const R = Grafik.renderer, gl = R.getContext();
+    // Zwischenbilder mit grossem Helligkeitsumfang brauchen eine Erweiterung; fehlt sie, bleibt die Nachbearbeitung aus
+    this.moeglich = !!(R.capabilities.isWebGL2 && (R.extensions.has('EXT_color_buffer_float') || R.extensions.has('EXT_color_buffer_half_float')));
+    this.kam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const g = new THREE.BufferGeometry();      // ein Dreieck, das den ganzen Bildschirm bedeckt
+    g.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 2, 0, 0, 2], 2));
+    this.netz = new THREE.Mesh(g, null); this.netz.frustumCulled = false;
+    this.szene = new THREE.Scene(); this.szene.add(this.netz);
+    const vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+    const M = (fs, u, mehr) => new THREE.ShaderMaterial(Object.assign({ vertexShader: vs, fragmentShader: fs, uniforms: u, depthTest: false, depthWrite: false, toneMapped: false, fog: false }, mehr || {}));
+    const kopf = 'uniform sampler2D tBild; uniform vec2 px; varying vec2 vUv;\n';
+    // 1 helle Stellen herausholen und dabei auf halbe Grösse verkleinern
+    this.mHell = M(kopf + `uniform float schwelle;
+      vec3 hell(vec2 uv) { vec3 c = min(texture2D(tBild, uv).rgb, vec3(16.0)); float l = max(c.r, max(c.g, c.b)); return c * (max(l - schwelle, 0.0) / max(l, 1e-4)); }
+      void main() { gl_FragColor = vec4((hell(vUv + px * vec2(-1.0, -1.0)) + hell(vUv + px * vec2(1.0, -1.0)) + hell(vUv + px * vec2(-1.0, 1.0)) + hell(vUv + px * vec2(1.0, 1.0))) * 0.25, 1.0); }`,
+      { tBild: { value: null }, px: { value: new THREE.Vector2() }, schwelle: { value: 1 } });
+    // 2 weich verkleinern …
+    this.mKlein = M(kopf + `void main() { vec3 s = texture2D(tBild, vUv).rgb * 4.0;
+        s += texture2D(tBild, vUv + px * vec2(-1.0, -1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, -1.0)).rgb + texture2D(tBild, vUv + px * vec2(-1.0, 1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, 1.0)).rgb;
+        gl_FragColor = vec4(s / 8.0, 1.0); }`, { tBild: { value: null }, px: { value: new THREE.Vector2() } });
+    // 3 … und weich wieder vergrössern, dabei aufaddieren
+    this.mGross = M(kopf + `uniform float anteil;
+      void main() { vec3 s = texture2D(tBild, vUv + vec2(-2.0 * px.x, 0.0)).rgb + texture2D(tBild, vUv + vec2(2.0 * px.x, 0.0)).rgb + texture2D(tBild, vUv + vec2(0.0, 2.0 * px.y)).rgb + texture2D(tBild, vUv + vec2(0.0, -2.0 * px.y)).rgb;
+        s += (texture2D(tBild, vUv + px * vec2(-1.0, 1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, 1.0)).rgb + texture2D(tBild, vUv + px * vec2(-1.0, -1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, -1.0)).rgb) * 2.0;
+        gl_FragColor = vec4(s / 12.0 * anteil, 1.0); }`, { tBild: { value: null }, px: { value: new THREE.Vector2() }, anteil: { value: 1 } },
+      { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, transparent: true });
+    // Umgebungsverdeckung aus dem Tiefenbild (halbe Auflösung)
+    this.mAO = M(`uniform sampler2D tTiefe; uniform vec2 px; uniform mat4 projInv; uniform vec2 mass; uniform float radius; varying vec2 vUv;
+      vec3 ort(vec2 uv) { float z = texture2D(tTiefe, uv).x; vec4 p = projInv * vec4(uv * 2.0 - 1.0, z * 2.0 - 1.0, 1.0); return p.xyz / p.w; }
+      void main() {
+        if (texture2D(tTiefe, vUv).x >= 0.99995) { gl_FragColor = vec4(1.0); return; }
+        vec3 p = ort(vUv), r = ort(vUv + vec2(px.x, 0.0)), l = ort(vUv - vec2(px.x, 0.0)), o = ort(vUv + vec2(0.0, px.y)), u = ort(vUv - vec2(0.0, px.y));
+        vec3 dx = abs(r.z - p.z) < abs(p.z - l.z) ? r - p : p - l, dy = abs(o.z - p.z) < abs(p.z - u.z) ? o - p : p - u;
+        vec3 n = normalize(cross(dx, dy));
+        float w0 = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) * 6.2831853, summe = 0.0;
+        vec2 rs = radius * mass / max(-p.z, 0.5);      // Radius auf dem Bildschirm
+        for (int i = 0; i < 10; i++) {
+          float f = (float(i) + 0.5) / 10.0, a = w0 + f * 15.08;
+          vec3 v = ort(vUv + vec2(cos(a), sin(a)) * rs * (0.15 + 0.85 * f)) - p;
+          float d2 = dot(v, v);
+          summe += max(dot(n, v) - 0.03 - 0.004 * -p.z, 0.0) / (d2 + 0.06) * smoothstep(radius * radius * 1.5, radius * radius * 0.5, d2);
+        }
+        float ao = clamp(1.0 - summe * 0.28, 0.0, 1.0);
+        gl_FragColor = vec4(vec3(mix(ao, 1.0, smoothstep(70.0, 240.0, -p.z))), 1.0);      // in der Ferne ausblenden (dort liegt Dunst)
+      }`, { tTiefe: { value: null }, px: { value: new THREE.Vector2() }, projInv: { value: new THREE.Matrix4() }, mass: { value: new THREE.Vector2() }, radius: { value: 1.4 } });
+    // Schlussbild: alles zusammensetzen, Helligkeit auf den Bildschirm abbilden, Farben abstimmen
+    this.mFertig = M(`uniform sampler2D tBild, tLeucht, tAO; uniform vec2 px; uniform float leuchten, saettigung, kontrast, vignette, aoKraft; uniform vec3 tonung; varying vec2 vUv;
+      void main() {
+        vec3 c = texture2D(tBild, vUv).rgb;
+        if (aoKraft > 0.0) {
+          float ao = (texture2D(tAO, vUv).r * 2.0 + texture2D(tAO, vUv + px * vec2(3.0, 3.0)).r + texture2D(tAO, vUv + px * vec2(-3.0, 3.0)).r + texture2D(tAO, vUv + px * vec2(3.0, -3.0)).r + texture2D(tAO, vUv + px * vec2(-3.0, -3.0)).r) / 6.0;
+          c *= mix(1.0, ao, aoKraft);
+        }
+        c += texture2D(tLeucht, vUv).rgb * leuchten;
+        gl_FragColor = vec4(c, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        vec3 f = gl_FragColor.rgb;
+        f = mix(vec3(dot(f, vec3(0.2126, 0.7152, 0.0722))), f, saettigung);
+        f = (f - 0.5) * kontrast + 0.5;
+        f *= tonung;
+        vec2 q = vUv - 0.5;
+        f *= 1.0 - vignette * smoothstep(0.18, 0.75, dot(q, q) * 1.6);
+        f += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;      // feines Rauschen gegen Farbstufen
+        gl_FragColor = vec4(clamp(f, 0.0, 1.0), 1.0);
+      }`, { tBild: { value: null }, tLeucht: { value: null }, tAO: { value: null }, px: { value: new THREE.Vector2() }, leuchten: { value: 0.5 }, saettigung: { value: 1 }, kontrast: { value: 1 },
+      vignette: { value: 0.3 }, aoKraft: { value: 0 }, tonung: { value: new THREE.Vector3(1, 1, 1) } }, { toneMapped: true });
+    this.bereit = true;
+  },
+
+  // Stufe einstellen: glaetten = Kantenglättung (Anzahl Abtastpunkte), ao = Umgebungsverdeckung, stufen = Weite des Leuchtens
+  setze(an, glaetten, ao, stufen) {
+    this.init();
+    this.an = an && this.moeglich; this.glaetten = glaetten; this.ao = ao; this.stufen = stufen;
+    this.raeume(); this.breite = 0;
+  },
+  setzeStil(id) { this.stil = BILDSTIL[id] || BILDSTIL.standard; },
+  raeume() {
+    if (this.ziel) { if (this.ziel.depthTexture) this.ziel.depthTexture.dispose(); this.ziel.dispose(); this.ziel = null; }
+    for (const z of this.kette) z.dispose();
+    this.kette = [];
+    if (this.aoZiel) { this.aoZiel.dispose(); this.aoZiel = null; }
+  },
+  // Zwischenbilder in der Grösse des Fensters anlegen
+  baue(w, h) {
+    this.raeume();
+    this.breite = w; this.hoehe = h;
+    const art = Grafik.renderer.extensions.has('EXT_color_buffer_float') || Grafik.renderer.extensions.has('EXT_color_buffer_half_float') ? THREE.HalfFloatType : THREE.UnsignedByteType;
+    this.ziel = new THREE.WebGLRenderTarget(w, h, { type: art, samples: this.glaetten, depthBuffer: true, stencilBuffer: false });
+    if (this.ao) { this.ziel.depthTexture = new THREE.DepthTexture(w, h); this.ziel.depthTexture.type = THREE.UnsignedIntType; }
+    let bw = w, bh = h;
+    for (let i = 0; i < this.stufen; i++) {
+      bw = Math.max(2, Math.round(bw / 2)); bh = Math.max(2, Math.round(bh / 2));
+      const z = new THREE.WebGLRenderTarget(bw, bh, { type: art, depthBuffer: false, stencilBuffer: false });
+      z.texture.minFilter = z.texture.magFilter = THREE.LinearFilter;
+      this.kette.push(z);
+    }
+    if (this.ao) { this.aoZiel = new THREE.WebGLRenderTarget(Math.round(w / 2), Math.round(h / 2), { depthBuffer: false, stencilBuffer: false }); }
+  },
+  durchlauf(mat, ziel) {
+    const R = Grafik.renderer;
+    this.netz.material = mat;
+    R.setRenderTarget(ziel);
+    R.render(this.szene, this.kam);
+  },
+
+  // Zeichnet alle Ansichten (Split-Screen) ins Zwischenbild und dann das fertige Bild auf den Bildschirm.
+  // jeAnsicht(a) wird vor jeder Ansicht aufgerufen (Sichtbarkeiten, Kamera).
+  zeichne(szene, ansichten, jeAnsicht) {
+    const R = Grafik.renderer, gr = R.getDrawingBufferSize(this._gr || (this._gr = new THREE.Vector2())), W = gr.x, H = gr.y;
+    if (W < 2 || H < 2) return;
+    if (W !== this.breite || H !== this.hoehe) this.baue(W, H);
+    const Z = this.ziel, S = this.stil, auto = R.autoClear;
+    R.autoClear = true;
+    for (const a of ansichten) {
+      const w = Math.round(a.w * W), h = Math.round(a.h * H), x = Math.round(a.x * W), y = H - Math.round(a.y * H) - h;
+      Z.viewport.set(x, y, w, h); Z.scissor.set(x, y, w, h); Z.scissorTest = ansichten.length > 1;
+      jeAnsicht(a, w, h);
+      R.setRenderTarget(Z);
+      R.render(szene, a.kamera);
+    }
+    Z.scissorTest = false;
+    // Leuchten: helle Stellen verkleinern, verwischen, wieder vergrössern
+    const K = this.kette, n = K.length;
+    this.mHell.uniforms.tBild.value = Z.texture; this.mHell.uniforms.px.value.set(0.5 / W, 0.5 / H); this.mHell.uniforms.schwelle.value = S.schwelle;
+    this.durchlauf(this.mHell, K[0]);
+    for (let i = 1; i < n; i++) {
+      this.mKlein.uniforms.tBild.value = K[i - 1].texture; this.mKlein.uniforms.px.value.set(0.5 / K[i - 1].width, 0.5 / K[i - 1].height);
+      this.durchlauf(this.mKlein, K[i]);
+    }
+    R.autoClear = false;
+    for (let i = n - 1; i > 0; i--) {
+      this.mGross.uniforms.tBild.value = K[i].texture; this.mGross.uniforms.px.value.set(0.5 / K[i].width, 0.5 / K[i].height); this.mGross.uniforms.anteil.value = 1;
+      this.durchlauf(this.mGross, K[i - 1]);
+    }
+    R.autoClear = true;
+    // Umgebungsverdeckung (nur mit einer einzigen Ansicht)
+    const F = this.mFertig.uniforms;
+    let aoKraft = 0;
+    if (this.ao && this.aoZiel && Z.depthTexture && ansichten.length === 1) {
+      const k = ansichten[0].kamera, U = this.mAO.uniforms;
+      U.tTiefe.value = Z.depthTexture; U.px.value.set(2 / W, 2 / H); U.projInv.value.copy(k.projectionMatrixInverse);
+      U.mass.value.set(k.projectionMatrix.elements[0] / 2, k.projectionMatrix.elements[5] / 2);
+      this.durchlauf(this.mAO, this.aoZiel);
+      F.tAO.value = this.aoZiel.texture; aoKraft = 0.85;
+    }
+    F.tBild.value = Z.texture; F.tLeucht.value = K[0].texture; F.px.value.set(1 / W, 1 / H); F.aoKraft.value = aoKraft;
+    F.leuchten.value = S.leuchten / Math.max(1, n * 0.42); F.saettigung.value = S.saettigung; F.kontrast.value = S.kontrast; F.vignette.value = ansichten.length > 1 ? 0 : S.vignette;
+    F.tonung.value.set(S.tonung[0], S.tonung[1], S.tonung[2]);
+    R.setRenderTarget(null);
+    R.setScissorTest(false);
+    R.setViewport(0, 0, window.innerWidth, window.innerHeight);
+    this.netz.material = this.mFertig;
+    R.render(this.szene, this.kam);
+    R.autoClear = auto;
+  },
+};
+/* ══════════════════════════════════════════════════════════════════════════
+   Teil 7d: Leben in der Landschaft
+   · Grasbüschel und Blumen neben der Strecke. Es sind viele tausend, aber jede Art braucht nur einen
+     Zeichenaufruf (InstancedMesh). Sie wachsen nur, wo der Boden grün ist, in Flecken, nicht auf Wegen
+     und nicht im Wasser. Weit weg von der Kamera schrumpfen sie weg (spart Arbeit und flimmert nicht).
+   · Steine in der Farbe des Bodens auf Kies, Erde und Fels.
+   · Wind: ein kleiner Zusatz im Shader lässt Halme und Blumen wiegen; Böen wandern über die Wiese.
+   · Bäume und Büsche (Kiesgrube, Bergpass, Platanen in Paris, Parkbäume in New York): Fichten aus sieben gezackten Astschichten, Laubbäume mit Ästen
+     und einer Krone aus vielen Blätterbüscheln (Karten mit einem im Code gemalten Blätterbild). Alle wiegen im Wind.
+   · Zuschauer auf den Tribünen jubeln, Bauarbeiter mit Helm und Warnweste schaufeln bei Kran und Bagger.
+   · Vögel: kleine Schwärme ziehen Kreise über der Strecke, schlagen mit den Flügeln und gleiten (nicht nachts).
+   Zahlen pro Grafik-Stufe: CONFIG.grafik.leben
+   ══════════════════════════════════════════════════════════════════════════ */
+
+// Farben der Blüten: weiss, gelb, mohnrot, violett, blau, orange
+const BLUETEN = [0xf4f1ea, 0xf6d23a, 0xd8322e, 0x9a6ad8, 0x5f86e8, 0xf08a2a];
+
+const Leben = {
+  zeit: { value: 0 },          // gemeinsame Uhr für Wind und Flügelschlag (Sekunden)
+  netze: [], voegel: null, mats: {},
+
+  // Shader-Zusatz für Gras, Blumen und Bäume: Wind (oben mehr als unten, Böen wandern über die Fläche),
+  // Gras und Blumen schrumpfen in der Ferne weg. art: gras | blumen | wald
+  windStoff(art) {
+    if (this.mats[art]) return this.mats[art];
+    const weit = CONFIG.grafik.leben.weit, wald = art === 'wald';
+    const mat = new THREE.MeshStandardMaterial(wald ? { map: this.blattBild(), vertexColors: true, alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.92, metalness: 0 } : { vertexColors: true, side: THREE.DoubleSide, roughness: 0.95, metalness: 0 });   // Standard wie die Umgebung: bekommt dasselbe Himmelslicht
+    const staerke = wald ? '0.012 + 0.02 * boe' : '0.1 + 0.22 * boe';
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uZeit = this.zeit;
+      sh.vertexShader = 'uniform float uZeit;\n' + sh.vertexShader
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          vec3 wo = vec3(0.0); float gross = 1.0;
+          #ifdef USE_INSTANCING
+            wo = instanceMatrix[3].xyz; gross = length(instanceMatrix[1].xyz);
+          #endif
+          float hoch = max(position.y, 0.0);
+          float boe = 0.5 + 0.5 * sin(uZeit * 0.8 - wo.x * 0.03 - wo.z * 0.021);
+          float zappeln = 0.75 + 0.25 * sin(uZeit * ${wald ? '1.7' : '3.4'} + wo.x * 1.3 + wo.z * 0.9);
+          vec2 windWelt = vec2(${staerke}, ${wald ? '0.006' : '0.05'} * sin(uZeit * 2.1 + wo.z * 0.7)) * zappeln * hoch * hoch * gross;
+          ${wald ? 'transformed.y += 0.007 * sin(uZeit * 5.0 + position.x * 31.0 + position.z * 17.0 + wo.x) * step(0.45, position.y);      // Blätter zittern' : `transformed *= 1.0 - smoothstep(${(weit * 0.7).toFixed(1)}, ${weit.toFixed(1)}, distance(wo, cameraPosition));`}`)
+        .replace('#include <project_vertex>', `vec4 mvPosition = vec4(transformed, 1.0);
+          #ifdef USE_INSTANCING
+            mvPosition = instanceMatrix * mvPosition;
+          #endif
+          mvPosition.xz += windWelt;
+          mvPosition = modelViewMatrix * mvPosition;
+          gl_Position = projectionMatrix * mvPosition;`);
+      if (art !== 'gras') sh.vertexShader = sh.vertexShader.replace('#include <color_vertex>', `vColor = color;
+          #ifdef USE_INSTANCING_COLOR
+            ${wald ? 'if (abs(color.r - color.g) < 0.004 && abs(color.g - color.b) < 0.004) vColor *= instanceColor;      // nur graue Teile (Krone) bekommen das Grün des Baums' : 'if (color.r > 0.95 && color.g > 0.95) vColor *= instanceColor;     // nur die Blütenblätter bekommen die Farbe der Blume'}
+          #endif`);
+    };
+    mat.customProgramCacheKey = () => 'leben-' + art;
+    return (this.mats[art] = mat);
+  },
+
+  // Geometrie aus Punkten und Farben; alle Normalen zeigen nach oben, dann ist das Gras so hell wie der Boden darunter
+  geo(pos, col) {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((v, i) => (i % 3 === 1 ? 1 : 0)), 3));
+    return g;
+  },
+  // Grasbüschel: sechs schmale, schräg stehende Halme, unten dunkel, an der Spitze hell (Höhe 1, wird pro Büschel skaliert)
+  bueschel() {
+    const pos = [], col = [], zuf = zufallsGenerator(31);
+    for (let h = 0; h < 6; h++) {
+      const w = (h / 6) * TAU + zuf() * 0.7, cx = Math.cos(w), cz = Math.sin(w), r = 0.03 + zuf() * 0.1, neig = 0.16 + zuf() * 0.34, hoch = 0.62 + zuf() * 0.38, b = 0.05 + zuf() * 0.025, hell = 0.85 + zuf() * 0.3;
+      const fx = cx * r, fz = cz * r;
+      pos.push(fx + cz * b, 0, fz - cx * b, fx - cz * b, 0, fz + cx * b, fx + cx * neig, hoch, fz + cz * neig);
+      col.push(0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 1.3 * hell, 1.3 * hell, 1.22 * hell);
+    }
+    return this.geo(pos, col);
+  },
+  // Blume: Stiel aus zwei gekreuzten Dreiecken, Blüte aus fünf gewölbten Blättern und gelber Mitte
+  blume() {
+    const pos = [], col = [], GR = [0.3, 0.5, 0.18], WS = [1, 1, 1], GE = [1, 0.8, 0.15];
+    const tri = (a, b, c, f) => { pos.push(...a, ...b, ...c); col.push(...f, ...f, ...f); };
+    tri([-0.02, 0, 0], [0.02, 0, 0], [0, 0.86, 0], GR); tri([0, 0, -0.02], [0, 0, 0.02], [0, 0.86, 0], GR);
+    const y = 0.84, r = 0.15;
+    for (let k = 0; k < 5; k++) { const a = (k / 5) * TAU, b = a + TAU / 9, c = a - TAU / 9; tri([0, y, 0], [Math.cos(c) * r, y + 0.09, Math.sin(c) * r], [Math.cos(b) * r, y + 0.09, Math.sin(b) * r], WS); }
+    tri([-0.04, y + 0.04, -0.035], [0.04, y + 0.04, -0.035], [0, y + 0.04, 0.05], GE);
+    return this.geo(pos, col);
+  },
+
+  // ── Bäume und Büsche ───────────────────────────────────────────────────
+  pflanzen: [],
+  // merkt sich einen Baum (x, y, z der Welt). Verbraucht wie die alten Bäume vier Zufallszahlen, damit der Rest der Strecke gleich bleibt.
+  pflanze(art, x, y, z, zuf, gr) {
+    const a = zuf(), b = zuf(), c = zuf(), d = zuf();
+    if (art === 'platane' || art === 'parkbaum') zuf();                          // die alten Stadtbäume brauchten fünf Zufallszahlen
+    const h = art === 'fichte' ? (4.5 + a * 4) * 1.3 : art === 'laub' ? (4 + a * 3.5) * 1.25 : art === 'platane' ? (5.5 + a * 2.2) * (gr || 1) * 1.2 : art === 'parkbaum' ? (6 + a * 4) * 1.05 : (0.7 + a * 0.9) * 1.7;
+    this.pflanzen.push({ art, x, y, z, h, ton: b, dreh: c * TAU, schief: d - 0.5 });
+  },
+  // Blätterbild: viele kleine Blätter in einem unregelmässigen Haufen (grau, das Grün kommt pro Baum dazu); unten ein voller Streifen für Stamm und Kern
+  blattBild() {
+    if (this._blatt) return this._blatt;
+    const c = document.createElement('canvas'); c.width = c.height = 256;
+    const x = c.getContext('2d'), zuf = zufallsGenerator(77);
+    x.fillStyle = '#fff'; x.fillRect(0, 240, 256, 16);
+    for (let i = 0; i < 950; i++) {
+      const w = zuf() * TAU, r = Math.sqrt(zuf()) * 104, px = 128 + Math.cos(w) * r, py = 116 + Math.sin(w) * r * 0.92, g = Math.round(clamp(150 + zuf() * 105 - r * 0.4, 90, 255));
+      x.fillStyle = 'rgb(' + g + ',' + g + ',' + g + ')';
+      x.save(); x.translate(px, py); x.rotate(zuf() * TAU); x.beginPath(); x.ellipse(0, 0, 4 + zuf() * 5, 2 + zuf() * 2.4, 0, 0, TAU); x.fill(); x.restore();
+    }
+    x.strokeStyle = 'rgba(70,70,70,.8)'; x.lineWidth = 1.4;                       // ein paar Zweige
+    for (let i = 0; i < 14; i++) { const w = zuf() * TAU; x.beginPath(); x.moveTo(128, 116); x.lineTo(128 + Math.cos(w) * 70, 116 + Math.sin(w) * 64); x.stroke(); }
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    return (this._blatt = t);
+  },
+  // Geometrie eines Baums (Höhe 1). Stamm braun, Krone grau (wird pro Baum grün gefärbt). art: fichte | laub | busch
+  baumGeo(art) {
+    const P = [], N = [], C = [], U = [], zuf = zufallsGenerator(art === 'fichte' ? 11 : art === 'laub' ? 12 : 13), VOLL = [0.5, 0.03];
+    const ecke = (p, n, c, u) => { P.push(p[0], p[1], p[2]); N.push(n[0], n[1], n[2]); C.push(c[0], c[1], c[2]); U.push(u[0], u[1]); };
+    const grau = (v) => [v, v, v], BRAUN = art === 'platane' ? [0.26, 0.23, 0.17] : art === 'parkbaum' ? [0.07, 0.052, 0.04] : [0.14, 0.085, 0.045];   // Platane: heller, gefleckter Stamm
+    const rohr = (a, b, r0, r1, seg) => {                                       // Stamm oder Ast von a nach b
+      const d = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], l = Math.hypot(...d), ax = d.map((v) => v / l), q = Math.abs(ax[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+      const e1 = [ax[1] * q[2] - ax[2] * q[1], ax[2] * q[0] - ax[0] * q[2], ax[0] * q[1] - ax[1] * q[0]], l1 = Math.hypot(...e1); for (let i = 0; i < 3; i++) e1[i] /= l1;
+      const e2 = [ax[1] * e1[2] - ax[2] * e1[1], ax[2] * e1[0] - ax[0] * e1[2], ax[0] * e1[1] - ax[1] * e1[0]];
+      const ring = (k) => { const w = (k / seg) * TAU; return [0, 1, 2].map((i) => Math.cos(w) * e1[i] + Math.sin(w) * e2[i]); };
+      for (let k = 0; k < seg; k++) {
+        const n0 = ring(k), n1 = ring(k + 1), p = (c, n, r) => [c[0] + n[0] * r, c[1] + n[1] * r, c[2] + n[2] * r];
+        ecke(p(a, n0, r0), n0, BRAUN, VOLL); ecke(p(a, n1, r0), n1, BRAUN, VOLL); ecke(p(b, n1, r1), n1, BRAUN, VOLL);
+        ecke(p(a, n0, r0), n0, BRAUN, VOLL); ecke(p(b, n1, r1), n1, BRAUN, VOLL); ecke(p(b, n0, r1), n0, BRAUN, VOLL);
+      }
+    };
+    // Kern der Krone: dunkle Kugel aus Dreiecken, damit man nicht durch die Blätter sieht
+    const kern = (cx, cy, cz, rx, ry, rz, hell) => {
+      const g = new THREE.IcosahedronGeometry(1, 1), pa = g.attributes.position;
+      for (let i = 0; i < pa.count; i += 3) for (let k = 0; k < 3; k++) {
+        const vx = pa.getX(i + k), vy = pa.getY(i + k), vz = pa.getZ(i + k), j = 0.88 + 0.24 * ((Math.sin(vx * 7.1 + vz * 5.3) + 1) / 2);
+        ecke([cx + vx * rx * j, cy + vy * ry * j, cz + vz * rz * j], [vx, vy, vz], grau(hell * (0.75 + 0.35 * vy)), VOLL);
+      }
+      g.dispose();
+    };
+    // Blätterbüschel: Karte mit dem Blätterbild, nach aussen gerichtet, oben heller als unten
+    const karte = (cx, cy, cz, rx, ry, rz, gr) => {
+      let dx = zuf() * 2 - 1, dy = zuf() * 1.6 - 0.55, dz = zuf() * 2 - 1; const l = Math.hypot(dx, dy, dz) || 1; dx /= l; dy /= l; dz /= l;
+      const m = [cx + dx * rx * 0.88, cy + dy * ry * 0.88, cz + dz * rz * 0.88], n = [dx, dy, dz];
+      const q = Math.abs(dy) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+      let t1 = [n[1] * q[2] - n[2] * q[1], n[2] * q[0] - n[0] * q[2], n[0] * q[1] - n[1] * q[0]]; const lt = Math.hypot(...t1); t1 = t1.map((v) => v / lt);
+      const t2 = [n[1] * t1[2] - n[2] * t1[1], n[2] * t1[0] - n[0] * t1[2], n[0] * t1[1] - n[1] * t1[0]], w = zuf() * TAU, c = Math.cos(w), s = Math.sin(w);
+      const a = t1.map((v, i) => (v * c + t2[i] * s) * gr), b = t1.map((v, i) => (-v * s + t2[i] * c) * gr), hell = grau(0.85 + 0.4 * (dy + 1) / 2 + (zuf() - 0.5) * 0.14);
+      const pkt = (u, v) => [m[0] + a[0] * u + b[0] * v, m[1] + a[1] * u + b[1] * v, m[2] + a[2] * u + b[2] * v], uv = (u, v) => [(u + 1) / 2, 0.1 + ((v + 1) / 2) * 0.9];
+      ecke(pkt(-1, -1), n, hell, uv(-1, -1)); ecke(pkt(1, -1), n, hell, uv(1, -1)); ecke(pkt(1, 1), n, hell, uv(1, 1));
+      ecke(pkt(-1, -1), n, hell, uv(-1, -1)); ecke(pkt(1, 1), n, hell, uv(1, 1)); ecke(pkt(-1, 1), n, hell, uv(-1, 1));
+    };
+    if (art === 'fichte') {
+      rohr([0, -0.05, 0], [0, 0.4, 0], 0.035, 0.018, 6);
+      for (let l = 0; l < 7; l++) {                                                   // sieben Astschichten, unten breit, Spitzen hängen leicht
+        const y0 = 0.1 + l * 0.12, rr = 0.33 * (1 - l / 7.6) + 0.035, hh = 0.27, s = 10, sp = [0, y0 + hh, 0];
+        const rand = (k) => { const w = (k / s) * TAU + l * 0.41, lang = k % 2 ? 1 : 0.8; return [[Math.cos(w) * rr * lang, y0 - (k % 2 ? 0.05 : 0.02), Math.sin(w) * rr * lang], [Math.cos(w) * 0.7, 0.72, Math.sin(w) * 0.7], k % 2 ? 0.72 : 0.86]; };
+        for (let k = 0; k < s; k++) {
+          const A = rand(k), B = rand(k + 1);
+          ecke(A[0], A[1], grau(A[2]), VOLL); ecke(B[0], B[1], grau(B[2]), VOLL); ecke(sp, [0, 1, 0], grau(1.25), VOLL);
+          if (l < 3) { ecke(B[0], [0, -1, 0], grau(0.45), VOLL); ecke(A[0], [0, -1, 0], grau(0.45), VOLL); ecke([0, y0 + 0.03, 0], [0, -1, 0], grau(0.45), VOLL); }
+        }
+      }
+    } else if (art === 'laub' || art === 'platane' || art === 'parkbaum') {
+      rohr([0, -0.05, 0], [0, 0.5, 0], 0.05, 0.032, 6);
+      for (const w of [0.4, 2.5, 4.5]) rohr([0, 0.4, 0], [Math.cos(w) * 0.17, 0.66, Math.sin(w) * 0.17], 0.022, 0.012, 4);
+      kern(0, 0.67, 0, 0.27, 0.21, 0.27, 0.6);
+      for (let i = 0; i < 30; i++) karte(0, 0.67, 0, 0.3, 0.24, 0.3, 0.16 + zuf() * 0.06);
+    } else {
+      kern(0, 0.36, 0, 0.42, 0.3, 0.42, 0.62);
+      for (let i = 0; i < 14; i++) karte(0, 0.36, 0, 0.46, 0.33, 0.46, 0.2 + zuf() * 0.07);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2));
+    return g;
+  },
+  wald(G, W) {
+    const liste = this.pflanzen; this.pflanzen = [];
+    if (!liste.length) return;
+    const GRUEN = { fichte: [0x3f7048, 0x4a7a50, 0x38653f, 0x557f52], laub: [0x6fae4c, 0x80b852, 0x8ec259, 0x64a043, 0xa0bd52, 0xaab54c], busch: [0x6a9a48, 0x5f9142, 0x78a650], platane: [0x6f9248, 0x7a9c4c, 0x668a44], parkbaum: [0x44683a, 0x4d713e, 0x3f6037] };
+    const m4 = new THREE.Matrix4(), qu = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(), po = new THREE.Vector3(), c = new THREE.Color();
+    const tiefe = this._tiefe || (this._tiefe = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: this.blattBild(), alphaTest: 0.5 }));
+    for (const art of ['fichte', 'laub', 'busch', 'platane', 'parkbaum']) {
+      const teil = liste.filter((p) => p.art === art);
+      if (!teil.length) continue;
+      const im = new THREE.InstancedMesh(this.baumGeo(art), this.windStoff('wald'), teil.length);
+      teil.forEach((p, k) => {
+        e.set(p.schief * 0.08, p.dreh, p.schief * 0.06); qu.setFromEuler(e);
+        const breit = 0.9 + p.ton * 0.25; sc.set(p.h * breit, p.h, p.h * breit); po.set(p.x, p.y - 0.08, p.z);
+        im.setMatrixAt(k, m4.compose(po, qu, sc));
+        const f = GRUEN[art]; c.setHex(f[Math.floor(p.ton * f.length) % f.length]); im.setColorAt(k, c);
+      });
+      im.frustumCulled = false; im.castShadow = true; im.receiveShadow = false; im.customDepthMaterial = tiefe;   // kein Eigenschatten: die Kronen blieben sonst fast schwarz
+      W.add(im); this.netze.push(im);
+    }
+  },
+
+  // ── Zuschauer auf den Tribünen: Rumpf in Shirt-Farbe, Kopf, Arme. Im Shader hüpfen sie, reissen die Arme hoch und winken.
+  menschen: [],
+  zuschauer(x, y, z, dreh, hex) { this.menschen.push({ x, y, z, dreh, hex }); },
+  menschGeo() {
+    const P = [], N = [], C = [], HAUT = [0.62, 0.4, 0.27], HOSE = [0.07, 0.08, 0.11];
+    const quader = (x0, y0, z0, x1, y1, z1, f) => {
+      const v = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]];
+      for (const [a, b, c, d, n] of [[0, 1, 2, 3, [0, 0, -1]], [5, 4, 7, 6, [0, 0, 1]], [4, 0, 3, 7, [-1, 0, 0]], [1, 5, 6, 2, [1, 0, 0]], [3, 2, 6, 7, [0, 1, 0]], [4, 5, 1, 0, [0, -1, 0]]])
+        for (const i of [a, b, c, a, c, d]) { P.push(...v[i]); N.push(...n); C.push(...f); }
+    };
+    quader(-0.2, -0.35, -0.14, 0.2, 0.02, 0.14, HOSE);                                  // Beine (sitzend, von vorn kaum zu sehen)
+    quader(-0.21, 0.02, -0.13, 0.21, 0.62, 0.13, [1, 1, 1]);                           // Rumpf: bekommt die Farbe des Shirts
+    for (const s of [1, -1]) quader(s > 0 ? 0.215 : -0.315, 0.06, -0.06, s > 0 ? 0.315 : -0.215, 0.58, 0.06, [1, 1, 1]);   // Arme (Ärmel)
+    const g = new THREE.IcosahedronGeometry(0.14, 1), pa = g.attributes.position;       // Kopf
+    for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i), l = Math.hypot(x, y, z); P.push(x, y + 0.79, z); N.push(x / l, y / l, z / l); C.push(...(y > 0.06 ? [0.09, 0.06, 0.04] : HAUT)); }
+    g.dispose();
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+    return geo;
+  },
+  menschStoff() {
+    if (this.mats.mensch) return this.mats.mensch;
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 });
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uZeit = this.zeit;
+      sh.vertexShader = 'uniform float uZeit;\n' + sh.vertexShader
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          float ph = 0.0;
+          #ifdef USE_INSTANCING
+            ph = dot(instanceMatrix[3].xyz, vec3(1.37, 0.71, 2.13));
+          #endif
+          float jubel = smoothstep(0.1, 0.6, sin(uZeit * 0.45 + ph));                   // mal jubeln, mal zuschauen
+          float seite = sign(position.x);
+          if (abs(position.x) > 0.212 && position.y > 0.03 && position.y < 0.6) {       // Arm: um die Schulter hochdrehen und winken
+            float w = seite * jubel * (2.3 + 0.45 * sin(uZeit * 9.0 + ph * 2.0));
+            vec2 q = transformed.xy - vec2(seite * 0.24, 0.56);
+            transformed.xy = vec2(seite * 0.24, 0.56) + vec2(q.x * cos(w) - q.y * sin(w), q.x * sin(w) + q.y * cos(w));
+          }
+          transformed.y += jubel * abs(sin(uZeit * 5.5 + ph)) * 0.13;`);
+      sh.vertexShader = sh.vertexShader.replace('#include <color_vertex>', `vColor = color;
+          #ifdef USE_INSTANCING_COLOR
+            if (color.r > 0.95 && color.g > 0.95) vColor *= instanceColor;
+          #endif`);
+    };
+    mat.customProgramCacheKey = () => 'leben-mensch';
+    return (this.mats.mensch = mat);
+  },
+  // Bauarbeiter mit Helm und Warnweste: stehen bei Kran und Bagger, schaufeln oder zeigen (Arme schwingen im Shader)
+  arbeiter: [],
+  bauarbeiter(x, z, dreh, n, zuf) {
+    for (let i = 0; i < n; i++) {
+      const w = dreh + 1.2 + i * 1.9 + zuf() * 0.6, r = 4.5 + zuf() * 3, ax = x + Math.cos(w) * r, az = z - Math.sin(w) * r;
+      this.arbeiter.push({ x: ax, z: az, y: Grafik.hoehe(ax, -az).y, dreh: w + Math.PI * (0.5 + zuf()), hex: zuf() < 0.7 ? 0xff7a1a : 0xf2e23a });
+    }
+  },
+  arbeiterGeo() {
+    const P = [], N = [], C = [], HAUT = [0.62, 0.4, 0.27], HOSE = [0.09, 0.1, 0.14], HELM = [1, 0.72, 0.05], SCHUH = [0.05, 0.04, 0.03];
+    const quader = (x0, y0, z0, x1, y1, z1, f) => {
+      const v = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]];
+      for (const [a, b, c, d, n] of [[0, 1, 2, 3, [0, 0, -1]], [5, 4, 7, 6, [0, 0, 1]], [4, 0, 3, 7, [-1, 0, 0]], [1, 5, 6, 2, [1, 0, 0]], [3, 2, 6, 7, [0, 1, 0]], [4, 5, 1, 0, [0, -1, 0]]])
+        for (const i of [a, b, c, a, c, d]) { P.push(...v[i]); N.push(...n); C.push(...f); }
+    };
+    for (const s of [1, -1]) { quader(s * 0.03, 0.08, -0.08, s * 0.17, 0.86, 0.08, HOSE); quader(s * 0.02, 0, -0.09, s * 0.18, 0.08, 0.14, SCHUH); }   // Beine, Schuhe
+    quader(-0.21, 0.86, -0.12, 0.21, 1.45, 0.12, [1, 1, 1]);                                                  // Weste (Farbe pro Arbeiter)
+    quader(-0.215, 1.08, -0.125, 0.215, 1.13, 0.125, [0.94, 0.94, 0.9]);                                      // Leuchtstreifen
+    for (const s of [1, -1]) quader(s > 0 ? 0.215 : -0.315, 0.9, -0.06, s > 0 ? 0.315 : -0.215, 1.42, 0.06, HOSE);   // Arme
+    const g = new THREE.IcosahedronGeometry(0.13, 1), pa = g.attributes.position;
+    for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i), l = Math.hypot(x, y, z), helm = y > 0.01; P.push(x * (helm ? 1.18 : 1), y * (helm ? 1.1 : 1) + 1.6, z * (helm ? 1.18 : 1)); N.push(x / l, y / l, z / l); C.push(...(helm ? HELM : HAUT)); }
+    g.dispose();
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+    return geo;
+  },
+  arbeiterStoff() {
+    if (this.mats.arbeiter) return this.mats.arbeiter;
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.9, metalness: 0 });
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uZeit = this.zeit;
+      sh.vertexShader = 'uniform float uZeit;\n' + sh.vertexShader
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          float ph = 0.0;
+          #ifdef USE_INSTANCING
+            ph = dot(instanceMatrix[3].xyz, vec3(1.37, 0.71, 2.13));
+          #endif
+          if (abs(position.x) > 0.212 && position.y > 0.88 && position.y < 1.43) {        // Arme schwingen vor und zurück (Schaufeln)
+            float w = sin(uZeit * 2.4 + ph + sign(position.x) * 0.5) * 0.75 - 0.35;
+            vec2 q = transformed.zy - vec2(0.0, 1.38);
+            transformed.zy = vec2(0.0, 1.38) + vec2(q.x * cos(w) - q.y * sin(w), q.x * sin(w) + q.y * cos(w));
+          }
+          if (position.y > 0.86) transformed.z += (position.y - 0.86) * 0.18 * (0.5 + 0.5 * sin(uZeit * 2.4 + ph));   // Oberkörper beugt sich mit`);
+      sh.vertexShader = sh.vertexShader.replace('#include <color_vertex>', `vColor = color;
+          #ifdef USE_INSTANCING_COLOR
+            if (color.r > 0.99 && color.g > 0.99) vColor *= instanceColor;
+          #endif`);
+    };
+    mat.customProgramCacheKey = () => 'leben-arbeiter';
+    return (this.mats.arbeiter = mat);
+  },
+  baustelle(W) {
+    const liste = this.arbeiter; this.arbeiter = [];
+    if (!liste.length) return;
+    const im = new THREE.InstancedMesh(this.arbeiterGeo(), this.arbeiterStoff(), liste.length), m4 = new THREE.Matrix4(), qu = new THREE.Quaternion(), e = new THREE.Euler(), po = new THREE.Vector3(), sc = new THREE.Vector3(1, 1, 1), c = new THREE.Color();
+    liste.forEach((p, k) => { e.set(0, p.dreh, 0); qu.setFromEuler(e); po.set(p.x, p.y - 0.02, p.z); im.setMatrixAt(k, m4.compose(po, qu, sc)); c.setHex(p.hex); im.setColorAt(k, c); });
+    im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
+    W.add(im); this.netze.push(im);
+  },
+  publikum(W) {
+    const liste = this.menschen; this.menschen = [];
+    if (!liste.length) return;
+    const im = new THREE.InstancedMesh(this.menschGeo(), this.menschStoff(), liste.length), m4 = new THREE.Matrix4(), qu = new THREE.Quaternion(), e = new THREE.Euler(), po = new THREE.Vector3(), sc = new THREE.Vector3(), c = new THREE.Color();
+    liste.forEach((p, k) => {
+      e.set(0, p.dreh + Math.PI, 0); qu.setFromEuler(e); const g = 0.92 + ((k * 37) % 17) / 100; sc.set(g, g, g); po.set(p.x, p.y, p.z);
+      im.setMatrixAt(k, m4.compose(po, qu, sc)); c.setHex(p.hex); im.setColorAt(k, c);
+    });
+    im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
+    W.add(im); this.netze.push(im);
+  },
+
+  // Passanten in den Städten: gehen auf dem Gehsteig neben der Strecke hin und her. Beine und Arme schwingen im Shader;
+  // der Schritt hängt an der zurückgelegten Strecke, darum rutschen die Füsse nicht. Die Wege werden beim Bauen vorberechnet.
+  gaenger: null,
+  passantGeo() {
+    const P = [], N = [], C = [], HAUT = [0.66, 0.46, 0.33], JEANS = [0.16, 0.2, 0.3], SCHUH = [0.08, 0.07, 0.06], HAAR = [0.12, 0.08, 0.05];
+    const quader = (x0, y0, z0, x1, y1, z1, f) => {
+      const v = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]];
+      for (const [a, b, c, d, n] of [[0, 1, 2, 3, [0, 0, -1]], [5, 4, 7, 6, [0, 0, 1]], [4, 0, 3, 7, [-1, 0, 0]], [1, 5, 6, 2, [1, 0, 0]], [3, 2, 6, 7, [0, 1, 0]], [4, 5, 1, 0, [0, -1, 0]]])
+        for (const i of [a, b, c, a, c, d]) { P.push(...v[i]); N.push(...n); C.push(...f); }
+    };
+    for (const s of [1, -1]) { quader(s * 0.025, 0.08, -0.07, s * 0.16, 0.88, 0.07, JEANS); quader(s * 0.02, 0, -0.08, s * 0.17, 0.08, 0.14, SCHUH); }   // Beine, Schuhe
+    quader(-0.2, 0.86, -0.11, 0.2, 1.44, 0.11, [1, 1, 1]);                                                      // Oberteil (Farbe pro Person)
+    for (const s of [1, -1]) { quader(s > 0 ? 0.205 : -0.29, 0.98, -0.055, s > 0 ? 0.29 : -0.205, 1.42, 0.055, [1, 1, 1]); quader(s > 0 ? 0.21 : -0.285, 0.9, -0.045, s > 0 ? 0.285 : -0.21, 0.98, 0.045, HAUT); }   // Ärmel, Hände
+    const g = new THREE.IcosahedronGeometry(0.125, 1), pa = g.attributes.position;
+    for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i), l = Math.hypot(x, y, z), haar = y > 0.03 || z < -0.06; P.push(x, y + 1.58, z); N.push(x / l, y / l, z / l); C.push(...(haar ? HAAR : HAUT)); }
+    g.dispose();
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.Float32BufferAttribute(N, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
+    return geo;
+  },
+  passantStoff() {
+    if (this.mats.passant) return this.mats.passant;
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.88, metalness: 0 });
+    mat.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          float ph = 0.0;
+          #ifdef USE_INSTANCING
+            ph = dot(instanceMatrix[3].xz, normalize(instanceMatrix[2].xz)) * 4.4;      // Schrittphase aus dem zurückgelegten Weg
+          #endif
+          float seite = sign(position.x), w = sin(ph) * 0.42;
+          if (abs(position.x) < 0.18 && position.y < 0.88) {                              // Bein: um die Hüfte vor und zurück
+            float b = w * seite; vec2 q = transformed.zy - vec2(0.0, 0.86);
+            transformed.zy = vec2(0.0, 0.86) + vec2(q.x * cos(b) - q.y * sin(b), q.x * sin(b) + q.y * cos(b));
+          } else if (abs(position.x) > 0.2 && position.y < 1.43) {                         // Arm: gegengleich um die Schulter
+            float b = -w * seite * 0.8; vec2 q = transformed.zy - vec2(0.0, 1.4);
+            transformed.zy = vec2(0.0, 1.4) + vec2(q.x * cos(b) - q.y * sin(b), q.x * sin(b) + q.y * cos(b));
+          }
+          transformed.y += abs(cos(ph)) * 0.035;`);
+      sh.vertexShader = sh.vertexShader.replace('#include <color_vertex>', `vColor = color;
+          #ifdef USE_INSTANCING_COLOR
+            if (color.r > 0.99 && color.g > 0.99) vColor *= instanceColor;
+          #endif`);
+    };
+    mat.customProgramCacheKey = () => 'leben-passant';
+    return (this.mats.passant = mat);
+  },
+  passanten(G, S, W, bk, anzahl) {
+    this.gaenger = null;
+    if (!anzahl || !bk) return;
+    const H = S.haupt, L = S.laenge, zuf = zufallsGenerator(5150), o = {}, wege = [], ny = S.id === 'newyork';
+    const OBERTEIL = [0x2f6fd6, 0xd8322e, 0xf4f1ea, 0x3aa655, 0x1d2a3a, 0xe0a03a, 0x8a4fc4, 0xc9c3b4, 0x6e2f2a, 0x2a8a8a];
+    const ab = ny ? [2.6, 0.7] : [3.3, 1.8];                       // Abstand vom Fahrbahnrand: in New York zwischen Laternen und Taxis
+    let versuche = 0;
+    while (wege.length < anzahl && versuche++ < anzahl * 30) {
+      const s0 = zuf() * L, seite = zuf() < 0.5 ? 1 : -1, len = 14 + zuf() * 26, off = ab[0] + zuf() * ab[1], P = [];
+      let ok = true;
+      for (let q = 0; q <= len && ok; q += 0.5) {
+        const s = (s0 + q) % L, i = Math.floor(s / H.ds) % H.n;
+        if (S.bruecke[i]) { ok = false; break; }
+        H.ort(s, seite * (H.hb[i] + (seite > 0 ? S.randL[i] : S.randR[i]) + off), o);
+        if (q % 3 === 0 && !bk.frei(o.x, o.z, 0.3, true)) ok = false;
+        P.push(o.x, G.hoehe(o.x, o.z).y, -o.z);
+      }
+      if (!ok || P.length < 36) continue;
+      wege.push({ P: Float32Array.from(P), n: P.length / 3, v: 1.0 + zuf() * 0.5, ph: zuf() * 200, hex: OBERTEIL[Math.floor(zuf() * OBERTEIL.length)] });
+    }
+    if (!wege.length) return;
+    const im = new THREE.InstancedMesh(this.passantGeo(), this.passantStoff(), wege.length), c = new THREE.Color();
+    wege.forEach((w, k) => im.setColorAt(k, c.setHex(w.hex)));
+    im.frustumCulled = false; im.castShadow = true; im.receiveShadow = true;
+    W.add(im); this.netze.push(im);
+    this.gaenger = { im, wege, m4: new THREE.Matrix4(), qu: new THREE.Quaternion(), e: new THREE.Euler(), po: new THREE.Vector3(), sc: new THREE.Vector3(1, 1, 1) };
+    this.gehen(0);
+  },
+  // pro Bild: jede Person ein Stück weiter auf ihrem Weg (am Ende kehrt sie um)
+  gehen(t) {
+    const Q = this.gaenger;
+    if (!Q) return;
+    Q.wege.forEach((w, k) => {
+      const lauf = (w.n - 1) * 0.5, u = (t * w.v + w.ph) % (2 * lauf), zurueck = u > lauf, s = (zurueck ? 2 * lauf - u : u) / 0.5;
+      const i = Math.min(w.n - 2, Math.floor(s)), f = s - i, P = w.P, a = i * 3, b = a + 3;
+      const dx = (P[b] - P[a]) * (zurueck ? -1 : 1), dz = (P[b + 2] - P[a + 2]) * (zurueck ? -1 : 1);
+      Q.e.set(0, Math.atan2(dx, dz), 0); Q.qu.setFromEuler(Q.e);
+      Q.po.set(P[a] + (P[b] - P[a]) * f, P[a + 1] + (P[b + 1] - P[a + 1]) * f, P[a + 2] + (P[b + 2] - P[a + 2]) * f);
+      Q.im.setMatrixAt(k, Q.m4.compose(Q.po, Q.qu, Q.sc));
+    });
+    Q.im.instanceMatrix.needsUpdate = true;
+  },
+
+  // Baukran mit Gittermast (ab «Mittel»): Fundament und Mast stehen fest in der Deko, der obere Teil dreht sich langsam hin und her
+  // (Ausleger und Gegenausleger aus Gitterstäben, Führerhaus, Turmspitze mit Abspannseilen, Laufkatze, Seil, Haken mit Last).
+  kraene: [],
+  stab(g, ax, ay, az, bx, by, bz, d, f) {          // Stab von A nach B mit Dicke d
+    const dx = bx - ax, dy = by - ay, dz = bz - az, h = Math.hypot(dx, dz);
+    g.box((ax + bx) / 2, (ay + by) / 2, (az + bz) / 2, Math.hypot(h, dy), d, d, f, Math.atan2(-dz, dx), Math.atan2(dy, h), 0);
+  },
+  kran(g, x, y, z, dreh) {
+    const f = Geo.farbe, gelb = f(0xf2b81a), dunkel = f(0x5a5f66), beton = f(0x9a958a), a = 0.75, h = 34, seg = 3.4, n = Math.round(h / seg), y0 = y + 1.2;
+    g.box(x, y + 0.6, z, 5, 1.2, 5, beton);
+    for (const [p, q] of [[-a, -a], [a, -a], [a, a], [-a, a]]) g.box(x + p, y0 + (n * seg) / 2, z + q, 0.17, n * seg, 0.17, gelb);      // Eckstiele
+    for (let i = 0; i < n; i++) {
+      const yu = y0 + i * seg, w = (i % 2 ? 1 : -1);
+      for (const s of [-1, 1]) {
+        g.box(x, yu + seg, z + s * a, 2 * a, 0.09, 0.09, gelb); g.box(x + s * a, yu + seg, z, 0.09, 0.09, 2 * a, gelb);            // Ringe
+        this.stab(g, x - a * w, yu, z + s * a, x + a * w, yu + seg, z + s * a, 0.08, gelb);                                       // Streben im Zickzack
+        this.stab(g, x + s * a, yu, z - a * w, x + s * a, yu + seg, z + a * w, 0.08, gelb);
+      }
+    }
+    // drehender Oberteil, in eigenen Koordinaten: Ursprung oben auf dem Mast, Ausleger zeigt nach +x
+    const o = new Geo(), L = 30, K = -10, hk = 1.1, sp = 5.6;
+    o.box(0, 0.25, 0, 1.9, 0.5, 1.9, dunkel);                                                                                       // Drehkranz
+    o.box(0.6, 1.25, 1.35, 1.7, 1.9, 1.3, f(0xf4f1e8)); o.box(1.46, 1.45, 1.35, 0.04, 0.9, 1.1, f(0x24313d));                    // Führerhaus mit Scheibe
+    for (const [p, q] of [[-0.6, -0.6], [0.6, -0.6], [0.6, 0.6], [-0.6, 0.6]]) this.stab(o, p, 0.5, q, 0, sp, 0, 0.12, gelb);   // Turmspitze
+    for (const s of [-1, 1]) this.stab(o, 0.9, 0.5, s * 0.55, L, 0.5, s * 0.3, 0.12, gelb);                                      // Ausleger: zwei Untergurte …
+    this.stab(o, 0.9, 0.5 + hk, 0, L, 0.62, 0, 0.11, gelb);                                                                       // … und ein Obergurt
+    for (let q = 1; q < L - 1; q += 1.6) {
+      const t = (q - 0.9) / (L - 0.9), zq = 0.55 - 0.25 * t, hq = hk * (1 - t) + 0.12 * t, w = Math.floor(q / 1.6) % 2 ? 0.8 : 0;
+      for (const s of [-1, 1]) this.stab(o, q, 0.5, s * zq, q + 0.8 - w, 0.5 + hq, 0, 0.06, gelb);
+      o.box(q, 0.5, 0, 0.06, 0.06, 2 * zq, gelb);
+    }
+    for (const s of [-1, 1]) this.stab(o, 0, 0.5, s * 0.6, K, 0.5, s * 0.6, 0.16, gelb);                                         // Gegenausleger
+    for (let q = -1.5; q > K + 0.5; q -= 1.5) o.box(q, 0.5, 0, 0.08, 0.08, 1.2, gelb);
+    for (let q = 0; q < 3; q++) o.box(K + 1.2 + q * 0.7, -0.4, 0, 0.6, 2.2, 1.6, beton);                                         // Gegengewicht
+    this.stab(o, 0, sp, 0, L * 0.62, 0.5 + hk * 0.4, 0, 0.05, dunkel); this.stab(o, 0, sp, 0, K + 0.5, 0.6, 0, 0.05, dunkel);    // Abspannseile
+    const kat = L * 0.7;
+    o.box(kat, 0.3, 0, 1.0, 0.35, 1.0, dunkel); o.box(kat, -6.1, 0, 0.05, 12.4, 0.05, f(0x2a2d31));                            // Laufkatze, Seil
+    o.box(kat, -12.5, 0, 0.5, 0.6, 0.35, f(0xe0362c)); o.box(kat, -13.4, 0, 1.6, 0.12, 1.2, f(0x8a6a44));                        // Haken, Palette
+    for (let i = 0; i < 6; i++) o.box(kat - 0.5 + (i % 3) * 0.5, -13.05, (i < 3 ? -0.28 : 0.28), 0.46, 0.6, 0.5, f(0xb4543a, 0.9 + (i % 2) * 0.15));   // Ziegelstapel
+    this.kraene.push({ geo: o, x, y: y0 + n * seg, z, dreh, ph: (x * 0.37 + z * 0.11) % TAU });
+  },
+  kranNetze(G, W) {
+    const liste = this.kraene; this.kraene = []; this.drehKraene = [];
+    for (const k of liste) {
+      const m = k.geo.netz(G.mat, true);
+      m.position.set(k.x, k.y, k.z); m.rotation.y = k.dreh;
+      W.add(m); this.drehKraene.push({ m, dreh: k.dreh, ph: k.ph });
+    }
+  },
+  drehKraene: [],
+  // Bagger (ab «Mittel»): Raupenfahrwerk mit Kettengliedern steht fest in der Deko; Oberwagen, Ausleger, Stiel und Löffel
+  // sind eigene Teile mit Drehpunkten und graben im Takt (Oberwagen schwenkt, Ausleger hebt, Stiel und Löffel holen Erde).
+  bagger: [],
+  baggerFein(g, x, y, z, dreh) {
+    const f = Geo.farbe, c = Math.cos(dreh), sn = Math.sin(dreh), ge = f(0xf2b81a), dk = f(0x2a2d31), st = f(0x4a4e55);
+    const box = (lx, ly, lz, sx, sy, sz, fa) => g.box(x + c * lx + sn * lz, y + ly, z - sn * lx + c * lz, sx, sy, sz, fa, dreh);
+    for (const q of [-1.25, 1.25]) {
+      box(0, 0.45, q, 4.4, 0.7, 0.72, dk);                                                         // Kette
+      for (let i = 0; i < 12; i++) { const lx = -2.05 + i * 0.373; box(lx, 0.83, q, 0.16, 0.08, 0.76, st); box(lx, 0.07, q, 0.16, 0.08, 0.76, st); }   // Kettenglieder
+      for (const lx of [-2.0, 2.0]) g.zyl(x + c * lx + sn * q, y + 0.45, z - sn * lx + c * q, 0.38, 0.38, 0.78, 10, st, 'z', dreh);   // Antriebs- und Leitrad
+    }
+    box(0, 0.75, 0, 2.2, 0.55, 1.8, dk);                                                            // Mittelteil mit Drehkranz
+    const ob = new Geo(), au = new Geo(), stl = new Geo(), lo = new Geo(), glas = f(0x9fd0e6), gd = f(0xd9a012);
+    ob.box(-0.3, 0.65, 0, 3.0, 1.3, 2.4, ge); ob.box(-1.95, 0.55, 0, 0.7, 1.1, 2.4, gd);            // Oberwagen, Gegengewicht
+    ob.box(0.55, 2.0, 0.68, 1.1, 1.45, 1.0, ge); ob.box(1.11, 2.05, 0.68, 0.03, 1.1, 0.85, glas); ob.box(0.55, 2.05, 1.19, 0.9, 1.0, 0.03, glas);   // Führerhaus mit Scheiben
+    ob.box(-0.9, 1.42, -0.55, 1.4, 0.25, 1.1, gd); ob.zyl(-1.2, 1.9, -0.75, 0.07, 0.07, 0.8, 6, dk);   // Motorhaube, Auspuff
+    this.stab(ob, 1.0, 0.45, -0.2, 1.75, 1.5, -0.2, 0.22, st);                                      // Hubzylinder (am Oberwagen)
+    this.stab(au, 0, 0, 0, 2.7, 2.0, 0, 0.42, ge); this.stab(au, 2.7, 2.0, 0, 4.7, 1.25, 0, 0.36, ge);   // Ausleger, geknickt
+    this.stab(au, 1.4, 1.35, 0, 3.9, 2.05, 0, 0.14, st);                                           // Stielzylinder
+    this.stab(stl, 0, 0, 0, 0.35, -2.5, 0, 0.3, ge); this.stab(stl, 0.1, 0.4, 0, 0.4, -1.9, 0, 0.1, st);
+    lo.box(0.35, -0.35, 0, 0.85, 0.75, 1.05, f(0x55595f)); for (let i = 0; i < 4; i++) lo.box(0.8, -0.72, -0.39 + i * 0.26, 0.2, 0.12, 0.1, dk);   // Löffel mit Zähnen
+    this.bagger.push({ x, y, z, dreh, ob, au, stl, lo, ph: (x * 0.21 + z * 0.13) % TAU });
+  },
+  baggerNetze(G, W) {
+    const liste = this.bagger; this.bagger = []; this.baggerTeile = [];
+    for (const b of liste) {
+      const ob = new THREE.Group(), au = new THREE.Group(), stl = new THREE.Group(), lo = new THREE.Group();
+      ob.position.set(b.x, b.y + 1.05, b.z); ob.rotation.y = b.dreh;
+      au.position.set(1.15, 0.55, -0.2); stl.position.set(4.7, 1.25, 0); lo.position.set(0.35, -2.5, 0);
+      ob.add(b.ob.netz(G.mat, true)); au.add(b.au.netz(G.mat, true)); stl.add(b.stl.netz(G.mat, true)); lo.add(b.lo.netz(G.mat, true));
+      stl.add(lo); au.add(stl); ob.add(au); W.add(ob);
+      this.baggerTeile.push({ ob, au, stl, lo, dreh: b.dreh, ph: b.ph });
+    }
+  },
+  baggerTeile: [],
+  graben(t) {
+    for (const b of this.baggerTeile) {
+      const w = t * 0.55 + b.ph;
+      b.ob.rotation.y = b.dreh + Math.sin(w * 0.5) * 0.55;          // Oberwagen schwenkt zwischen Grube und Haufen
+      b.au.rotation.z = -0.12 + Math.sin(w) * 0.22;                  // Ausleger hebt und senkt
+      b.stl.rotation.z = 0.25 + Math.sin(w + 1.1) * 0.42;           // Stiel holt aus
+      b.lo.rotation.z = Math.sin(w + 2.1) * 0.65;                    // Löffel gräbt und kippt aus
+    }
+  },
+
+  // Wehende Fahnen: Mast und Tuch. Das Tuch flattert im Shader: Wellen laufen vom Mast zum freien Ende und werden dorthin stärker.
+  // Alle Fahnen wehen mit dem Wind (Welt +x, wie Gras und Bäume). art: 'ziel' = Zielflagge (schwarz-weiss kariert), sonst Farbe (hex)
+  fahnen: [],
+  fahne(x, y, z, art, h, gr) { this.fahnen.push({ x, y, z, art, h: h || 3, gr: gr || 1 }); },      // x, y, z = Fuss des Masts (Welt), h = Masthöhe, gr = Grösse des Tuchs
+  fahnenStoff(kariert) {
+    const key = kariert ? 'fahneZiel' : 'fahne';
+    if (this.mats[key]) return this.mats[key];
+    const c = document.createElement('canvas'); c.width = 128; c.height = 80;
+    const x = c.getContext('2d');
+    if (kariert) { for (let i = 0; i < 8; i++) for (let j = 0; j < 5; j++) { x.fillStyle = (i + j) % 2 ? '#141414' : '#f4f4f0'; x.fillRect(i * 16, j * 16, 16, 16); } }
+    else { x.fillStyle = '#ffffff'; x.fillRect(0, 0, 128, 80); x.fillStyle = 'rgba(0,0,0,0.2)'; x.fillRect(0, 0, 9, 80); x.fillStyle = 'rgba(255,255,255,0.9)'; x.fillRect(9, 52, 119, 9); }   // Saum am Mast, heller Streifen
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    const mat = new THREE.MeshStandardMaterial({ map: t, side: THREE.DoubleSide, roughness: 0.8, metalness: 0 });
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uZeit = this.zeit;
+      sh.vertexShader = 'uniform float uZeit;\n' + sh.vertexShader
+        .replace('#include <beginnormal_vertex>', `vec3 wo = vec3(0.0);
+          #ifdef USE_INSTANCING
+            wo = instanceMatrix[3].xyz;
+          #endif
+          float u = clamp(position.x / 1.8, 0.0, 1.0), ph = wo.x * 0.37 + wo.z * 0.23;
+          float a1 = position.x * 3.0 - uZeit * 7.0 + ph, a2 = position.x * 5.3 - uZeit * 11.0 + ph * 1.7 + position.y * 2.2;
+          float welle = (sin(a1) * 0.17 + sin(a2) * 0.05) * u;
+          float steig = (cos(a1) * 0.51 + cos(a2) * 0.265) * u + (sin(a1) * 0.17 + sin(a2) * 0.05) / 1.8;
+          vec3 objectNormal = normalize(vec3(-steig, 0.0, 1.0));
+          #ifdef USE_TANGENT
+            vec3 objectTangent = vec3(tangent.xyz);
+          #endif`)
+        .replace('#include <begin_vertex>', `vec3 transformed = vec3(position);
+          transformed.z += welle; transformed.y -= u * u * 0.14;`);
+    };
+    mat.customProgramCacheKey = () => 'leben-' + key;
+    return (this.mats[key] = mat);
+  },
+  fahnenNetz(W) {
+    const liste = this.fahnen; this.fahnen = [];
+    if (!liste.length) return;
+    const tuch = new THREE.PlaneGeometry(1.8, 1.1, 16, 6), mast = new THREE.CylinderGeometry(0.045, 0.06, 1, 6);
+    tuch.translate(0.9, -0.55, 0); mast.translate(0, 0.5, 0);
+    const m4 = new THREE.Matrix4(), qu = new THREE.Quaternion(), e = new THREE.Euler(), po = new THREE.Vector3(), sc = new THREE.Vector3(1, 1, 1), c = new THREE.Color();
+    for (const kariert of [true, false]) {
+      const teil = liste.filter((f) => (f.art === 'ziel') === kariert);
+      if (!teil.length) continue;
+      const im = new THREE.InstancedMesh(tuch, this.fahnenStoff(kariert), teil.length);
+      teil.forEach((f, i) => {
+        e.set(0, Math.sin(f.x * 0.7 + f.z * 0.3) * 0.25, 0); qu.setFromEuler(e); po.set(f.x, f.y + f.h - 0.08, f.z); sc.set(f.gr, f.gr, f.gr);
+        im.setMatrixAt(i, m4.compose(po, qu, sc));
+        if (!kariert) im.setColorAt(i, c.setHex(f.art));
+      });
+      im.frustumCulled = false; im.castShadow = true;
+      W.add(im); this.netze.push(im);
+    }
+    const masten = new THREE.InstancedMesh(mast, new THREE.MeshStandardMaterial({ color: 0xc9ccd0, roughness: 0.35, metalness: 0.7 }), liste.length);
+    liste.forEach((f, i) => { qu.identity(); po.set(f.x, f.y, f.z); masten.setMatrixAt(i, m4.compose(po, qu, sc.set(Math.sqrt(f.gr), f.h, Math.sqrt(f.gr)))); });
+    masten.frustumCulled = false; masten.castShadow = true;
+    W.add(masten); this.netze.push(masten);
+  },
+
+  // See: Wasser mit wandernden kleinen Wellen (Normalenbild), unregelmässigem Ufer, hellerem flachem Wasser und Schaum am Rand
+  see(ws) {
+    const gr = new THREE.Group(), zuf = zufallsGenerator(91 + Math.round(ws.r)), N = 128, S = 72, ph = [zuf() * TAU, zuf() * TAU, zuf() * TAU];
+    const rr = (w) => ws.r * (1 + 0.06 * Math.sin(3 * w + ph[0]) + 0.035 * Math.sin(5 * w + ph[1]) + 0.02 * Math.sin(9 * w + ph[2]));   // Uferlinie
+    // Band zwischen zwei Abständen vom Ufer (innen, aussen in m; negativ = im Wasser), Deckkraft innen → aussen
+    const band = (innen, aussen, aI, aA) => {
+      const P = [], C = [], U = [], I = [], NR = [];
+      for (let k = 0; k <= S; k++) {
+        const w = (k / S) * TAU, r = rr(w), c = Math.cos(w), s2 = Math.sin(w);
+        for (const [d, a] of [[innen, aI], [aussen, aA]]) { const q = Math.max(0, r + d); P.push(c * q, s2 * q, 0); C.push(1, 1, 1, a); U.push((c * q) / 6, (s2 * q) / 6); NR.push(0, 0, 1); }   // Normale zeigt nach dem Drehen nach oben
+        if (k < S) { const o = k * 2; I.push(o, o + 1, o + 2, o + 1, o + 3, o + 2); }      // Vorderseite zeigt nach dem Drehen nach oben
+      }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(C, 4)); g.setAttribute('uv', new THREE.Float32BufferAttribute(U, 2)); g.setAttribute('normal', new THREE.Float32BufferAttribute(NR, 3)); g.setIndex(I);
+      return g;
+    };
+    if (!this._seeWellen) { this._seeWellen = Struktur.textur(Struktur.relief(Struktur.wolkig(N, 6, 3, zuf), N, 4), false, 1, 1); }
+    const w = this._seeWellen.clone(); w.needsUpdate = true; w.repeat.set(1.4, 1.4); this.wellen.push(w);
+    const wasser = new THREE.Mesh(band(-ws.r * 1.2, 0, 1, 1), new THREE.MeshStandardMaterial({ color: 0x2a6890, transparent: true, opacity: 0.9, roughness: 0.06, metalness: 0.65, normalMap: w, normalScale: new THREE.Vector2(0.35, 0.35) }));
+    gr.add(wasser);
+    if (!this._schaum) {
+      const c = document.createElement('canvas'); c.width = c.height = 128;
+      const x = c.getContext('2d');
+      for (let i = 0; i < 900; i++) { const px = zuf() * 128, py = zuf() * 128, r = 0.5 + zuf() * zuf() * 2.2; for (const dx of [-128, 0, 128]) for (const dy of [-128, 0, 128]) { x.fillStyle = 'rgba(255,255,255,' + (0.25 + zuf() * 0.6).toFixed(2) + ')'; x.beginPath(); x.arc(px + dx, py + dy, r, 0, TAU); x.fill(); } }
+      this._schaum = new THREE.CanvasTexture(c); this._schaum.wrapS = this._schaum.wrapT = THREE.RepeatWrapping; this._schaum.colorSpace = THREE.SRGBColorSpace;
+    }
+    const flach = new THREE.Mesh(band(-4, -0.4, 0, 0.3), new THREE.MeshBasicMaterial({ color: 0x7cc4b8, vertexColors: true, transparent: true, depthWrite: false }));   // helleres, flaches Wasser am Ufer
+    flach.position.z = 0.02; gr.add(flach);
+    const rand = new THREE.Mesh(band(-1.6, 0.2, 0, 0.85), new THREE.MeshBasicMaterial({ map: this._schaum, color: 0xeef4f2, vertexColors: true, transparent: true, depthWrite: false }));   // Schaum: am Ufer dicht, gegen das Wasser hin auslaufend
+    rand.position.z = 0.04; rand.renderOrder = 1; gr.add(rand);
+    return gr;
+  },
+  wellen: [],
+
+  leeren() { this.netze = []; this.voegel = null; this.gaenger = null; this.drehKraene = []; this.baggerTeile = []; },
+  seenLeeren() { for (const w of this.wellen) w.dispose(); this.wellen = []; },        // die Netze hängen an der Welt; baueWelt räumt ihre Geometrie weg
+
+  baue(G, S, W, bk) {
+    this.leeren();
+    const L = CONFIG.grafik.leben, q = G.qualitaet;
+    this.wald(G, W);
+    this.publikum(W);
+    this.baustelle(W);
+    this.fahnenNetz(W);
+    this.kranNetze(G, W);
+    this.baggerNetze(G, W);
+    if (L.passanten.nur.includes(S.id)) this.passanten(G, S, W, bk, L.passanten[q] || 0);
+    if ((L.gras[q] || 0) > 0 && G.bodenRaster) this.wiese(G, S, W, L, L.gras[q]);
+    if ((L.steine[q] || 0) > 0 && G.bodenRaster && !L.ohneSteine.includes(S.id)) this.steine(G, S, W, L, L.steine[q]);
+    this.schwarm(G, S, W, L, L.voegel[q] || 0);
+  },
+
+  wiese(G, S, W, L, anzahl) {
+    const { raster, nx, nz, zelle, farben, gruen } = G.bodenRaster, N = nx + 1, def = S.def, zuf = zufallsGenerator(8642);
+    const wasser = def.wasser || [], fluesse = def.fluesse || [], frei = (def.frei || []).filter((f) => !f[3]);
+    const nBlumen = Math.round(anzahl * L.blumen), nGras = anzahl - nBlumen, gras = [], blumen = [];
+    // Bodenwerte an einer Stelle der Zelle (i, j), u und v von 0 bis 1 (weich zwischen den vier Ecken)
+    const probe = (i, j, u, v) => {
+      const a = j * N + i, b = a + 1, c = a + N, d = c + 1, wa = (1 - u) * (1 - v), wb = u * (1 - v), wc = (1 - u) * v, wd = u * v;
+      const m = (k) => raster[a][k] * wa + raster[b][k] * wb + raster[c][k] * wc + raster[d][k] * wd;
+      const f = (k) => farben[a * 3 + k] * wa + farben[b * 3 + k] * wb + farben[c * 3 + k] * wc + farben[d * 3 + k] * wd;
+      return { x: m(0), y: m(1), zw: m(2), d: m(3), gw: gruen[a] * wa + gruen[b] * wb + gruen[c] * wc + gruen[d] * wd, r: f(0), g: f(1), b: f(2) };
+    };
+    let versuche = 0;
+    while ((gras.length < nGras || blumen.length < nBlumen) && versuche++ < anzahl * 40) {
+      const i = Math.floor(zuf() * nx), j = Math.floor(zuf() * nz), u = zuf(), v = zuf(), p = probe(i, j, u, v);
+      if (p.gw < 0.05 || p.d < L.band[0] || p.d > L.band[1]) continue;
+      const rand = Math.min(1, (p.d - L.band[0]) / 3) * Math.min(1, (L.band[1] - p.d) / (L.band[1] * 0.35));
+      const fleck = 0.5 + 0.5 * Math.sin(p.x * 0.13 + Math.sin(p.zw * 0.07) * 2.2) * Math.sin(p.zw * 0.1 + Math.cos(p.x * 0.05) * 1.7);   // Gras wächst in Flecken
+      if (zuf() > Math.min(1, p.gw * 1.4) * rand * (0.35 + 0.65 * fleck)) continue;
+      const zl = -p.zw;
+      if (wasser.some((w) => hyp(p.x - w.x, zl - w.z) < w.r + 1.5)) continue;
+      if (fluesse.some((f) => Math.abs(zl - f.z) < f.breite / 2 + 3 && p.x > f.x0 && p.x < f.x1)) continue;
+      if (frei.some((f) => hyp(p.x - f[0], zl - f[1]) < f[2])) continue;
+      const istBlume = blumen.length < nBlumen && (gras.length >= nGras || zuf() < L.blumen * 1.2), liste = istBlume ? blumen : gras, ziel = istBlume ? nBlumen : nGras;
+      const n = istBlume ? 2 + Math.floor(zuf() * 5) : 1 + Math.floor(zuf() * 4);                    // kleine Gruppen
+      for (let k = 0; k < n && liste.length < ziel; k++) liste.push(k ? probe(i, j, clamp(u + ((zuf() - 0.5) * 2.6) / zelle, 0, 1), clamp(v + ((zuf() - 0.5) * 2.6) / zelle, 0, 1)) : p);
+    }
+    const m4 = new THREE.Matrix4(), qu = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(), po = new THREE.Vector3(), c = new THREE.Color();
+    const setze = (liste, geo, art) => {
+      if (!liste.length) { geo.dispose(); return; }
+      const im = new THREE.InstancedMesh(geo, this.windStoff(art), liste.length);
+      liste.forEach((p, k) => {
+        const gras = art === 'gras', h = gras ? 0.36 + zuf() * zuf() * 0.62 : 0.3 + zuf() * 0.26;
+        e.set(gras ? 0 : (zuf() - 0.5) * 0.5, zuf() * TAU, gras ? 0 : (zuf() - 0.5) * 0.5); qu.setFromEuler(e);
+        sc.set(h * (0.8 + zuf() * 0.5), h, h * (0.8 + zuf() * 0.5)); po.set(p.x, p.y - 0.05, p.zw);
+        im.setMatrixAt(k, m4.compose(po, qu, sc));
+        if (gras) { const hell = 0.95 + zuf() * 0.3; c.setRGB(p.r * hell, p.g * 1.16 * hell, p.b * 0.82 * hell); } else c.setHex(BLUETEN[Math.floor(zuf() * BLUETEN.length)]);
+        im.setColorAt(k, c);
+      });
+      im.frustumCulled = false; im.receiveShadow = true; im.castShadow = false;
+      W.add(im); this.netze.push(im);
+    };
+    setze(gras, this.bueschel(), 'gras');
+    setze(blumen, this.blume(), 'blumen');
+    this.anzahl = { gras: gras.length, blumen: blumen.length };
+  },
+
+  // Steine: flache, unregelmässige Brocken in der Farbe des Bodens, dort wo kein Gras wächst (Kies, Erde, Fels)
+  steine(G, S, W, L, anzahl) {
+    const { raster, nx, nz, zelle, farben, gruen } = G.bodenRaster, N = nx + 1, def = S.def, zuf = zufallsGenerator(5317), liste = [];
+    const wasser = def.wasser || [], fluesse = def.fluesse || [];
+    let versuche = 0;
+    while (liste.length < anzahl && versuche++ < anzahl * 60) {
+      const i = Math.floor(zuf() * nx), j = Math.floor(zuf() * nz), u = zuf(), v = zuf(), a = j * N + i, b = a + 1, c = a + N, d = c + 1;
+      const wa = (1 - u) * (1 - v), wb = u * (1 - v), wc = (1 - u) * v, wd = u * v, m = (k) => raster[a][k] * wa + raster[b][k] * wb + raster[c][k] * wc + raster[d][k] * wd;
+      const ab = m(3), gw = gruen[a] * wa + gruen[b] * wb + gruen[c] * wc + gruen[d] * wd;
+      if (ab < 3.2 || ab > 40 || zuf() > (1 - gw) * (ab < 14 ? 1 : 0.4)) continue;
+      const x = m(0), zw = m(2), zl = -zw;
+      if (wasser.some((w) => hyp(x - w.x, zl - w.z) < w.r + 1)) continue;
+      if (fluesse.some((f) => Math.abs(zl - f.z) < f.breite / 2 + 2 && x > f.x0 && x < f.x1)) continue;
+      const f = (k) => farben[a * 3 + k] * wa + farben[b * 3 + k] * wb + farben[c * 3 + k] * wc + farben[d * 3 + k] * wd;
+      liste.push({ x, y: m(1), zw, r: f(0), g: f(1), b: f(2) });
+    }
+    if (!liste.length) return;
+    const geo = new THREE.IcosahedronGeometry(1, 0), pa = geo.attributes.position;
+    for (let i = 0; i < pa.count; i++) { const x = pa.getX(i), y = pa.getY(i), z = pa.getZ(i), k = 1 + 0.22 * Math.sin(x * 12.9 + y * 7.3 + z * 3.1); pa.setXYZ(i, x * k, Math.max(-0.3, y) * 0.62 * k, z * k); }   // gleiche Ecke → gleiche Verschiebung, sonst klaffen Fugen
+    geo.computeVertexNormals();
+    const mat = this.mats.stein || (this.mats.stein = new THREE.MeshStandardMaterial({ roughness: 0.92, metalness: 0, flatShading: true }));
+    const im = new THREE.InstancedMesh(geo, mat, liste.length), m4 = new THREE.Matrix4(), qu = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(), po = new THREE.Vector3(), c = new THREE.Color();
+    liste.forEach((p, k) => {
+      const gr = 0.08 + Math.pow(zuf(), 2.2) * 0.42; e.set((zuf() - 0.5) * 0.4, zuf() * TAU, (zuf() - 0.5) * 0.4); qu.setFromEuler(e);
+      sc.set(gr * (0.8 + zuf() * 0.6), gr * (0.7 + zuf() * 0.5), gr * (0.8 + zuf() * 0.6)); po.set(p.x, p.y + gr * 0.05, p.zw);
+      im.setMatrixAt(k, m4.compose(po, qu, sc)); const h = 0.75 + zuf() * 0.4, grau = (p.r + p.g + p.b) / 3; c.setRGB(lerp(p.r, grau, 0.5) * h, lerp(p.g, grau, 0.5) * h, lerp(p.b, grau, 0.5) * h); im.setColorAt(k, c);
+    });
+    im.frustumCulled = false; im.castShadow = false; im.receiveShadow = true;
+    W.add(im); this.netze.push(im);
+  },
+
+  // Vogel: schmaler Körper mit Schwanz, zwei Flügel aus je zwei Dreiecken (Spannweite etwa 1.2 × Grösse)
+  vogelGeo() {
+    const pos = [0.32, 0, 0, -0.26, 0.02, 0.05, -0.26, 0.02, -0.05, -0.2, 0.01, 0, -0.44, 0.01, 0.1, -0.44, 0.01, -0.1];
+    for (const s of [1, -1]) pos.push(0.12, 0, 0, -0.1, 0, 0, 0, 0.02, 0.32 * s, 0, 0.02, 0.32 * s, -0.1, 0, 0, -0.16, 0.01, 0.62 * s);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(pos.map((v, i) => (i % 3 === 1 ? 1 : 0)), 3));
+    return g;
+  },
+  vogelStoff() {
+    if (this.mats.vogel) return this.mats.vogel;
+    const mat = new THREE.MeshStandardMaterial({ color: 0x2a2c30, side: THREE.DoubleSide, roughness: 0.9, metalness: 0 });
+    mat.onBeforeCompile = (sh) => {
+      sh.uniforms.uZeit = this.zeit;
+      sh.vertexShader = 'uniform float uZeit;\n' + sh.vertexShader.replace('#include <begin_vertex>', `#include <begin_vertex>
+        float ph = 0.0;
+        #if __VERSION__ >= 300
+          ph = float(gl_InstanceID) * 1.37;
+        #endif
+        float schlag = step(-0.2, sin(uZeit * 0.6 + ph * 0.7));                 // mal schlagen, mal gleiten
+        float fl = abs(position.z);
+        transformed.y += fl * (schlag * sin(uZeit * 10.0 + ph) * 0.7 + (1.0 - schlag) * 0.12);`);
+    };
+    mat.customProgramCacheKey = () => 'leben-vogel';
+    return (this.mats.vogel = mat);
+  },
+  schwarm(G, S, W, L, anzahl) {
+    const st = G.stimmung || {};
+    if (!anzahl || (st.nacht || 0) > 0.35 || L.ohneVoegel.includes(S.id)) return;
+    const zuf = zufallsGenerator(1357), H = S.haupt, gruppen = Math.max(1, Math.round(anzahl / 8)), liste = [];
+    for (let g = 0; g < gruppen; g++) {
+      const o = {}; H.ort(zuf() * S.laenge, (zuf() - 0.5) * 70, o);                                      // Kreismitte nahe der Strecke
+      const r = 28 + zuf() * 45, y = o.y + 20 + zuf() * 22, w = (0.22 + zuf() * 0.18) * (zuf() < 0.5 ? 1 : -1);   // w: Drehung in rad/s
+      for (let k = g; k < anzahl; k += gruppen) liste.push({ cx: o.x, cz: -o.z, r: r + (zuf() - 0.5) * 10, y: y + (zuf() - 0.5) * 6, w: w * (0.94 + zuf() * 0.12), a: zuf() * 0.7 + g * 2, gr: 0.6 + zuf() * 0.4, wellen: zuf() * TAU });
+    }
+    const im = new THREE.InstancedMesh(this.vogelGeo(), this.vogelStoff(), liste.length);
+    im.frustumCulled = false;
+    this.voegel = { im, liste, m4: new THREE.Matrix4(), qu: new THREE.Quaternion(), e: new THREE.Euler(0, 0, 0, 'YXZ'), po: new THREE.Vector3(), sc: new THREE.Vector3() };
+    W.add(im); this.netze.push(im);
+    this.proBild(G, 0);
+  },
+
+  // pro Bild: Uhr weiter, Vögel auf ihren Kreisen bewegen
+  proBild(G, dt) {
+    this.zeit.value += dt;
+    for (const w of this.wellen) { w.offset.x += dt * 0.01; w.offset.y += dt * 0.017; }
+    if (this.gaenger && dt > 0) this.gehen(this.zeit.value);
+    for (const k of this.drehKraene) k.m.rotation.y = k.dreh + Math.sin(this.zeit.value * 0.06 + k.ph) * 0.9;      // Kräne schwenken langsam
+    if (this.baggerTeile.length) this.graben(this.zeit.value);
+    const V = this.voegel;
+    if (!V) return;
+    const t = this.zeit.value;
+    V.liste.forEach((b, k) => {
+      const a = b.a + b.w * t, s = Math.sign(b.w), vx = -Math.sin(a) * s, vz = Math.cos(a) * s;
+      V.po.set(b.cx + Math.cos(a) * b.r, b.y + Math.sin(t * 0.4 + b.wellen) * 2.5, b.cz + Math.sin(a) * b.r);
+      V.e.set(s * 0.32, Math.atan2(-vz, vx), 0); V.qu.setFromEuler(V.e); V.sc.setScalar(b.gr);
+      V.im.setMatrixAt(k, V.m4.compose(V.po, V.qu, V.sc));
+    });
+    V.im.instanceMatrix.needsUpdate = true;
+  },
+};
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 10: Eingabe – Tastatur, Gamepad, Touch
    Jedes Eingabegerät liefert dieselben «Tasten» wie in LEERE_EINGABE.
@@ -7537,8 +8747,22 @@ const SYMBOLE = {
 };
 
 // ── Anzeige im Rennen: pro lokalem Spieler ein eigenes Feld ───────────────
+const TACHO_MAX = 140;      // Endwert des Tachos in km/h (Höchsttempo 108, mit Boost bis etwa 137)
 const Hud = {
   teile: [], grund: null, kf: 1, kx: 0, ky: 0, bild: 0,
+
+  // Tacho als SVG: Skala über 260 Grad, oranger Boost-Bereich, Nadel, aussen ein Ring für Drift-Aufladung und Boost
+  tachoBild() {
+    const pkt = (grad, r) => { const w = (grad * Math.PI) / 180; return (60 + Math.cos(w) * r).toFixed(1) + ' ' + (60 + Math.sin(w) * r).toFixed(1); };
+    const bogen = (a, b, r) => 'M' + pkt(a, r) + ' A' + r + ' ' + r + ' 0 ' + (b - a > 180 ? 1 : 0) + ' 1 ' + pkt(b, r);
+    let striche = '';
+    for (let v = 0; v <= TACHO_MAX; v += 10) { const g = 140 + (260 * v) / TACHO_MAX, gross = v % 20 === 0; striche += '<path class="' + (gross ? 'strich' : 'strich fein') + '" d="M' + pkt(g, gross ? 39 : 42) + ' L' + pkt(g, 46) + '"/>'; }
+    for (let v = 0; v <= TACHO_MAX; v += 40) striche += '<text x="' + pkt(140 + (260 * v) / TACHO_MAX, 32.5).replace(' ', '" y="') + '">' + v + '</text>';
+    const boostAb = 140 + (260 * CONFIG.fahren.vmax * 3.6) / TACHO_MAX;
+    return '<svg viewBox="0 0 120 120"><circle class="scheibe" cx="60" cy="60" r="52"/><path class="bogen" d="' + bogen(140, 400, 47.5) + '"/><path class="rot" d="' + bogen(boostAb, 400, 47.5) + '"/>' + striche +
+      '<path class="ladegrund" d="' + bogen(140, 400, 56) + '"/><path class="lade" pathLength="100" d="' + bogen(140, 400, 56) + '"/>' +
+      '<g class="nadel"><path d="M54 58.2 L101 60 L54 61.8 Z"/></g><circle class="nabe" cx="60" cy="60" r="4.6"/></svg>';
+  },
 
   // Auslosung: zeigt jedem lokalen Spieler vor dem Countdown sein Auto mit Stärke und Schwäche
   auslosung(R) {
@@ -7559,7 +8783,7 @@ const Hud = {
       const d = document.createElement('div'); d.className = 'hud';
       d.innerHTML = '<div class="h-platz"></div><div class="h-runde"></div><div class="h-zeit"></div>' +
         '<div class="h-karte"><canvas></canvas></div>' +
-        '<div class="h-tempo"><span>0</span> <small>km/h</small><span class="lade"><i></i></span></div>' +
+        '<div class="h-tempo">' + Hud.tachoBild() + '<span>0</span><small>km/h</small></div>' +
         '<div class="h-mitte"><div class="h-warnung versteckt"></div><div class="h-meldung"></div></div>' +
         '<div class="h-gross versteckt"></div><div class="h-abstand"></div><div class="h-bauinfo"></div>' +
         '<div class="h-bau"><div class="h-bp"><b>0</b><span>BP</span><div class="lade"><i></i></div></div>' +
@@ -7567,12 +8791,12 @@ const Hud = {
         '</div><div class="h-falsch versteckt">Falsche Richtung!</div>';
       wurzel.appendChild(d);
       const q = (s) => d.querySelector(s);
-      const t = { sp, el: d, platz: q('.h-platz'), runde: q('.h-runde'), zeit: q('.h-zeit'), karte: q('.h-karte canvas'), tempo: q('.h-tempo span'), lade: q('.h-tempo .lade i'),
+      const t = { sp, el: d, platz: q('.h-platz'), runde: q('.h-runde'), zeit: q('.h-zeit'), karte: q('.h-karte canvas'), tempo: q('.h-tempo > span'), lade: q('.h-tempo .lade'), nadel: q('.h-tempo .nadel'),
         warnung: q('.h-warnung'), meldung: q('.h-meldung'), gross: q('.h-gross'), abstand: q('.h-abstand'), bauinfo: q('.h-bauinfo'), bp: q('.h-bp b'), bpLade: q('.h-bp .lade i'),
         bw: Array.from(d.querySelectorAll('.bw')), falsch: q('.h-falsch'), alt: {}, meldZeit: 0, grossZeit: 0, warnBw: -1 };
       // Bauleiste lässt sich auch anklicken/antippen: einmal wählen, nochmals = bauen
       t.bw.forEach((el, nr) => { el.onclick = () => { Eingabe.ziffer = nr + 1; }; });
-      if (sp.geraet === 'tasten' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) Touch.baue(d);
+      if (sp.geraet === 'tasten' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) { Touch.baue(d); d.classList.add('mit-touch'); }
       this.teile.push(t);
     });
     this.groesse();
@@ -7600,11 +8824,44 @@ const Hud = {
       if (zu) x.closePath();
       x.lineWidth = breite; x.strokeStyle = farbe; x.stroke();
     };
+    const H = S.haupt, o = {};
+    // Schatten unter der Strecke: Die Karte wirkt wie ein kleines Relief
+    x.save(); x.translate(3, 4);
+    for (const w of S.wege) linie(w.pfad, false, 6, 'rgba(0,0,0,.3)');
+    linie(H, true, 9, 'rgba(0,0,0,.3)');
+    x.restore();
     for (const w of S.wege) linie(w.pfad, false, 6, 'rgba(0,0,0,.8)');
-    linie(S.haupt, true, 9, 'rgba(0,0,0,.85)');
+    linie(H, true, 9, 'rgba(0,0,0,.85)');
     for (const w of S.wege) linie(w.pfad, false, 3, w.art === 'abkuerzung' ? '#7ad67f' : '#c9c5b8');
-    linie(S.haupt, true, 5, '#f5f1e6');
-    const H = S.haupt; x.fillStyle = '#e0362c'; x.fillRect(this.kx + H.x[0] * f - 4, this.ky - H.z[0] * f - 4, 8, 8);
+    // Hauptstrecke: Die Höhe zeigt sich als Helligkeit (tief = dunkler, hoch = heller)
+    let y0 = 1e9, y1 = -1e9;
+    for (let i = 0; i < H.n; i++) { y0 = Math.min(y0, H.y[i]); y1 = Math.max(y1, H.y[i]); }
+    const st = Math.max(1, Math.round(H.n / 140));
+    x.lineWidth = 5;
+    for (let i = 0; i < H.n; i += st) {
+      x.beginPath(); x.moveTo(this.kx + H.x[i] * f, this.ky - H.z[i] * f);
+      for (let q = 1; q <= st; q++) { const j = (i + q) % H.n; x.lineTo(this.kx + H.x[j] * f, this.ky - H.z[j] * f); }
+      const g = Math.round(y1 - y0 > 3 ? 168 + 87 * ((H.y[i] - y0) / (y1 - y0)) : 245);
+      x.strokeStyle = 'rgb(' + g + ',' + Math.round(g * 0.985) + ',' + Math.round(g * 0.94) + ')'; x.stroke();
+    }
+    // Boost-Felder: kleine orange Pfeile in Fahrtrichtung
+    for (const b of S.boostfelder || []) {
+      H.ort(b.s, b.d, o); const px = this.kx + o.x * f, py = this.ky - o.z * f;
+      H.ort((b.s + 6) % S.laenge, b.d, o); const w = Math.atan2(-(this.ky - o.z * f - py), this.kx + o.x * f - px);
+      x.save(); x.translate(px, py); x.rotate(-w);
+      x.beginPath(); x.moveTo(5, 0); x.lineTo(-3, 4.5); x.lineTo(-1, 0); x.lineTo(-3, -4.5); x.closePath();
+      x.fillStyle = '#ff8a1e'; x.fill(); x.lineWidth = 1; x.strokeStyle = '#000'; x.stroke(); x.restore();
+    }
+    // Sehenswürdigkeiten: goldene Rauten
+    for (const d of S.def.deko || []) {
+      if (typeof Bauten === 'undefined' || !Bauten[d.art] || d.x === undefined) continue;
+      const px = this.kx + d.x * f, py = this.ky - d.z * f;
+      if (px < 8 || px > 248 || py < 8 || py > 248) continue;
+      x.beginPath(); x.moveTo(px, py - 6); x.lineTo(px + 5, py); x.lineTo(px, py + 6); x.lineTo(px - 5, py); x.closePath();
+      x.fillStyle = '#ffd23e'; x.fill(); x.lineWidth = 1.5; x.strokeStyle = '#3a2c00'; x.stroke();
+    }
+    x.fillStyle = '#e0362c'; x.fillRect(this.kx + H.x[0] * f - 4, this.ky - H.z[0] * f - 4, 8, 8);
+    x.lineWidth = 1.5; x.strokeStyle = '#fff'; x.strokeRect(this.kx + H.x[0] * f - 4, this.ky - H.z[0] * f - 4, 8, 8);
   },
 
   zeichneKarte(t, R, k) {
@@ -7664,11 +8921,20 @@ const Hud = {
       if (k.drift) { lade = clamp(k.driftZeit / (CONFIG.drift.stufe2 * k.w.driftLaden), 0, 1); farbe = k.driftStufe === 2 ? '#ff7a1a' : k.driftStufe === 1 ? '#4db8ff' : '#fff0a8'; }
       else if (k.boostZeit > 0) { lade = clamp(k.boostZeit / 1.5, 0, 1); farbe = '#ff7a1a'; }
       const lk = Math.round(lade * 50) + farbe;
-      if (a.lade !== lk) { a.lade = lk; t.lade.style.width = Math.round(lade * 100) + '%'; t.lade.style.background = farbe; }
+      if (a.lade !== lk) { a.lade = lk; t.lade.style.strokeDasharray = (lade * 100).toFixed(1) + ' 200'; t.lade.style.stroke = farbe; t.lade.style.opacity = lade > 0.01 ? 1 : 0; }
+      // Tacho-Nadel: 0 bis TACHO_MAX km/h über 260 Grad
+      const nw = Math.round((140 + 260 * clamp((Math.abs(k.v) * 3.6) / TACHO_MAX, 0, 1)) * 2) / 2;
+      if (a.nadel !== nw) { a.nadel = nw; t.nadel.style.transform = 'rotate(' + nw + 'deg)'; }
       // Abstand
       let ab;
-      if (k.rang === 1) { const zw = R.karts[R.reihenfolge[1]]; ab = zw ? 'Vorsprung ' + Math.max(0, R.rueckstand(zw)).toFixed(1) + ' s' : ''; }
-      else ab = 'Führender +' + Math.max(0, R.rueckstand(k)).toFixed(1) + ' s';
+      const hinter = R.karts[R.reihenfolge[k.rang]];      // der Fahrer direkt hinter mir (falls es einen gibt)
+      if (k.rang === 1) ab = hinter ? 'Vorsprung <b>' + Math.max(0, R.rueckstand(hinter)).toFixed(1) + ' s</b>' : '';
+      else {
+        const rk = Math.max(0, R.rueckstand(k)), vorn = R.karts[R.reihenfolge[k.rang - 2]];
+        ab = 'Führender <b>+' + rk.toFixed(1) + ' s</b>';
+        if (k.rang > 2 && vorn) ab += '<br>Vordermann <b>+' + Math.max(0, rk - Math.max(0, R.rueckstand(vorn))).toFixed(1) + ' s</b>';
+        if (hinter) ab += '<br>Verfolger <b>−' + Math.max(0, Math.max(0, R.rueckstand(hinter)) - rk).toFixed(1) + ' s</b>';
+      }
       if (k.windAktiv) ab += '<br>Windschatten!'; else if (k.windZeit > 0.3) ab += '<br>Windschatten lädt …';
       setze(t.abstand, 'ab', ab);
       // Baupunkte
@@ -7912,6 +9178,20 @@ const GERAETE_LISTE = [{ wert: 'tasten1', text: 'Tastatur W A S D' }, { wert: 't
 const FARB_LISTE = FARBEN.map((f, i) => ({ wert: i, text: '<span class="farbfeld" style="background:' + hexCss(f.hex) + '"></span> ' + f.name }));
 const FAHRZEUG_LISTE = FAHRZEUGE.map((f, i) => ({ wert: i, text: f.klasse + ' · ' + f.name }));
 const EIN_AUS = [{ wert: true, text: 'Ein' }, { wert: false, text: 'Aus' }];
+// Steckbrief der Strecken in der Streckenwahl: Tageszeit und Namen der Beläge
+const TAGESZEIT = { kiesgrube: ['tag', 'Später Nachmittag'], bergpass: ['tag', 'Sonniger Vormittag'], paris: ['abend', 'Abend, blaue Stunde'], himalaya: ['tag', 'Vormittag, Schneefall'], aegypten: ['tag', 'Mittagshitze'], newyork: ['nacht', 'Nacht'] };
+const BELAG_NAMEN = { asphalt: 'Asphalt', pflaster: 'Pflaster', platten: 'Steinplatten', schotter: 'Schotter', schnee: 'Schnee', eis: 'Eis', holz: 'Holzbohlen', kies: 'Kies', sand: 'Sand', nass: 'nasser Asphalt', gitter: 'Gitterrost' };
+// kleine eigene Symbole (SVG, 16 × 16)
+const SYMBOL = {
+  laenge: '<path d="M2 12 11 3l3 3-9 9zM5.5 9.5l1.4 1.4M7.5 7.5l1.4 1.4M9.5 5.5l1.4 1.4"/>',
+  belag: '<path d="M8 2 14 5 8 8 2 5zM2 8.2 8 11.2 14 8.2M2 11.2 8 14.2 14 11.2"/>',
+  tag: '<circle cx="8" cy="8" r="3"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>',
+  abend: '<path d="M2 12h12M4.5 12a3.5 3.5 0 0 1 7 0M8 4.5v2M3.8 6.6l1.2 1.2M12.2 6.6 11 7.8"/>',
+  nacht: '<path d="M11.5 10.5A5 5 0 0 1 5.5 3a5 5 0 1 0 6 7.5z"/>',
+  abkuerzung: '<path d="M4 14V8.5C4 6 6 4.5 8.5 4.5H13M10.5 2l2.5 2.5L10.5 7M4 9.5c0 2 1.5 3.5 4 4"/>',
+  boost: '<path d="M9 1.5 3.5 9H8l-1 5.5L12.5 7H8z"/>',
+};
+const symbol = (n) => '<svg viewBox="0 0 16 16" aria-hidden="true">' + SYMBOL[n] + '</svg>';
 function zahlen(von, bis) { const l = []; for (let i = von; i <= bis; i++) l.push({ wert: i, text: String(i) }); return l; }
 
 const Menue = {
@@ -7936,6 +9216,7 @@ const Menue = {
     });
     Schauraum.schliesse(); clearInterval(this.schauTakt);
     if ($('schau')) { Schauraum.oeffne($('schau')); this.schau(); }
+    if ($('streckenkarte')) this.streckenKarte(Speicher.daten.strecke);
     const erster = this.el.querySelector('.knopf');
     if (erster && !('ontouchstart' in window)) erster.focus();
   },
@@ -7950,8 +9231,25 @@ const Menue = {
   },
   streckenZeilen() {
     const D = Speicher.daten;
-    return this.wahlZeile('Strecke', 'strecke', Object.keys(STRECKEN).map((id) => ({ wert: id, text: STRECKEN[id].name })), D.strecke, (v) => { D.strecke = v; Spiel.starteDemo(v); }) +
+    return this.wahlZeile('Strecke', 'strecke', Object.keys(STRECKEN).map((id) => ({ wert: id, text: STRECKEN[id].name })), D.strecke, (v) => { D.strecke = v; Spiel.starteDemo(v); this.streckenKarte(v); }) +
+      '<div class="streckenkarte" id="streckenkarte"></div>' +
       this.wahlZeile('Runden', 'runden', zahlen(1, 7), D.runden, (v) => { D.runden = v; });
+  },
+  // Steckbrief der gewählten Strecke: Karte wie im Rennen (Höhenschatten, Abkürzungen grün, Boost-Felder, Sehenswürdigkeiten),
+  // Beschreibung, Länge, Beläge, Tageszeit, Abkürzungen und Boost-Felder. Dahinter läuft die Strecke selbst in 3D (Vorführrennen).
+  streckenKarte(id) {
+    const el = $('streckenkarte');
+    if (!el || !STRECKEN[id]) return;
+    const S = holeStrecke(id), def = STRECKEN[id], arten = [];
+    for (const a of S.belagArt.concat((def.wege || []).map((w) => w.belag || 'kies'))) if (!arten.includes(a)) arten.push(a);
+    const abk = (def.wege || []).filter((w) => w.art === 'abkuerzung').length, boost = (S.boostfelder || []).length, tz = TAGESZEIT[id] || ['tag', 'Tag'];
+    const fakt = (sym, text) => '<li>' + symbol(sym) + '<span>' + text + '</span></li>';
+    el.innerHTML = '<canvas width="236" height="236" aria-label="Karte der Strecke ' + esc(def.name) + '"></canvas><div class="sk-text"><b>' + esc(def.name) + '</b><span>' + esc(def.text || '') + '</span><ul>' +
+      fakt('laenge', (S.laenge / 1000).toFixed(2).replace('.', ',') + ' km') + fakt(tz[0], tz[1]) + fakt('belag', arten.map((a) => BELAG_NAMEN[a] || a).join(', ')) +
+      (abk ? fakt('abkuerzung', abk + (abk > 1 ? ' Abkürzungen' : ' Abkürzung')) : '') + (boost ? fakt('boost', boost + ' Boost-Felder') : '') + '</ul></div>';
+    const k = {}; Hud.zeichneKartenGrund.call(k, S);                // eigene Leinwand: die Karte im Rennen bleibt unberührt
+    el.querySelector('canvas').getContext('2d').drawImage(k.grund, 0, 0, 236, 236);
+    el.classList.remove('neu'); void el.offsetWidth; el.classList.add('neu');          // kleine Einblend-Animation bei jedem Wechsel
   },
   fahrerZeilen(immerWahl) {
     const D = Speicher.daten, neu = () => { if (this.beiProfil) this.beiProfil(); this.schau(); };
@@ -7964,7 +9262,7 @@ const Menue = {
   // Showroom: gewähltes Auto mit Stärke und Schwäche. Bei Zufalls-Auto wechseln die 8 Autos durch, man wählt nur den Lack.
   schau() {
     const D = Speicher.daten, t = $('schau-text');
-    if (!$('schau')) return;
+    if (!$('schau') || this.offen === 'ergebnis') return;           // im Ergebnis zeigt der Schauraum das Siegerpodest
     clearInterval(this.schauTakt);
     const zeig = (i, zufall) => {
       const f = FAHRZEUGE[i]; Schauraum.zeige(f.id, D.farbe);
@@ -8092,8 +9390,8 @@ const Menue = {
       '<div class="zeile"><label for="f-laut">Effekte</label><input type="range" id="f-laut" min="0" max="100" value="' + Math.round(D.lautstaerke * 100) + '"></div>' +
       '<div class="zeile"><label for="f-musik">Musik</label><input type="range" id="f-musik" min="0" max="100" value="' + Math.round(D.musik * 100) + '"></div>' +
       this.wahlZeile('Ton', 'stumm', [{ wert: false, text: 'An' }, { wert: true, text: 'Stumm' }], D.stumm, (v) => { D.stumm = v; App.tonSetzen(); }) +
-      this.wahlZeile('Grafik', 'grafik', [{ wert: 'niedrig', text: 'Niedrig' }, { wert: 'mittel', text: 'Mittel' }, { wert: 'hoch', text: 'Hoch' }], D.grafik, (v) => { D.grafik = v; Grafik.setzeQualitaet(v); }) +
-      '<p class="hinweis">Ruckelt das Spiel, stelle die Grafik auf «Niedrig». Die Einstellungen bleiben in diesem Browser gespeichert.</p>' +
+      this.wahlZeile('Grafik', 'grafik', Object.keys(GRAFIK_NAMEN).map((q) => ({ wert: q, text: GRAFIK_NAMEN[q] })), D.grafik, (v) => { D.grafik = v; D.grafikGemessen = true; Grafik.setzeQualitaet(v); Spiel.starteDemo(D.strecke); }) +
+      '<p class="hinweis">Beim ersten Start wählt das Spiel die Stufe nach einer kurzen Messung selbst. Ruckelt es, nimm eine tiefere Stufe. «Ultra» braucht eine starke Grafikkarte. Die Einstellungen bleiben in diesem Browser gespeichert.</p>' +
       '<div class="knoepfe"><button class="knopf" data-a="zurueck">Fertig</button></div></div>', { zurueck: () => { this.nameLesen(); Speicher.sichern(); this.haupt(); } });
     $('f-laut').oninput = (ev) => { D.lautstaerke = ev.target.value / 100; App.tonSetzen(); };
     $('f-musik').oninput = (ev) => { D.musik = ev.target.value / 100; App.tonSetzen(); };
@@ -8131,6 +9429,7 @@ const Menue = {
     const titel = lokal.length === 1 ? 'Platz ' + R.karts[lokal[0]].rang + ' von ' + R.n : 'Ergebnis';
     const online = konfig && konfig.modus === 'online';
     this.zeige('ergebnis', '<div class="tafel breit"><h2>' + titel + '</h2><p class="hinweis">' + esc(R.S.def.name) + ' · ' + R.runden + (R.runden === 1 ? ' Runde' : ' Runden') + '</p>' +
+      '<div class="schau podest"><canvas id="schau" aria-label="Siegerpodest"></canvas></div>' +
       '<div class="karte" style="overflow:auto"><table><tr><th class="zahl">Platz</th><th>Fahrer</th><th class="zahl">Zeit</th><th class="zahl">Beste Runde</th><th class="zahl">BP verdient / ausgegeben</th><th class="zahl">Überholt</th><th class="zahl">Bauwerke</th><th class="zahl">Treffer</th></tr>' + zeilen + '</table></div>' +
       '<div>' + preise + '</div><div class="zeile" style="margin-top:14px">' + (online && !konfig.host ? '' : '<button class="knopf los" data-a="revanche">Revanche</button>') +
       '<button class="knopf" data-a="lobby">Lobby</button><button class="knopf zweit" data-a="menue">Menü</button></div></div>', {
@@ -8138,6 +9437,7 @@ const Menue = {
       lobby: () => { if (online) { Online.zurLobby(); return; } Spiel.starteDemo(konfig.strecke); if (konfig.modus === 'lokal') this.lokal(); else this.bots(); },
       menue: () => App.zumMenue(),
     }, 'mitte');
+    Schauraum.podest(reihe.slice(0, 3).map((k) => ({ typ: k.fahrzeug, farbe: k.farbe })));
   },
 };
 
@@ -8261,10 +9561,21 @@ const App = {
   },
 
   bereit() {
-    try { Grafik.qualitaet = Speicher.daten.grafik; Grafik.init($('bild')); }
+    const D = Speicher.daten, fest = this.parameter.get('grafik');      // ?grafik=hoch legt die Stufe für diesen Besuch fest (für Tests)
+    const messen = !(fest && GRAFIK_NAMEN[fest]) && !D.grafikGemessen;   // erster Start: Stufe selbst wählen
+    if (!GRAFIK_NAMEN[D.grafik]) D.grafik = 'mittel';
+    try { Grafik.qualitaet = fest && GRAFIK_NAMEN[fest] ? fest : messen ? 'hoch' : D.grafik; Grafik.init($('bild')); }
     catch (e) { Menue.fehler('Dein Browser kann hier keine 3D-Grafik (WebGL) anzeigen. Versuche es mit einem aktuellen Chrome, Firefox, Edge oder Safari.'); return; }
     this.tonSetzen(); Ton.musikGewollt = true;
     Spiel.starteDemo(Speicher.daten.strecke);
+    if (messen) {
+      // kurz messen, wie schnell dieses Gerät die Vorschau-Szene zeichnet, und die Grafik-Stufe danach wählen
+      let q = 'mittel';
+      try { q = Grafik.messeStufe(); } catch (e) { /* Messung nicht möglich: «Mittel» */ }
+      D.grafik = q; D.grafikGemessen = true; Speicher.sichern();
+      if (q !== Grafik.qualitaet) { Grafik.setzeQualitaet(q); Spiel.starteDemo(D.strecke); }
+      setTimeout(() => this.toast('Grafik «' + GRAFIK_NAMEN[q] + '» automatisch gewählt. Ändern kannst du sie in den Einstellungen.', 4500), 1500);
+    }
     const raum = this.parameter.get('raum');
     if (raum && typeof Online !== 'undefined') Online.beitretenDialog(raum); else Menue.haupt();
     requestAnimationFrame((t) => { this.letzte = t; this.bild(t); });

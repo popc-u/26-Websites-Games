@@ -41,11 +41,40 @@ Es gibt acht Autos in vier Klassen. Jedes hat eine eigene Form, einen eigenen Mo
 - **Andere Autos** hört man aus der richtigen Richtung, leiser mit dem Abstand und mit veränderter Tonhöhe beim Vorbeifahren (wenn ein Spieler allein am Gerät fährt).
 - **Musik:** eigene, im Code erzeugte Stücke fürs Menü und fürs Rennen. In der letzten Runde wird die Musik schneller und dichter. Dazu Signale für Countdown, Überholen, Baupunkte, letzte Runde und Ziel.
 - **Regler:** In den Einstellungen gibt es getrennte Regler für Effekte und Musik und das Stummschalten (auch mit <kbd>M</kbd>). Alles entsteht mit Web Audio, es gibt keine Sound-Dateien.
-- **Bild:** Himmel mit Wolken und Sonne, Dunst, weiche Schatten, Spiegelungen auf Lack und Glas. Jede Strecke hat ihre Stimmung: die Kiesgrube liegt im Abendlicht, der Bergpass im klaren Morgen. Am Streckenrand stehen Tannen, Laubbäume, Büsche, Felsen, Häuser, Laternen, Tafeln, Kräne, Bagger und eine Tribüne mit Zuschauern. In den Kurven liegen Reifenspuren.
+- **Bild:** Himmel mit Haufen- und Schleierwolken und einer Sonne, die blendet, Dunst in der Ferne, weiche Schatten, Spiegelungen auf Lack und Glas. Lampen, Fenster, Rücklichter und Boost-Felder leuchten und strahlen (siehe «Grafik-Stufen»). Jede Strecke hat ihre Stimmung und Farbabstimmung: die Kiesgrube liegt im Abendlicht, der Bergpass im klaren Morgen. Am Streckenrand stehen Fichten mit gezackten Astschichten und Laubbäume mit Kronen aus Blätterbüscheln, die sich im Wind wiegen, dazu Gras, Blumen und Steine, Büsche, Felsen, Häuser, Laternen und Tafeln. Auf den Baustellen schwenken Baukräne mit Gittermast langsam ihren Ausleger mit der Last, Bagger mit Raupen graben im Takt, Bauarbeiter mit Helm und Warnweste schaufeln. Auf den Tribünen jubeln die Zuschauer. Über der Strecke kreisen Vögel, Seen haben Wellen und einen Schaumrand. Auf dem Start/Ziel-Bogen wehen Zielflaggen, hinter den Tribünen bunte Fahnen, in Paris und New York gehen Passanten auf den Gehsteigen. Nachts blenden die Scheinwerfer, der Fahrer dreht den Kopf in die Kurve. Stösse an Wänden, Bauwerken und anderen Autos hinterlassen Kratzer und Dellen in der Karosserie. In den Kurven liegen Reifenspuren.
 - **Berühmte Orte:** In «Paris» fährt man am Abend durch den Triumphbogen, an der Glaspyramide vorbei, über Pflaster am Fluss, über eine Stein- und eine Eisenbrücke und unter dem beleuchteten Eisenturm hindurch, dann hinauf zur Mühle und zur weissen Kuppelkirche. Die Fenster und Laternen leuchten, die Scheinwerfer werfen Licht auf die Strasse. Im «Himalaya» beginnt das Rennen im Bergdorf unter Gebetsfahnen, führt auf Schotter und Schnee in Kehren zum Kloster, über eine Hängebrücke und einen gefrorenen See und steil hinunter, während Schnee fällt. In «Ägypten» startet das Rennen zur Mittagszeit an der Uferstrasse am Nil zwischen Palmen, Lehmhäusern und Marktständen, führt durch ein Tempeltor mit Reliefs, eine Allee mit liegenden Löwen und eine Säulenhalle, an Sphinx und Pyramiden vorbei hinauf auf das Plateau und über Sanddünen mit einem Sprung. In «New York» fährt man nachts auf nassen Strassen durch Häuserschluchten mit beleuchteten Fenstern, über einen Platz voller Leuchtreklamen, über eine Hängebrücke mit Lichterketten, an alten Lagerhäusern am Hafen entlang mit Blick auf die Skyline, über eine Stahlbrücke mit Gitterrost an der Statue mit der Fackel vorbei und durch den Park zurück. Am Strassenrand stehen Taxis, aus Rohren steigt Dampf. Alle Bauwerke sind eigene, vereinfachte Nachbauten aus Grundformen, die Reklamen zeigen nur Farben und Formen.
 - **Beläge:** Asphalt, nasser Asphalt, Kopfsteinpflaster, Steinplatten, Schotter, Sand, Schnee, Eis, Holzbohlen und Stahlgitter fahren sich verschieden. Auf Eis dreht das Auto nur zögernd ein, auf nassem Asphalt hält es in Kurven weniger, im Sand, auf Schnee und Schotter ist es etwas langsamer, auf Pflaster, Bohlen und Gitter rüttelt die Federung. Die Bots bremsen vor glatten Stellen früher. Die Werte stehen kommentiert in `CONFIG.belag`.
 - **Boost-Felder:** Auf jeder Strecke liegen fünf leuchtende Felder mit wandernden Pfeilen, meist am Ausgang einer Kurve. Wer darüber fährt, bekommt 1 s lang Schub. Auch die Bots steuern sie an. Anzahl, Dauer und Stärke stehen kommentiert in `CONFIG.boostfeld`; eine Strecke kann ihre Felder auch selbst festlegen (`boostfelder`).
-- **Grafik-Einstellung:** «Hoch», «Mittel» oder «Niedrig». «Niedrig» verzichtet auf Schatten und Spiegelungen und zeigt weniger Dekoration.
+- **Grafik-Einstellung:** «Niedrig», «Mittel», «Hoch» oder «Ultra». Beim ersten Start wählt das Spiel selbst, siehe «Grafik-Stufen».
+- **Streckenwahl und Ergebnis:** Unter der Streckenwahl steht ein Steckbrief mit einer kleinen Karte (Höhenschatten, Abkürzungen, Boost-Felder, Sehenswürdigkeiten), Beschreibung, Länge, Belägen, Tageszeit und der Zahl der Abkürzungen und Boost-Felder; dahinter fährt die Strecke selbst in 3D vor. Nach dem Rennen stehen die drei Ersten mit ihren echten Autos und Lackfarben auf dem Siegerpodest.
+
+## Grafik-Stufen
+
+Beim ersten Start misst das Spiel kurz, wie schnell das Gerät ein Bild zeichnet, und wählt die Stufe selbst. Ein Hinweis unten im Bild sagt, welche es geworden ist. In den Einstellungen lässt sie sich jederzeit ändern. Mit `index.html?grafik=ultra` (oder `hoch`, `mittel`, `niedrig`) lässt sich eine Stufe auch erzwingen.
+
+| Stufe | gedacht für | was dazukommt |
+|---|---|---|
+| Niedrig | Mittelklasse-Handy | keine Schatten, keine Nachbearbeitung, einfache Bäume, kein Gras |
+| Mittel | normaler Laptop | Schatten, Nachbearbeitung mit Leuchten, Bäume mit Blätterkronen, Gras und Blumen, Steine, Seen mit Wellen, Zuschauer, Bauarbeiter, Passanten, Vögel, wehende Fahnen, Kräne mit Gittermast und Bagger, die sich bewegen, Dellen nach Stössen |
+| Hoch | gute Grafikkarte | feinere Schatten, mehr Gras, Sonnenblendung, mehr Rauch und Staub |
+| Ultra | sehr starke Grafikkarte | noch feinere Schatten, Umgebungsverdeckung (Ecken und Fugen dunkeln ab), am meisten Gras und Vögel, schärfere Oberflächen |
+
+**Nachbearbeitung** (ab «Mittel», Teil `7c` im Code): Das Bild wird zuerst in hoher Helligkeits-Auflösung gezeichnet. Danach leuchten helle Stellen weich nach (Lampen, Fenster, Rücklichter, Boost-Felder), auf «Ultra» kommt die Umgebungsverdeckung dazu. Zum Schluss bekommt jeder Ort seine Farbabstimmung: Sättigung, Kontrast, ein leichter Farbstich und dunklere Bildecken (`BILDSTIL` im Code). Im Split-Screen bleiben die Bildecken hell.
+
+**Leben in der Landschaft** (Teil `7d`): Gras, Blumen, Steine, Bäume, Zuschauer, Bauarbeiter, Passanten, Fahnen und Vögel sind «Instanzen»: viele tausend Stück, aber nur ein Zeichenaufruf pro Art. Wind, Jubeln, Schritte, flatternde Tücher und Flügelschlag rechnet die Grafikkarte. Die Zahlen pro Stufe stehen kommentiert in `CONFIG.grafik.leben`, die Dellen in `CONFIG.grafik.delle`.
+
+**Budget pro Bild** mit 8 Fahrern (gemessen 6 s nach dem Start, Kamera hinter dem eigenen Auto, Höchstwert über alle sechs Strecken; Werte in `CONFIG.grafik.budget`):
+
+| Stufe | Dreiecke | Zeichenaufrufe |
+|---|---|---|
+| Niedrig | 160’000 | 160 |
+| Mittel | 460’000 | 370 |
+| Hoch | 560’000 | 390 |
+| Ultra | 570’000 | 370 |
+
+«Ultra» ist nur auf Kiesgrube und Bergpass gemessen (in der Testumgebung lief die Messung der anderen Strecken in eine Zeitüberschreitung). New York ist die schwerste Strecke, dort liegt «Ultra» vermutlich etwas höher.
+
+Gemessen ist das nur mit Software-Grafik in meiner Testumgebung (dort läuft jede Stufe mit etwa 10 Bildern pro Sekunde). Wie flüssig es auf echten Geräten läuft, konnte ich nicht messen.
 
 ## Steuerung
 
@@ -147,9 +176,32 @@ Stand 14.11.2026 mit den 8 Autos, pro Strecke 400 Rennen mit 8 gleich starken Bo
 | Rennwagen | 13,0 % | 15,0 % |
 | Rallye-Auto | 10,8 % | 9,5 % |
 
-Damit die Autos trotz ihrer Eigenheiten gleich stark sind, sind Höchsttempo und Lenkung jedes Autos zusätzlich um wenige Prozent fein abgestimmt (`CONFIG.fahrzeuge`). Die Limousine hat einen 2,5-fachen statt 4-fachen Windschatten, weil sie sonst zu oft führte und dann doch verlor. Am Bergpass gewinnt der starke Bot mit 45 % etwas seltener als das Ziel von 50 %, weil das zugeloste Auto dort mehr ausmacht.
+Damit die Autos trotz ihrer Eigenheiten gleich stark sind, sind Höchsttempo und Lenkung jedes Autos zusätzlich um wenige Prozent fein abgestimmt (`CONFIG.fahrzeuge`). Die Limousine hat einen 2,5-fachen statt 4-fachen Windschatten, weil sie sonst zu oft führte und dann doch verlor. Am Bergpass gewann der starke Bot damals mit 45 % etwas seltener als das Ziel von 50 %. Seit dem 17.11.2026 ist «Schwer» viel stärker und gewinnt 95 bis 100 % (siehe «Schwer»-Bots). Die Rennen mit 8 «Mittel»-Bots gehen genau gleich aus wie vorher (36 von 36 Vergleichsrennen mit gleichem Zufall), die Siegquoten der Autos gelten also weiter.
 
 Selbst nachmessen: `index.html?sim=200` öffnen (dauert einige Minuten). Die Siegquote pro Auto zeigt diese Seite noch nicht an, sie stammt aus meiner Mess-Reihe.
+
+## «Schwer»-Bots
+
+Ein «Schwer»-Bot fährt wie ein Profi: perfekte Linie ohne Zufallsfehler, späte Bremspunkte, Drift schon in sanfteren Kurven (mit Mini-Turbo), jedes Boost-Feld, sieht jedes Hindernis rechtzeitig und hat keine schlechten Tage. Er nutzt dieselbe Fahrphysik wie der Spieler und hat zusätzlich 3 % mehr Höchsttempo (`CONFIG.bots.stufen.schwer.tempo`, höchstens erlaubt sind 3 %). «Leicht» und «Mittel» sind unverändert.
+
+**Siege eines «Schwer»-Bots gegen 7 «Mittel»-Bots** (je 200 Rennen pro Strecke, Autos jedes Mal neu zugelost, mit Bauen):
+
+| Kiesgrube | Bergpass | Paris | Himalaya | Ägypten | New York |
+|---|---|---|---|---|---|
+| 100 % | 95 % | 100 % | 99 % | 97 % | 100 % |
+
+**Vergleich mit einem Optimierer** (`tools/optimierer.js`): Er sucht pro Strecke mit 160 Versuchen die Fahr-Einstellungen (Kurventempo, Bremspunkte, Drift) mit der schnellsten fliegenden Runde, mit derselben Fahrphysik wie der Spieler und ohne Tempo-Vorteil. Gleiches Auto für alle Messungen.
+
+| Strecke | Optimierer | «Schwer» im Spiel | Abstand | «Schwer» ohne Tempo-Vorteil | Abstand |
+|---|---|---|---|---|---|
+| Kiesgrube | 42,71 s | 42,02 s | −1,6 % | 43,07 s | +0,8 % |
+| Bergpass | 41,35 s | 41,03 s | −0,8 % | 42,38 s | +2,5 % |
+| Paris | 43,81 s | 43,10 s | −1,6 % | 44,18 s | +0,8 % |
+| Himalaya | 44,14 s | 43,53 s | −1,4 % | 44,77 s | +1,4 % |
+| Ägypten | 46,20 s | 45,51 s | −1,5 % | 46,72 s | +1,1 % |
+| New York | 42,64 s | 41,55 s | −2,5 % | 42,93 s | +0,7 % |
+
+Mit seinem Tempo-Vorteil ist der «Schwer»-Bot also auf jeder Strecke schneller als die beste Runde des Optimierers. Nur am Fahrkönnen gemessen (ohne Vorteil) liegt er 0,7 bis 2,5 % dahinter; am Bergpass etwas über dem Ziel von 2 %.
 
 ## Wichtigste CONFIG-Werte
 
@@ -168,7 +220,13 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `bau.maxProSpieler`, `bau.maxGesamt`, `bau.wartezeit` | 2, 6, 4 s | Grenzen für Hindernisse |
 | `bau.maxSchlenker` | 4 m | Sperren stehen so, dass die Ideallinie höchstens so weit im gesperrten Teil liegt |
 | `windschatten.bonus` | 0,02 | 2 % mehr Höchsttempo im Windschatten |
-| `bots.stufen` | Mut 0,76 / 0,83 / 0,96 | Fahrkönnen der Bots leicht, mittel, schwer |
+| `bots.stufen` | Mut 0,76 / 0,83 / 1,04 | Fahrkönnen der Bots leicht, mittel, schwer |
+| `bots.stufen.schwer` | `profi`, `bremsen` 34, `driftAb` 0,5, `tempo` 1,03 | Profi ohne Fehler, spätere Bremspunkte, früher Drift, 3 % Tempo-Vorteil (höchstens erlaubt) |
+| `grafik.auto` | 3,5 / 8 / 16 ms | so schnell muss ein Bild auf «Hoch» sein für «Ultra», «Hoch», «Mittel» |
+| `grafik.leben` | Gras 6000 / 14000 / 26000 | Gras, Blumen, Steine und Vögel pro Grafik-Stufe |
+| `grafik.leben.passanten` | 50 / 90 / 140 | Fussgänger in Paris und New York ab «Mittel» |
+| `grafik.lod` | 30 / 45 / 70 m | ab dieser Entfernung zeigen Autos ihre einfache Fassung («Mittel», «Hoch», «Ultra») |
+| `grafik.delle` | ab 3 m/s, höchstens 0,13 m | Dellen nach Stössen |
 
 ## Entscheidungen, die ich getroffen habe
 
@@ -182,7 +240,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 
 ## Bekannte Grenzen
 
-- **Stand der grossen Überarbeitung (14.11.2026):** Autos, Zufalls-Auto, Showroom, Ton, Himmel, Licht und das neue Aussehen der Menüs sind eingebaut. Noch nicht gebaut sind Tunnels und zusätzliche Brücken, ein eigenes Abrollgeräusch für Schlamm und ein neues Aussehen der Anzeigen im Rennen (dort sind nur Schrift und Farben angepasst).
+- **Stand des Grafik-Auftrags (17.11.2026):** Fertig sind die «Schwer»-Bots, die Grafik-Grundlage (Nachbearbeitung, Himmel mit Wolken, Sonnenblendung, Stufe «Ultra» mit automatischer Wahl), leuchtende und blendende Lichter, Dellen nach Stössen, der Fahrerkopf und eine einfache Fassung der Autos für die Ferne, der Tacho mit Nadel und die Minikarte mit Höhenschatten, Gras, Blumen, Steine, Bäume im Wind, Vögel, Seen mit Wellen und Schaumrand, jubelnde Zuschauer, Bauarbeiter, Passanten in Paris und New York, wehende Fahnen, Baukräne mit Gittermast und grabende Bagger, der Steckbrief in der Streckenwahl und das Siegerpodest. Noch offen sind: feinere Karosserien (Rundungen, Fugen, Lufteinlässe), Ort für Ort feinere Sehenswürdigkeiten, fahrender Verkehr im Hintergrund, Regen, Vorschaubilder der Strecken als gerenderte Bilder, und das neue Aussehen von Garage, Lobby, Ladebild und Handy-Ansicht.
 - Die Autos bestehen aus einfachen Flächen. Sie sind klar unterscheidbar und haben Felgen, leuchtende Lichter, getönte Scheiben, Spoiler, Spiegel und Auspuff, sehen aber nicht fotorealistisch aus.
 - Ton lässt sich in der Test-Umgebung nicht anhören. Geprüft ist, dass alle Klänge ohne Fehler laufen, abgehört hat sie noch niemand.
 
@@ -190,7 +248,6 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Die Bildrate ist nur mit Software-Grafik geprüft. Ruckelt es auf einem Gerät, hilft die Grafikstufe «Niedrig».
 - Die Touch-Steuerung ist eingebaut, aber nicht getestet.
 - Einen Grand-Prix-Modus gibt es nicht.
-- Auf dem «Bergpass» gewinnt der starke Bot mit 52 % nur knapp über dem Zielwert.
 - Bots bauen selten Umleitungen und Abkürzungen, weil die Punkte knapp sind.
 - three.js 0.160.0 schreibt eine harmlose Warnung in die Browser-Konsole.
 
