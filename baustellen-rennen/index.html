@@ -425,13 +425,14 @@ const CONFIG = {
       // schon in sanfteren Kurven (driftAb). tempo: Tempo-Vorteil auf das Höchsttempo (1.03 = 3 %, mehr ist nicht erlaubt).
       schwer: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.03 },
       // «Ultra» fährt, so gut es die Fahrphysik erlaubt: Fahr-Einstellungen pro Strecke vom Optimierer (tools/ultra.js, mit
-      // mehreren Autos geprüft), jedes Boost-Feld, keine Fehler, sieht jedes Hindernis. tempo: Tempo-Vorteil (höchstens 1.08 = 8 %).
+      // mehreren Autos geprüft), jedes Boost-Feld, keine Fehler, sieht jedes Hindernis. tempo: Tempo-Vorteil (1.08 = 8 %; nur am Himalaya
+      // 1.12, so am 17.11.2026 entschieden, weil «Ultra» dort mit 8 % nur 91 % statt 99 % der Rennen gegen «Schwer» gewinnt).
       // hindernisse: Anteil der Hindernisse, die er baut (er spart vor allem für Abkürzung und Rampe); pylonen: 0 = setzt keine.
       // umsichtig: fährt vor einem Nebenweg früh auf dessen Seite und lenkt nie mehr in eine Abzweigung, die schon hinter ihm liegt.
       ultra: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.08, hindernisse: 0.15, pylonen: 0, umsichtig: true,
         strecken: {           // gemessen mit tools/ultra.js (200 Versuche, Tempo-Vorteil 8 %, vier Autos)
           kiesgrube: { mut: 1.3, bremsen: 46, driftAb: 0.5, drift: 1 }, bergpass: { mut: 1.18, bremsen: 36, driftAb: 0.2, drift: 1 },
-          paris: { mut: 1.18, bremsen: 24, driftAb: 0.33, drift: 1 }, himalaya: { mut: 1.27, bremsen: 39, driftAb: 0.25, drift: 0.88 },
+          paris: { mut: 1.18, bremsen: 24, driftAb: 0.33, drift: 1 }, himalaya: { mut: 1.27, bremsen: 39, driftAb: 0.25, drift: 0.88, tempo: 1.12 },
           aegypten: { mut: 1.3, bremsen: 44, driftAb: 0.21, drift: 0.94 }, newyork: { mut: 1.3, bremsen: 49, driftAb: 0.28, drift: 1 },
         } },
     },
@@ -2383,7 +2384,7 @@ class Rennen {
    Ein Bot «drückt» dieselben Tasten wie ein Mensch (Lenken, Gas, Bremse, Drift,
    Bauen) und fährt mit derselben Physik. Die Stufen unterscheiden sich im Können
    (siehe CONFIG.bots). Einzige Ausnahme: «Schwer» und «Ultra» dürfen ein paar Prozent
-   mehr Höchsttempo haben (CONFIG.bots.stufen.*.tempo, höchstens 8 %).
+   mehr Höchsttempo haben (CONFIG.bots.stufen.*.tempo, höchstens 8 %, «Ultra» am Himalaya 12 %).
    ══════════════════════════════════════════════════════════════════════════ */
 const BOT_VORAUS = [4, 12, 22, 34, 48, 64];      // in diesen Abständen schaut ein Bot auf die Krümmung voraus
 

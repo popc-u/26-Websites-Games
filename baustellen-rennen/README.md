@@ -288,7 +288,7 @@ Mit seinem Tempo-Vorteil ist der «Schwer»-Bot also auf jeder Strecke schneller
 
 ## «Ultra»-Bots
 
-«Ultra» ist die Stufe über «Schwer», wählbar gegen Bots, im Split-Screen und online («Ultra · unschlagbar»). Ein «Ultra»-Bot fährt mit derselben Fahrphysik wie der Spieler, so gut es diese erlaubt: Kurventempo, Bremspunkte und Drift sind pro Strecke mit dem Optimierer gesucht (`tools/ultra.js`, mit vier verschiedenen Autos geprüft, damit sie für jedes Auto passen). Er macht keine Fehler, nimmt jedes Boost-Feld mit, sieht jedes Hindernis und hat 8 % mehr Höchsttempo (`CONFIG.bots.stufen.ultra.tempo`, höchstens erlaubt sind 8 %). Er holt nicht künstlich auf. Seine Baupunkte gibt er vor allem für sich selbst aus (Abkürzung, Rampe), Hindernisse baut er selten und Pylonen nie.
+«Ultra» ist die Stufe über «Schwer», wählbar gegen Bots, im Split-Screen und online («Ultra · unschlagbar»). Ein «Ultra»-Bot fährt mit derselben Fahrphysik wie der Spieler, so gut es diese erlaubt: Kurventempo, Bremspunkte und Drift sind pro Strecke mit dem Optimierer gesucht (`tools/ultra.js`, mit vier verschiedenen Autos geprüft, damit sie für jedes Auto passen). Er macht keine Fehler, nimmt jedes Boost-Feld mit, sieht jedes Hindernis und hat 8 % mehr Höchsttempo (`CONFIG.bots.stufen.ultra.tempo`), am Himalaya 12 % (`CONFIG.bots.stufen.ultra.strecken.himalaya.tempo`, siehe unten). Er holt nicht künstlich auf. Seine Baupunkte gibt er vor allem für sich selbst aus (Abkürzung, Rampe), Hindernisse baut er selten und Pylonen nie.
 
 **Schnellste Runde** (Sportwagen, beste fliegende Runde ohne andere Fahrer; der Optimierer hat hier 200 Versuche, darum weichen seine Zeiten leicht von der Tabelle bei «Schwer» ab):
 
@@ -297,7 +297,7 @@ Mit seinem Tempo-Vorteil ist der «Schwer»-Bot also auf jeder Strecke schneller
 | Kiesgrube | 42,50 s | 39,87 s | −6,2 % | 42,50 s | 0,0 % |
 | Bergpass | 41,17 s | 39,01 s | −5,3 % | 41,30 s | +0,3 % |
 | Paris | 43,46 s | 41,04 s | −5,6 % | 43,81 s | +0,8 % |
-| Himalaya | 43,86 s | 41,77 s | −4,8 % | 44,34 s | +1,1 % |
+| Himalaya (12 %) | 43,86 s | 40,85 s | −6,9 % | 44,34 s | +1,1 % |
 | Ägypten | 46,07 s | 43,24 s | −6,1 % | 46,17 s | +0,2 % |
 | New York | 42,36 s | 39,27 s | −7,3 % | 42,37 s | 0,0 % |
 
@@ -307,11 +307,11 @@ Ziel war: mindestens 4 % schneller als der Optimierer. Das ist auf allen Strecke
 
 | Kiesgrube | Bergpass | Paris | Himalaya | Ägypten | New York |
 |---|---|---|---|---|---|
-| 99,5 % | 99,5 % | 99,5 % | 91 % | 100 % | 100 % |
+| 99,5 % | 99,5 % | 99,5 % | 99,5 % (mit 8 %: 91 %) | 100 % | 100 % |
 
-Dabei stand «Ultra» nie länger als 0,23 s still und musste nie zurückgesetzt werden. Pro Rennen baute er 0,26 bis 0,66 Mal etwas für sich selbst und 0,04 bis 0,24 Mal ein Hindernis für andere.
+Dabei stand «Ultra» nie länger als 0,28 s still und musste nie zurückgesetzt werden. Pro Rennen baute er 0,26 bis 0,37 Mal etwas für sich selbst und 0,04 bis 0,24 Mal ein Hindernis für andere.
 
-**Himalaya (91 %, Ziel 99 %):** Die «Schwer»-Bots bauen jedes Hindernis vor alle Fahrer, die vor ihnen liegen, also immer auch vor den Führenden. In der letzten Runde stehen darum oft mehrere Hindernisse hintereinander vor «Ultra». Am Himalaya liegen zwei Bauplätze an heiklen Stellen: einer in der S-Kurve kurz nach der Schanze, wo «Ultra» mit seinem Tempo noch in der Luft ist, und einer in der holprigen Kehre vor dem Ziel, durch die er rutscht. Dort trifft er oft ein Schlammloch oder eine Absperrung. Ich habe sechs Arten ausprobiert, wie er dort vorsichtiger fahren kann (früher ausweichen, in der Mitte der Lücke bleiben, vor der Schanze bremsen, in der Luft ruhiger lenken, langsamer in Kurven, nicht driften). Jede kostete mehr Zeit, als sie sparte (71 bis 90 % Siege). Geholfen hat nur, vor einer Umleitung früh auf die Seite des Nebenwegs zu fahren. Mit mehr Tempo-Vorteil würde es reichen: Mit 10 % gewinnt er am Himalaya 97 %, mit 12 % 99 % der Rennen (je 100 Rennen). Das ist mehr als die erlaubten 8 %, darum ist es bei 8 % geblieben. Ein eigener Wert nur für den Himalaya liesse sich mit `tempo` in `CONFIG.bots.stufen.ultra.strecken.himalaya` eintragen.
+**Himalaya:** Mit 8 % Tempo-Vorteil gewann «Ultra» hier nur 91 % statt 99 % der Rennen. Die «Schwer»-Bots bauen jedes Hindernis vor alle Fahrer, die vor ihnen liegen, also immer auch vor den Führenden. In der letzten Runde stehen darum oft mehrere Hindernisse hintereinander vor «Ultra». Am Himalaya liegen zwei Bauplätze an heiklen Stellen: einer in der S-Kurve kurz nach der Schanze, wo «Ultra» mit seinem Tempo noch in der Luft ist, und einer in der holprigen Kehre vor dem Ziel, durch die er rutscht. Dort trifft er oft ein Schlammloch oder eine Absperrung. Ich habe sechs Arten ausprobiert, wie er dort vorsichtiger fahren kann (früher ausweichen, in der Mitte der Lücke bleiben, vor der Schanze bremsen, in der Luft ruhiger lenken, langsamer in Kurven, nicht driften). Jede kostete mehr Zeit, als sie sparte (71 bis 90 % Siege). Geholfen hat nur, vor einer Umleitung früh auf die Seite des Nebenwegs zu fahren. Mit mehr Tempo-Vorteil reicht es: Mit 10 % gewann er am Himalaya 97 %, mit 12 % 99 % der Rennen (je 100 Rennen). Am 17.11.2026 entschieden: «Ultra» bekommt 12 % nur am Himalaya, auf allen anderen Strecken bleiben es 8 %. Nachgemessen mit 200 Rennen gewinnt er dort 99,5 %.
 
 ## Wichtigste CONFIG-Werte
 
@@ -332,7 +332,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `windschatten.bonus` | 0,02 | 2 % mehr Höchsttempo im Windschatten |
 | `bots.stufen` | Mut 0,76 / 0,83 / 1,04 / 1,18 bis 1,30 | Fahrkönnen der Bots leicht, mittel, schwer, ultra («Ultra» je Strecke eigene Werte) |
 | `bots.stufen.schwer` | `profi`, `bremsen` 34, `driftAb` 0,5, `tempo` 1,03 | Profi ohne Fehler, spätere Bremspunkte, früher Drift, 3 % Tempo-Vorteil (höchstens erlaubt) |
-| `bots.stufen.ultra` | `tempo` 1,08, `strecken`, `hindernisse` 0,15, `pylonen` 0, `umsichtig` | 8 % Tempo-Vorteil (höchstens erlaubt), Fahr-Einstellungen pro Strecke vom Optimierer, baut nur selten Hindernisse und nie Pylonen, weicht vorausschauend aus |
+| `bots.stufen.ultra` | `tempo` 1,08 (Himalaya 1,12), `strecken`, `hindernisse` 0,15, `pylonen` 0, `umsichtig` | 8 % Tempo-Vorteil, am Himalaya 12 %, Fahr-Einstellungen pro Strecke vom Optimierer, baut nur selten Hindernisse und nie Pylonen, weicht vorausschauend aus |
 | `bots.pylonen` | 0,4 | so oft wie früher setzen Bots Pylonen (1 = wie bis 17.11.2026, 0 = nie) |
 | `bots.schlammSparen` | 0,5 | so oft sparen Bots ihre Punkte, statt ein Schlammloch zu bauen (0 = nie, wie bis 17.11.2026) |
 | `grafik.auto` | 3,5 / 8 / 16 ms | so schnell muss ein Bild auf «Hoch» sein für «Ultra», «Hoch», «Mittel» |
@@ -361,7 +361,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Die Mindestzeit ist bewusst grosszügig (die besten Bots brauchen rund 40 % länger), damit keine echte Runde abgelehnt wird, auch nicht mit Abkürzung, Rampe und Windschatten. Unsinn wie eine 5-Sekunden-Runde lehnt die Datenbank ab, eine erfundene Zeit knapp über der Grenze nicht.
 - Bei Online-Rennen vor dieser Version hat jedes Gerät die Zeiten aller Mitspieler gespeichert, ohne sich zu merken, wer an welchem Gerät sass. Davon lädt ein Gerät beim ersten Hochladen nur die Zeiten mit dem eigenen Namen hoch, Bot-Zeiten aus solchen Rennen gar nicht.
 - Beim Öffnen lädt das Spiel die Liste höchstens einmal pro Minute neu, damit Blättern nicht jedes Mal lädt. «Aktualisieren» lädt sofort.
-- «Ultra» hat den grösstmöglichen Tempo-Vorteil von 8 %. Den Rest holt er nur mit Fahrkönnen: Die Einstellungen pro Strecke stammen aus derselben Suche wie beim Optimierer, nur mit Tempo-Vorteil und mit vier Autos geprüft.
+- «Ultra» hat 8 % Tempo-Vorteil (die Grenze aus dem Auftrag), nur am Himalaya 12 % (entschieden am 17.11.2026, weil er dort mit 8 % nur 91 % der Rennen gegen «Schwer» gewann). Den Rest holt er nur mit Fahrkönnen: Die Einstellungen pro Strecke stammen aus derselben Suche wie beim Optimierer, nur mit Tempo-Vorteil und mit vier Autos geprüft.
 - «Ultra» baut fast nur für sich selbst (Abkürzung, Rampe). Hindernisse für andere baut er in rund jedem siebten Fall, in dem ein anderer Bot eines bauen würde, Pylonen nie.
 - Pylonen: Bots setzen sie noch in 40 % der Fälle wie früher (`CONFIG.bots.pylonen` 0,4). Mit dem höheren Preis von 3 BP kommt das zusammen auf rund 0,2 Pylonen pro Rennen statt 14 bis 16. Menschen bauen wie bisher.
 - Ohne weitere Regel hätten die Bots die gesparten Punkte fast ganz in Schlammlöcher gesteckt (doppelt so viele wie vorher). Darum heben sie in der Hälfte dieser Fälle ihre Punkte auf (`CONFIG.bots.schlammSparen`).
@@ -379,7 +379,6 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Einen Grand-Prix-Modus gibt es nicht.
 - Bots bauen selten Umleitungen und Abkürzungen, weil die Punkte knapp sind.
 - three.js 0.160.0 schreibt eine harmlose Warnung in die Browser-Konsole.
-- **«Ultra» am Himalaya:** Er gewinnt dort gegen 7 «Schwer»-Bots 91 % statt der angestrebten 99 % der Rennen (siehe «Ultra»-Bots). Für Menschen ist er trotzdem praktisch nicht zu schlagen, er fährt auch dort fast 5 % schneller als der Optimierer.
 - **Umleitung kurz nach der Abzweigung:** Wird eine Umleitung gebaut, wenn ein Bot gerade an ihrer Abzweigung vorbei ist, lenkt er bei «Leicht», «Mittel» und «Schwer» trotzdem noch in den Nebenweg und fährt in die Wand. Das kostet einige Sekunden und kommt selten vor. Bei «Ultra» ist es behoben, bei den anderen Stufen nicht, damit sie genau gleich fahren wie vorher.
 - **Gemeinsame Bestenliste:** Solange keine Datenbank eingetragen ist, hat jedes Gerät nur seine eigene Liste (wie bisher). Die Anbindung an Firebase ist nur gegen einen nachgebauten Ersatz-Server mit denselben Regeln getestet, weil die Test-Umgebung das Internet nicht erreicht. Der echte Test sind zwei Geräte (siehe «Gemeinsame Bestenliste einrichten», Schritt 6). Schummeln lässt sich ohne eigenen Server nicht ganz verhindern: Wer sich auskennt, kann eine erfundene Zeit über der Mindestzeit schicken. Solche Einträge löschst du in der Firebase-Konsole. Gleicher Name heisst gleiche Person, auch auf verschiedenen Geräten: Zwei Leute mit demselben Namen teilen sich einen Platz. Die Liste kann jeder lesen, der die Adresse kennt, darum besser Spitznamen statt voller Namen. Wer die Website-Daten im Browser löscht, löscht die Liste des Geräts und noch nicht hochgeladene Zeiten, die gemeinsame Liste bleibt.
 
