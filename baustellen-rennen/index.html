@@ -76,12 +76,25 @@ kbd { display: inline-block; min-width: 26px; text-align: center; background: va
 .h-runde { left: calc(var(--m) * 18px); top: calc(var(--m) * 86px); font-size: calc(var(--m) * 22px); }
 .h-runde b { font-weight: 400; color: var(--gelb); }
 .h-zeit { left: calc(var(--m) * 18px); top: calc(var(--m) * 114px); font: 600 calc(var(--m) * 14px) var(--text); letter-spacing: 0; font-variant-numeric: tabular-nums; line-height: 1.35; }
-.h-karte { right: calc(var(--m) * 12px); top: calc(var(--m) * 10px); width: calc(var(--m) * 190px); height: calc(var(--m) * 190px); background: rgba(16,18,20,.5); border: 2px solid rgba(0,0,0,.7); border-radius: 10px; }
+.h-karte { right: calc(var(--m) * 12px); top: calc(var(--m) * 10px); width: calc(var(--m) * 190px); height: calc(var(--m) * 190px); background: radial-gradient(circle at 50% 45%, rgba(38,44,52,.72), rgba(10,12,15,.72)); border: 1.5px solid rgba(255,255,255,.2); border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,.45), inset 0 0 0 1px rgba(0,0,0,.6); }
 .h-karte canvas { width: 100%; height: 100%; display: block; }
-.h-tempo { right: calc(var(--m) * 14px); bottom: calc(var(--m) * 14px); font-size: calc(var(--m) * 40px); text-align: right; line-height: 1; }
-.h-tempo small { font-size: .4em; color: #d6d2c4; }
-.h-tempo .lade { display: block; margin: 4px 0 0 auto; width: calc(var(--m) * 120px); height: calc(var(--m) * 9px); background: rgba(0,0,0,.55); border: 2px solid #000; border-radius: 6px; overflow: hidden; }
-.h-tempo .lade i { display: block; height: 100%; width: 0; background: var(--gelb); }
+.h-tempo { right: calc(var(--m) * 10px); bottom: calc(var(--m) * 8px); width: calc(var(--m) * 150px); height: calc(var(--m) * 150px); text-align: center; line-height: 1; }
+.h-tempo svg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 2px 6px rgba(0,0,0,.6)); }
+.h-tempo .scheibe { fill: rgba(12,14,17,.6); stroke: rgba(255,255,255,.16); stroke-width: 1.2; }
+.h-tempo .bogen { fill: none; stroke: rgba(255,255,255,.8); stroke-width: 2.2; stroke-linecap: round; }
+.h-tempo .rot { fill: none; stroke: #ff7a1a; stroke-width: 3.4; stroke-linecap: round; }
+.h-tempo .strich { stroke: #fff; stroke-width: 1.7; }
+.h-tempo .strich.fein { stroke: rgba(255,255,255,.55); stroke-width: 1; }
+.h-tempo text { fill: #d6d2c4; font: 600 7px var(--text); text-anchor: middle; dominant-baseline: middle; letter-spacing: 0; }
+.h-tempo .ladegrund { fill: none; stroke: rgba(0,0,0,.5); stroke-width: 5.5; stroke-linecap: round; }
+.h-tempo .lade { fill: none; stroke: var(--gelb); stroke-width: 4.2; stroke-linecap: round; stroke-dasharray: 0 200; opacity: 0; }
+.h-tempo .nadel { transform-origin: 60px 60px; transform: rotate(140deg); transition: transform .08s linear; }
+.h-tempo .nadel path { fill: #ff3b30; stroke: rgba(0,0,0,.5); stroke-width: .5; }
+.h-tempo .nabe { fill: #e9e6dc; stroke: #000; stroke-width: 1; }
+.h-tempo > span { position: absolute; left: 0; right: 0; top: 62%; font-size: calc(var(--m) * 30px); }
+.h-tempo small { position: absolute; left: 0; right: 0; top: 84%; font-size: calc(var(--m) * 11px); color: #d6d2c4; }
+.hud.mit-touch .h-tempo { transform: scale(.72); transform-origin: right bottom; }
+.h-abstand b { font-weight: 700; color: var(--gelb); font-variant-numeric: tabular-nums; }
 .h-mitte { left: 50%; top: calc(var(--m) * 8px + 38px); transform: translateX(-50%); text-align: center; white-space: nowrap; }
 .h-warnung { display: inline-block; background: var(--gelb); color: #000; text-shadow: none; border: 3px solid #000; border-radius: 8px; padding: 3px 14px 2px; font-size: calc(var(--m) * 24px); box-shadow: 0 4px 0 #000; animation: blink .5s steps(2) infinite; }
 .h-warnung .pf { display: inline-block; font-size: 1.25em; line-height: .8; vertical-align: -0.08em; margin: 0 4px; }
@@ -364,7 +377,10 @@ const CONFIG = {
       //            bauen: Bau-Freude (0–1)                  fehler: Fahrfehler pro Minute
       leicht: { mut: 0.76, linie: 1.5, drift: 0.50, sehen: 0.75, bauen: 0.45, fehler: 1.6 },
       mittel: { mut: 0.83, linie: 0.9, drift: 0.90, sehen: 0.92, bauen: 0.75, fehler: 0.8 },
-      schwer: { mut: 0.96, linie: 0.45, drift: 1.00, sehen: 0.98, bauen: 1.0, fehler: 0.25 },
+      // «Schwer» ist ein Profi und fast unschlagbar: perfekte Linie, keine Fehler, sieht jedes Hindernis, trifft jedes Boost-Feld,
+      // bremst spät (bremsen: Verzögerung in m/s², mit der er rechnet; die anderen rechnen vorsichtig mit 22) und driftet
+      // schon in sanfteren Kurven (driftAb). tempo: Tempo-Vorteil auf das Höchsttempo (1.03 = 3 %, mehr ist nicht erlaubt).
+      schwer: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.03 },
     },
     zielVordermann: 0.8,   // Anteil der Hindernisse, die Bots ihrem direkten Gegner statt dem Führenden in den Weg bauen
     streuung: 0.02,        // zufällige Tagesform: ± so viel Unterschied im Mut zwischen gleich starken Bots
@@ -373,6 +389,16 @@ const CONFIG = {
     vorausZeit: 0.42,      // Bots zielen auf einen Punkt, der so viele Sekunden voraus liegt
     sichtweite: 75,        // so weit voraus beachten Bots Hindernisse (m)
     boostSicht: 40,        // so weit vor einem Boost-Feld ziehen Bots langsam zu ihm hin (m)
+  },
+
+  // ── Grafik-Stufen ───────────────────────────────────────────────────────
+  grafik: {
+    // Beim ersten Start misst das Spiel, wie viele Millisekunden dieses Gerät für ein Bild auf «Hoch» braucht.
+    // Schneller als … ms → diese Stufe; langsamer als «mittel» → «Niedrig». Software-Grafik bekommt immer «Niedrig».
+    auto: { ultra: 3.5, hoch: 8, mittel: 16 },
+    // Richtwerte pro Stufe mit 8 Fahrern: höchstens so viele Dreiecke und Zeichenaufrufe pro Bild (anzeigen mit ?debug=1).
+    // «Niedrig» hat keine Schatten und weniger Dekoration; ab «Mittel» kommen Schatten und die Nachbearbeitung dazu.
+    budget: { niedrig: [150000, 80], mittel: [330000, 380], hoch: [330000, 380], ultra: [330000, 380] },
   },
 
   // ── Netzwerk ────────────────────────────────────────────────────────────
@@ -412,6 +438,7 @@ const CONFIG = {
    TEIL 2: Hilfsfunktionen
    ══════════════════════════════════════════════════════════════════════════ */
 const TAU = Math.PI * 2;
+const GRAFIK_NAMEN = { niedrig: 'Niedrig', mittel: 'Mittel', hoch: 'Hoch', ultra: 'Ultra' };      // Grafik-Stufen in dieser Reihenfolge
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
 const lerp = (a, b, t) => a + (b - a) * t;
 const hyp = Math.hypot;
@@ -1499,6 +1526,7 @@ class Rennen {
 
     // erlaubtes Höchsttempo je nach Auto, Untergrund und Zustand
     let vmax = F.vmax * w.vmax;
+    if (k.typ === 'bot' && k.bot && k.bot.p.tempo) vmax *= k.bot.p.tempo;      // nur «Schwer»: kleiner Tempo-Vorteil (CONFIG.bots)
     if (boost) vmax *= k.boostStaerke;
     if (k.windAktiv) vmax *= 1 + W.bonus * w.wind;
     if (!k.aufStrasse) vmax *= boost ? CONFIG.boost.offroadFaktor : Math.min(1, F.offroadFaktor * w.offroad);
@@ -2257,8 +2285,9 @@ class Rennen {
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 6: Bots
    Ein Bot «drückt» dieselben Tasten wie ein Mensch (Lenken, Gas, Bremse, Drift,
-   Bauen) und fährt mit derselben Physik. Er wird nie heimlich schneller.
-   Die Stufen unterscheiden sich nur im Können (siehe CONFIG.bots).
+   Bauen) und fährt mit derselben Physik. Die Stufen unterscheiden sich im Können
+   (siehe CONFIG.bots). Einzige Ausnahme: «Schwer» darf ein paar Prozent mehr
+   Höchsttempo haben (CONFIG.bots.stufen.schwer.tempo), damit er fast unschlagbar ist.
    ══════════════════════════════════════════════════════════════════════════ */
 const BOT_VORAUS = [4, 12, 22, 34, 48, 64];      // in diesen Abständen schaut ein Bot auf die Krümmung voraus
 
@@ -2268,11 +2297,12 @@ class Bot {
     const z = R.zufall;
     this.p = p;
     this.stufe = stufe;
-    this.mut = p.mut * (1 + (z() * 2 - 1) * CONFIG.bots.streuung);   // Tagesform
+    this.mut = p.mut * (1 + (z() * 2 - 1) * CONFIG.bots.streuung * (p.profi ? 0 : 1));   // Tagesform (Profis haben keine schlechten Tage)
     this.versatz = (z() * 2 - 1) * p.linie * 0.5;                    // persönliche Abweichung von der Ideallinie
     this.rausch = 0; this.rauschZiel = 0; this.rauschUhr = 0;
     this.ausweich = 0;
     this.boostLust = clamp(0.7 + z() * 0.6, 0, 1);                    // wie entschlossen der Bot Boost-Felder ansteuert
+    if (p.profi) this.boostLust = 1;                                  // Profis treffen jedes Feld
     this.fehlerUhr = 0;
     this.driftAn = false; this.driftAusUhr = 0; this.driftLust = z() < p.drift; this.lustUhr = 0;
     this.bauUhr = 1 + z() * 2;
@@ -2476,7 +2506,7 @@ class Bot {
       const bl = CONFIG.belag[R.S.belagArt[Math.floor((((k.s + dist) % R.S.laenge) + R.S.laenge) % R.S.laenge / R.S.haupt.ds) % R.S.haupt.n]];      // Belag dort vorn
       const l1 = lr1 * (bl ? bl.lenk : 1), l2 = lr2 * (bl ? bl.lenk : 1);
       const vKurve = (c * l1) / (kr + (c * (l1 - l2)) / F.vmax);
-      const vJetzt = Math.sqrt(vKurve * vKurve + 2 * 22 * Math.max(0, dist - 4));
+      const vJetzt = Math.sqrt(vKurve * vKurve + 2 * (this.p.bremsen || 22) * Math.max(0, dist - 4));      // bremsen: mit so viel Verzögerung rechnet der Bot (später Bremspunkt = höherer Wert)
       if (vJetzt < vZiel) vZiel = vJetzt;
     }
     e.gas = k.v < vZiel ? 1 : 0;
@@ -2491,7 +2521,8 @@ class Bot {
       this.lustUhr -= dt;
       if (Math.abs(krNah) < 0.004 && this.lustUhr <= 0) { this.lustUhr = 1.5; this.driftLust = z() < this.p.drift; }
       const bedarf = (Math.abs(krNah) * k.v) / omegaMax;
-      if (this.driftLust && k.zielZeit == null && k.v > D.minTempo + 4 && bedarf > 0.6 && krNah * krWeit > 0 && (Math.abs(krWeit) * k.v) / omegaMax > 0.5
+      const dAb = this.p.driftAb || 0.6;      // ab so viel Lenkbedarf (Anteil der vollen Drehrate) lohnt sich für den Bot ein Drift
+      if (this.driftLust && k.zielZeit == null && k.v > D.minTempo + 4 && bedarf > dAb && krNah * krWeit > 0 && (Math.abs(krWeit) * k.v) / omegaMax > dAb - 0.1
           && !k.luft && k.aufStrasse && !k.driftGesperrt && e.lenk * krNah > 0 && Math.abs(e.lenk) > 0.3) this.driftAn = true;
     } else {
       if (driftAnteil < D.lenkMitte - D.lenkBereich - 0.12) this.driftAusUhr += dt; else this.driftAusUhr = 0;
@@ -2758,6 +2789,7 @@ const Grafik = {
   init(canvas) {
     const R = (this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
     R.setClearColor(0x8fc7ea);
+    R.info.autoReset = false;                  // die Zähler (Dreiecke, Zeichenaufrufe) gelten für das ganze Bild samt Nachbearbeitung
     this.szene = new THREE.Scene();
     this.mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
     this.matGlatt = new THREE.MeshLambertMaterial({ vertexColors: true });
@@ -2781,25 +2813,43 @@ const Grafik = {
     if (!this.bereit) return;
     const R = this.renderer;
     const dpr = window.devicePixelRatio || 1;
+    const ultra = q === 'ultra', hoch = q === 'hoch' || ultra;
     R.setPixelRatio(q === 'niedrig' ? Math.min(dpr, 1) * 0.75 : q === 'mittel' ? Math.min(dpr, 1.25) : Math.min(dpr, 2));
+    // Nachbearbeitung: ab «Mittel» Leuchten, Farbabstimmung und 4-fache Kantenglättung, auf «Ultra» zusätzlich Umgebungsverdeckung
+    Nach.setze(q !== 'niedrig', 4, ultra, ultra ? 6 : hoch ? 5 : 4);
+    this.matLicht().color.setScalar(Nach.an ? 1.35 : 1);      // Lampen und Leuchtflächen etwas über Weiss: Dann strahlen sie im Leuchten
+    if (this.blendung) this.blendung.visible = false;
     const schatten = q !== 'niedrig';
     R.shadowMap.enabled = schatten;
     R.shadowMap.type = THREE.PCFSoftShadowMap;
     R.toneMapping = q === 'niedrig' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.25;     // natürlichere Helligkeit
     this.sonne.castShadow = schatten;
     if (schatten) {
-      const g = q === 'hoch' ? 2048 : 1024;
+      const g = ultra ? 4096 : hoch ? 2048 : 1024;
       if (this.sonne.shadow.mapSize.x !== g) { this.sonne.shadow.mapSize.set(g, g); if (this.sonne.shadow.map) { this.sonne.shadow.map.dispose(); this.sonne.shadow.map = null; } }
       const c = this.sonne.shadow.camera;
-      const w = q === 'hoch' ? 70 : 55;
+      const w = ultra ? 80 : hoch ? 70 : 55;
       c.left = -w; c.right = w; c.top = w; c.bottom = -w; c.near = 10; c.far = 320; c.updateProjectionMatrix();
       this.sonne.shadow.bias = -0.0015; this.sonne.shadow.normalBias = 0.6;
     }
-    Teilchen.grenze = q === 'niedrig' ? 120 : q === 'mittel' ? 260 : 420;
-    Dunst.grenze = q === 'niedrig' ? 160 : q === 'mittel' ? 420 : 900;
+    Teilchen.grenze = q === 'niedrig' ? 120 : q === 'mittel' ? 260 : ultra ? 640 : 420;
+    Dunst.grenze = q === 'niedrig' ? 160 : q === 'mittel' ? 420 : ultra ? 1400 : 900;
     this._stoff = {}; this._flocken = null; this._belag = null; this._ort = null;
     this.szene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
     this.groesse();
+  },
+
+  // Erster Start: misst, wie lange dieses Gerät für ein Bild der Vorschau-Szene auf «Hoch» braucht, und wählt danach die Stufe
+  // (Grenzen in CONFIG.grafik.auto). readPixels wartet, bis die Grafikkarte wirklich fertig gezeichnet hat.
+  messeStufe() {
+    const R = this.renderer, gl = R.getContext(), G = CONFIG.grafik.auto, px = new Uint8Array(4);
+    let name = '';
+    try { const e = gl.getExtension('WEBGL_debug_renderer_info'); name = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)) : ''; } catch (e) { /* egal */ }
+    if (/swiftshader|llvmpipe|software|basic render/i.test(name)) return 'niedrig';      // Software-Grafik ohne Grafikkarte
+    const lauf = (n) => { const t = performance.now(); for (let i = 0; i < n; i++) this.zeichne(Spiel.R); gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px); return (performance.now() - t) / n; };
+    lauf(2);                                   // Aufwärmen: Shader übersetzen, Texturen hochladen
+    const ms = (this.messung = Math.min(lauf(4), lauf(4)));
+    return ms < G.ultra ? 'ultra' : ms < G.hoch ? 'hoch' : ms < G.mittel ? 'mittel' : 'niedrig';
   },
 
   groesse() {
@@ -3132,6 +3182,21 @@ Object.assign(Grafik, {
     this.licht.color.setHex(st.himmelLicht); this.licht.groundColor.setHex(st.bodenLicht); this.licht.intensity = st.licht;
     this.sonne.color.setHex(st.sonne); this.sonne.intensity = st.sonneKraft;
     this.sonneVersatz = st.sonnePos;
+    Nach.setzeStil(id);
+    // Blendung der Sonne: ein sehr heller Fleck in Sonnenrichtung, den die Nachbearbeitung weich überstrahlen lässt (ab «Hoch»)
+    if (!this.blendung) {
+      const c = document.createElement('canvas'); c.width = c.height = 64;
+      const x = c.getContext('2d'), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+      g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.16, 'rgba(255,255,255,0.7)'); g.addColorStop(0.45, 'rgba(255,255,255,0.1)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 64, 64);
+      this.blendung = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), blending: THREE.AdditiveBlending, depthWrite: false, fog: false, transparent: true }));
+      this.blendung.scale.set(120, 120, 1); this.blendung.renderOrder = 5;
+      this.szene.add(this.blendung);
+    }
+    const sp = st.sonnePos, sl = Math.hypot(sp[0], sp[1], sp[2]);
+    this.sonnenRichtung = new THREE.Vector3(sp[0] / sl, sp[1] / sl, sp[2] / sl);
+    this.blendung.material.color.setHex(st.sonne).multiplyScalar(3.2);
+    this.blendung.visible = Nach.an && !st.nacht && !st.schneefall && (this.qualitaet === 'hoch' || this.qualitaet === 'ultra');
   },
 });
 
@@ -3551,13 +3616,21 @@ Object.assign(Grafik, {
 
   zeichne(R) {
     const Re = this.renderer, Wd = window.innerWidth, Hh = window.innerHeight;
+    Re.info.reset();
+    // vor jeder Ansicht (w, h: ihre Grösse in Bildpunkten): Kamera, Teilchengrösse, Sonnen-Blendung, Sichtbarkeiten
+    const vor = (a, w, h) => {
+      a.kamera.aspect = w / h; a.kamera.updateProjectionMatrix();
+      Dunst.mat.uniforms.mass.value = h / (2 * Math.tan((a.kamera.fov * Math.PI) / 360));
+      if (this.blendung && this.blendung.visible) this.blendung.position.copy(a.kamera.position).addScaledVector(this.sonnenRichtung, 900);
+      if (R) this.fuerAnsicht(R, a);
+    };
+    if (Nach.an) { Nach.zeichne(this.szene, this.ansichten, vor); return; }      // mit Nachbearbeitung (ab «Mittel»)
+    Re.setRenderTarget(null);
     Re.setScissorTest(true);
     for (const a of this.ansichten) {
       const w = a.w * Wd, h = a.h * Hh, x = a.x * Wd, y = Hh - a.y * Hh - h;
       Re.setViewport(x, y, w, h); Re.setScissor(x, y, w, h);
-      a.kamera.aspect = w / h; a.kamera.updateProjectionMatrix();
-      Dunst.mat.uniforms.mass.value = (h * Re.getPixelRatio()) / (2 * Math.tan((a.kamera.fov * Math.PI) / 360));
-      if (R) this.fuerAnsicht(R, a);
+      vor(a, w * Re.getPixelRatio(), h * Re.getPixelRatio());
       Re.render(this.szene, a.kamera);
     }
   },
@@ -3748,7 +3821,7 @@ const Struktur = {
     const t = new THREE.CanvasTexture(c);
     t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(wx || 1, wy || wx || 1);
     if (farbe) t.colorSpace = THREE.SRGBColorSpace;
-    t.anisotropy = Grafik.qualitaet === 'niedrig' ? 1 : Grafik.qualitaet === 'hoch' ? 8 : 4;
+    t.anisotropy = Grafik.qualitaet === 'niedrig' ? 1 : Grafik.qualitaet === 'ultra' ? 16 : Grafik.qualitaet === 'hoch' ? 8 : 4;
     return t;
   },
 };
@@ -3913,7 +3986,7 @@ Object.assign(Grafik, {
     if (q === 'niedrig') return new THREE.MeshLambertMaterial(o);
     const w = { glanz: [0.2, 0.45, 1, 0.045], matt: [0.1, 0.78, 0, 0], metallic: [0.72, 0.4, 1, 0.04], tarn: [0, 0.9, 0, 0] }[art] || [0.2, 0.45, 1, 0.045];
     o.metalness = w[0]; o.roughness = w[1]; o.envMapIntensity = 1.1;
-    if (q !== 'hoch') { if (w[2]) o.roughness = art === 'metallic' ? 0.24 : 0.16; return new THREE.MeshStandardMaterial(o); }
+    if (q !== 'hoch' && q !== 'ultra') { if (w[2]) o.roughness = art === 'metallic' ? 0.24 : 0.16; return new THREE.MeshStandardMaterial(o); }
     const m = new THREE.MeshPhysicalMaterial(o);
     m.clearcoat = w[2]; m.clearcoatRoughness = w[3];
     if (art === 'metallic') { m.normalMap = this.flocken(); m.normalScale.set(0.22, 0.22); }
@@ -6841,6 +6914,192 @@ Object.assign(Bauten, {
   },
 });
 /* ══════════════════════════════════════════════════════════════════════════
+   TEIL 8g: Nachbearbeitung des Bildes (ab Grafik «Mittel»)
+   Die Szene wird zuerst in ein Zwischenbild mit grossem Helligkeitsumfang
+   gezeichnet (mit Kantenglättung). Daraus entsteht das fertige Bild:
+   · Leuchten (Bloom): Helle Stellen wie Lampen, Fenster, Sonne und Glanzlichter
+     strahlen weich über ihre Ränder.
+   · Umgebungsverdeckung (nur «Ultra»): Ecken und Fugen werden leicht abgedunkelt.
+   · Farbabstimmung je Ort (BILDSTIL): Sättigung, Kontrast, Farbstich, dunkle Bildecken.
+   Alles sind eigene, kleine Shader; es braucht keine weitere Bibliothek.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+// Bildstil pro Ort. leuchten: Stärke des Leuchtens · schwelle: ab dieser Helligkeit leuchtet etwas (1 = weiss im Sonnenlicht)
+// saettigung/kontrast: 1 = unverändert · tonung: Farbstich [rot, grün, blau] · vignette: Abdunkeln der Bildecken (0 = aus)
+const BILDSTIL = {
+  standard:  { leuchten: 0.45, schwelle: 1.0,  saettigung: 1.08, kontrast: 1.05, tonung: [1.0, 1.0, 1.0],    vignette: 0.28 },
+  kiesgrube: { leuchten: 0.5,  schwelle: 1.0,  saettigung: 1.1,  kontrast: 1.06, tonung: [1.03, 1.0, 0.96],  vignette: 0.3 },    // warmes Abendlicht
+  bergpass:  { leuchten: 0.35, schwelle: 1.1,  saettigung: 1.14, kontrast: 1.05, tonung: [0.99, 1.0, 1.03],  vignette: 0.24 },   // klarer Morgen
+  paris:     { leuchten: 0.75, schwelle: 0.92, saettigung: 1.08, kontrast: 1.06, tonung: [1.04, 0.99, 0.96], vignette: 0.34 },   // Abend mit Lichtern
+  himalaya:  { leuchten: 0.3,  schwelle: 1.3,  saettigung: 1.04, kontrast: 1.08, tonung: [0.97, 1.0, 1.05],  vignette: 0.3 },    // kalt; Schnee ist hell, darum hohe Schwelle
+  aegypten:  { leuchten: 0.35, schwelle: 1.2,  saettigung: 1.1,  kontrast: 1.07, tonung: [1.05, 1.0, 0.93],  vignette: 0.26 },   // Mittagshitze
+  newyork:   { leuchten: 0.95, schwelle: 0.8,  saettigung: 1.16, kontrast: 1.08, tonung: [0.97, 1.0, 1.06],  vignette: 0.4 },    // Nacht mit Leuchtreklamen
+};
+
+const Nach = {
+  an: false, ao: false, glaetten: 0, stufen: 5, ziel: null, kette: [], aoZiel: null, breite: 0, hoehe: 0, stil: BILDSTIL.standard, bereit: false,
+
+  init() {
+    if (this.bereit) return;
+    const R = Grafik.renderer, gl = R.getContext();
+    // Zwischenbilder mit grossem Helligkeitsumfang brauchen eine Erweiterung; fehlt sie, bleibt die Nachbearbeitung aus
+    this.moeglich = !!(R.capabilities.isWebGL2 && (R.extensions.has('EXT_color_buffer_float') || R.extensions.has('EXT_color_buffer_half_float')));
+    this.kam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    const g = new THREE.BufferGeometry();      // ein Dreieck, das den ganzen Bildschirm bedeckt
+    g.setAttribute('position', new THREE.Float32BufferAttribute([-1, -1, 0, 3, -1, 0, -1, 3, 0], 3));
+    g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, 2, 0, 0, 2], 2));
+    this.netz = new THREE.Mesh(g, null); this.netz.frustumCulled = false;
+    this.szene = new THREE.Scene(); this.szene.add(this.netz);
+    const vs = 'varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }';
+    const M = (fs, u, mehr) => new THREE.ShaderMaterial(Object.assign({ vertexShader: vs, fragmentShader: fs, uniforms: u, depthTest: false, depthWrite: false, toneMapped: false, fog: false }, mehr || {}));
+    const kopf = 'uniform sampler2D tBild; uniform vec2 px; varying vec2 vUv;\n';
+    // 1 helle Stellen herausholen und dabei auf halbe Grösse verkleinern
+    this.mHell = M(kopf + `uniform float schwelle;
+      vec3 hell(vec2 uv) { vec3 c = min(texture2D(tBild, uv).rgb, vec3(16.0)); float l = max(c.r, max(c.g, c.b)); return c * (max(l - schwelle, 0.0) / max(l, 1e-4)); }
+      void main() { gl_FragColor = vec4((hell(vUv + px * vec2(-1.0, -1.0)) + hell(vUv + px * vec2(1.0, -1.0)) + hell(vUv + px * vec2(-1.0, 1.0)) + hell(vUv + px * vec2(1.0, 1.0))) * 0.25, 1.0); }`,
+      { tBild: { value: null }, px: { value: new THREE.Vector2() }, schwelle: { value: 1 } });
+    // 2 weich verkleinern …
+    this.mKlein = M(kopf + `void main() { vec3 s = texture2D(tBild, vUv).rgb * 4.0;
+        s += texture2D(tBild, vUv + px * vec2(-1.0, -1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, -1.0)).rgb + texture2D(tBild, vUv + px * vec2(-1.0, 1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, 1.0)).rgb;
+        gl_FragColor = vec4(s / 8.0, 1.0); }`, { tBild: { value: null }, px: { value: new THREE.Vector2() } });
+    // 3 … und weich wieder vergrössern, dabei aufaddieren
+    this.mGross = M(kopf + `uniform float anteil;
+      void main() { vec3 s = texture2D(tBild, vUv + vec2(-2.0 * px.x, 0.0)).rgb + texture2D(tBild, vUv + vec2(2.0 * px.x, 0.0)).rgb + texture2D(tBild, vUv + vec2(0.0, 2.0 * px.y)).rgb + texture2D(tBild, vUv + vec2(0.0, -2.0 * px.y)).rgb;
+        s += (texture2D(tBild, vUv + px * vec2(-1.0, 1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, 1.0)).rgb + texture2D(tBild, vUv + px * vec2(-1.0, -1.0)).rgb + texture2D(tBild, vUv + px * vec2(1.0, -1.0)).rgb) * 2.0;
+        gl_FragColor = vec4(s / 12.0 * anteil, 1.0); }`, { tBild: { value: null }, px: { value: new THREE.Vector2() }, anteil: { value: 1 } },
+      { blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.OneFactor, blendDst: THREE.OneFactor, transparent: true });
+    // Umgebungsverdeckung aus dem Tiefenbild (halbe Auflösung)
+    this.mAO = M(`uniform sampler2D tTiefe; uniform vec2 px; uniform mat4 projInv; uniform vec2 mass; uniform float radius; varying vec2 vUv;
+      vec3 ort(vec2 uv) { float z = texture2D(tTiefe, uv).x; vec4 p = projInv * vec4(uv * 2.0 - 1.0, z * 2.0 - 1.0, 1.0); return p.xyz / p.w; }
+      void main() {
+        if (texture2D(tTiefe, vUv).x >= 0.99995) { gl_FragColor = vec4(1.0); return; }
+        vec3 p = ort(vUv), r = ort(vUv + vec2(px.x, 0.0)), l = ort(vUv - vec2(px.x, 0.0)), o = ort(vUv + vec2(0.0, px.y)), u = ort(vUv - vec2(0.0, px.y));
+        vec3 dx = abs(r.z - p.z) < abs(p.z - l.z) ? r - p : p - l, dy = abs(o.z - p.z) < abs(p.z - u.z) ? o - p : p - u;
+        vec3 n = normalize(cross(dx, dy));
+        float w0 = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))) * 6.2831853, summe = 0.0;
+        vec2 rs = radius * mass / max(-p.z, 0.5);      // Radius auf dem Bildschirm
+        for (int i = 0; i < 10; i++) {
+          float f = (float(i) + 0.5) / 10.0, a = w0 + f * 15.08;
+          vec3 v = ort(vUv + vec2(cos(a), sin(a)) * rs * (0.15 + 0.85 * f)) - p;
+          float d2 = dot(v, v);
+          summe += max(dot(n, v) - 0.03 - 0.004 * -p.z, 0.0) / (d2 + 0.06) * smoothstep(radius * radius * 1.5, radius * radius * 0.5, d2);
+        }
+        float ao = clamp(1.0 - summe * 0.28, 0.0, 1.0);
+        gl_FragColor = vec4(vec3(mix(ao, 1.0, smoothstep(70.0, 240.0, -p.z))), 1.0);      // in der Ferne ausblenden (dort liegt Dunst)
+      }`, { tTiefe: { value: null }, px: { value: new THREE.Vector2() }, projInv: { value: new THREE.Matrix4() }, mass: { value: new THREE.Vector2() }, radius: { value: 1.4 } });
+    // Schlussbild: alles zusammensetzen, Helligkeit auf den Bildschirm abbilden, Farben abstimmen
+    this.mFertig = M(`uniform sampler2D tBild, tLeucht, tAO; uniform vec2 px; uniform float leuchten, saettigung, kontrast, vignette, aoKraft; uniform vec3 tonung; varying vec2 vUv;
+      void main() {
+        vec3 c = texture2D(tBild, vUv).rgb;
+        if (aoKraft > 0.0) {
+          float ao = (texture2D(tAO, vUv).r * 2.0 + texture2D(tAO, vUv + px * vec2(3.0, 3.0)).r + texture2D(tAO, vUv + px * vec2(-3.0, 3.0)).r + texture2D(tAO, vUv + px * vec2(3.0, -3.0)).r + texture2D(tAO, vUv + px * vec2(-3.0, -3.0)).r) / 6.0;
+          c *= mix(1.0, ao, aoKraft);
+        }
+        c += texture2D(tLeucht, vUv).rgb * leuchten;
+        gl_FragColor = vec4(c, 1.0);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
+        vec3 f = gl_FragColor.rgb;
+        f = mix(vec3(dot(f, vec3(0.2126, 0.7152, 0.0722))), f, saettigung);
+        f = (f - 0.5) * kontrast + 0.5;
+        f *= tonung;
+        vec2 q = vUv - 0.5;
+        f *= 1.0 - vignette * smoothstep(0.18, 0.75, dot(q, q) * 1.6);
+        f += (fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5) / 255.0;      // feines Rauschen gegen Farbstufen
+        gl_FragColor = vec4(clamp(f, 0.0, 1.0), 1.0);
+      }`, { tBild: { value: null }, tLeucht: { value: null }, tAO: { value: null }, px: { value: new THREE.Vector2() }, leuchten: { value: 0.5 }, saettigung: { value: 1 }, kontrast: { value: 1 },
+      vignette: { value: 0.3 }, aoKraft: { value: 0 }, tonung: { value: new THREE.Vector3(1, 1, 1) } }, { toneMapped: true });
+    this.bereit = true;
+  },
+
+  // Stufe einstellen: glaetten = Kantenglättung (Anzahl Abtastpunkte), ao = Umgebungsverdeckung, stufen = Weite des Leuchtens
+  setze(an, glaetten, ao, stufen) {
+    this.init();
+    this.an = an && this.moeglich; this.glaetten = glaetten; this.ao = ao; this.stufen = stufen;
+    this.raeume(); this.breite = 0;
+  },
+  setzeStil(id) { this.stil = BILDSTIL[id] || BILDSTIL.standard; },
+  raeume() {
+    if (this.ziel) { if (this.ziel.depthTexture) this.ziel.depthTexture.dispose(); this.ziel.dispose(); this.ziel = null; }
+    for (const z of this.kette) z.dispose();
+    this.kette = [];
+    if (this.aoZiel) { this.aoZiel.dispose(); this.aoZiel = null; }
+  },
+  // Zwischenbilder in der Grösse des Fensters anlegen
+  baue(w, h) {
+    this.raeume();
+    this.breite = w; this.hoehe = h;
+    const art = Grafik.renderer.extensions.has('EXT_color_buffer_float') || Grafik.renderer.extensions.has('EXT_color_buffer_half_float') ? THREE.HalfFloatType : THREE.UnsignedByteType;
+    this.ziel = new THREE.WebGLRenderTarget(w, h, { type: art, samples: this.glaetten, depthBuffer: true, stencilBuffer: false });
+    if (this.ao) { this.ziel.depthTexture = new THREE.DepthTexture(w, h); this.ziel.depthTexture.type = THREE.UnsignedIntType; }
+    let bw = w, bh = h;
+    for (let i = 0; i < this.stufen; i++) {
+      bw = Math.max(2, Math.round(bw / 2)); bh = Math.max(2, Math.round(bh / 2));
+      const z = new THREE.WebGLRenderTarget(bw, bh, { type: art, depthBuffer: false, stencilBuffer: false });
+      z.texture.minFilter = z.texture.magFilter = THREE.LinearFilter;
+      this.kette.push(z);
+    }
+    if (this.ao) { this.aoZiel = new THREE.WebGLRenderTarget(Math.round(w / 2), Math.round(h / 2), { depthBuffer: false, stencilBuffer: false }); }
+  },
+  durchlauf(mat, ziel) {
+    const R = Grafik.renderer;
+    this.netz.material = mat;
+    R.setRenderTarget(ziel);
+    R.render(this.szene, this.kam);
+  },
+
+  // Zeichnet alle Ansichten (Split-Screen) ins Zwischenbild und dann das fertige Bild auf den Bildschirm.
+  // jeAnsicht(a) wird vor jeder Ansicht aufgerufen (Sichtbarkeiten, Kamera).
+  zeichne(szene, ansichten, jeAnsicht) {
+    const R = Grafik.renderer, gr = R.getDrawingBufferSize(this._gr || (this._gr = new THREE.Vector2())), W = gr.x, H = gr.y;
+    if (W < 2 || H < 2) return;
+    if (W !== this.breite || H !== this.hoehe) this.baue(W, H);
+    const Z = this.ziel, S = this.stil, auto = R.autoClear;
+    R.autoClear = true;
+    for (const a of ansichten) {
+      const w = Math.round(a.w * W), h = Math.round(a.h * H), x = Math.round(a.x * W), y = H - Math.round(a.y * H) - h;
+      Z.viewport.set(x, y, w, h); Z.scissor.set(x, y, w, h); Z.scissorTest = ansichten.length > 1;
+      jeAnsicht(a, w, h);
+      R.setRenderTarget(Z);
+      R.render(szene, a.kamera);
+    }
+    Z.scissorTest = false;
+    // Leuchten: helle Stellen verkleinern, verwischen, wieder vergrössern
+    const K = this.kette, n = K.length;
+    this.mHell.uniforms.tBild.value = Z.texture; this.mHell.uniforms.px.value.set(0.5 / W, 0.5 / H); this.mHell.uniforms.schwelle.value = S.schwelle;
+    this.durchlauf(this.mHell, K[0]);
+    for (let i = 1; i < n; i++) {
+      this.mKlein.uniforms.tBild.value = K[i - 1].texture; this.mKlein.uniforms.px.value.set(0.5 / K[i - 1].width, 0.5 / K[i - 1].height);
+      this.durchlauf(this.mKlein, K[i]);
+    }
+    R.autoClear = false;
+    for (let i = n - 1; i > 0; i--) {
+      this.mGross.uniforms.tBild.value = K[i].texture; this.mGross.uniforms.px.value.set(0.5 / K[i].width, 0.5 / K[i].height); this.mGross.uniforms.anteil.value = 1;
+      this.durchlauf(this.mGross, K[i - 1]);
+    }
+    R.autoClear = true;
+    // Umgebungsverdeckung (nur mit einer einzigen Ansicht)
+    const F = this.mFertig.uniforms;
+    let aoKraft = 0;
+    if (this.ao && this.aoZiel && Z.depthTexture && ansichten.length === 1) {
+      const k = ansichten[0].kamera, U = this.mAO.uniforms;
+      U.tTiefe.value = Z.depthTexture; U.px.value.set(2 / W, 2 / H); U.projInv.value.copy(k.projectionMatrixInverse);
+      U.mass.value.set(k.projectionMatrix.elements[0] / 2, k.projectionMatrix.elements[5] / 2);
+      this.durchlauf(this.mAO, this.aoZiel);
+      F.tAO.value = this.aoZiel.texture; aoKraft = 0.85;
+    }
+    F.tBild.value = Z.texture; F.tLeucht.value = K[0].texture; F.px.value.set(1 / W, 1 / H); F.aoKraft.value = aoKraft;
+    F.leuchten.value = S.leuchten / Math.max(1, n * 0.42); F.saettigung.value = S.saettigung; F.kontrast.value = S.kontrast; F.vignette.value = ansichten.length > 1 ? 0 : S.vignette;
+    F.tonung.value.set(S.tonung[0], S.tonung[1], S.tonung[2]);
+    R.setRenderTarget(null);
+    R.setScissorTest(false);
+    R.setViewport(0, 0, window.innerWidth, window.innerHeight);
+    this.netz.material = this.mFertig;
+    R.render(this.szene, this.kam);
+    R.autoClear = auto;
+  },
+};
+/* ══════════════════════════════════════════════════════════════════════════
    TEIL 10: Eingabe – Tastatur, Gamepad, Touch
    Jedes Eingabegerät liefert dieselben «Tasten» wie in LEERE_EINGABE.
    Geräte:  'tasten1' = WASD-Seite,  'tasten2' = Pfeiltasten-Seite,
@@ -7537,8 +7796,22 @@ const SYMBOLE = {
 };
 
 // ── Anzeige im Rennen: pro lokalem Spieler ein eigenes Feld ───────────────
+const TACHO_MAX = 140;      // Endwert des Tachos in km/h (Höchsttempo 108, mit Boost bis etwa 137)
 const Hud = {
   teile: [], grund: null, kf: 1, kx: 0, ky: 0, bild: 0,
+
+  // Tacho als SVG: Skala über 260 Grad, oranger Boost-Bereich, Nadel, aussen ein Ring für Drift-Aufladung und Boost
+  tachoBild() {
+    const pkt = (grad, r) => { const w = (grad * Math.PI) / 180; return (60 + Math.cos(w) * r).toFixed(1) + ' ' + (60 + Math.sin(w) * r).toFixed(1); };
+    const bogen = (a, b, r) => 'M' + pkt(a, r) + ' A' + r + ' ' + r + ' 0 ' + (b - a > 180 ? 1 : 0) + ' 1 ' + pkt(b, r);
+    let striche = '';
+    for (let v = 0; v <= TACHO_MAX; v += 10) { const g = 140 + (260 * v) / TACHO_MAX, gross = v % 20 === 0; striche += '<path class="' + (gross ? 'strich' : 'strich fein') + '" d="M' + pkt(g, gross ? 39 : 42) + ' L' + pkt(g, 46) + '"/>'; }
+    for (let v = 0; v <= TACHO_MAX; v += 40) striche += '<text x="' + pkt(140 + (260 * v) / TACHO_MAX, 31).replace(' ', '" y="') + '">' + v + '</text>';
+    const boostAb = 140 + (260 * CONFIG.fahren.vmax * 3.6) / TACHO_MAX;
+    return '<svg viewBox="0 0 120 120"><circle class="scheibe" cx="60" cy="60" r="52"/><path class="bogen" d="' + bogen(140, 400, 47.5) + '"/><path class="rot" d="' + bogen(boostAb, 400, 47.5) + '"/>' + striche +
+      '<path class="ladegrund" d="' + bogen(140, 400, 56) + '"/><path class="lade" pathLength="100" d="' + bogen(140, 400, 56) + '"/>' +
+      '<g class="nadel"><path d="M54 58.2 L101 60 L54 61.8 Z"/></g><circle class="nabe" cx="60" cy="60" r="4.6"/></svg>';
+  },
 
   // Auslosung: zeigt jedem lokalen Spieler vor dem Countdown sein Auto mit Stärke und Schwäche
   auslosung(R) {
@@ -7559,7 +7832,7 @@ const Hud = {
       const d = document.createElement('div'); d.className = 'hud';
       d.innerHTML = '<div class="h-platz"></div><div class="h-runde"></div><div class="h-zeit"></div>' +
         '<div class="h-karte"><canvas></canvas></div>' +
-        '<div class="h-tempo"><span>0</span> <small>km/h</small><span class="lade"><i></i></span></div>' +
+        '<div class="h-tempo">' + Hud.tachoBild() + '<span>0</span><small>km/h</small></div>' +
         '<div class="h-mitte"><div class="h-warnung versteckt"></div><div class="h-meldung"></div></div>' +
         '<div class="h-gross versteckt"></div><div class="h-abstand"></div><div class="h-bauinfo"></div>' +
         '<div class="h-bau"><div class="h-bp"><b>0</b><span>BP</span><div class="lade"><i></i></div></div>' +
@@ -7567,12 +7840,12 @@ const Hud = {
         '</div><div class="h-falsch versteckt">Falsche Richtung!</div>';
       wurzel.appendChild(d);
       const q = (s) => d.querySelector(s);
-      const t = { sp, el: d, platz: q('.h-platz'), runde: q('.h-runde'), zeit: q('.h-zeit'), karte: q('.h-karte canvas'), tempo: q('.h-tempo span'), lade: q('.h-tempo .lade i'),
+      const t = { sp, el: d, platz: q('.h-platz'), runde: q('.h-runde'), zeit: q('.h-zeit'), karte: q('.h-karte canvas'), tempo: q('.h-tempo > span'), lade: q('.h-tempo .lade'), nadel: q('.h-tempo .nadel'),
         warnung: q('.h-warnung'), meldung: q('.h-meldung'), gross: q('.h-gross'), abstand: q('.h-abstand'), bauinfo: q('.h-bauinfo'), bp: q('.h-bp b'), bpLade: q('.h-bp .lade i'),
         bw: Array.from(d.querySelectorAll('.bw')), falsch: q('.h-falsch'), alt: {}, meldZeit: 0, grossZeit: 0, warnBw: -1 };
       // Bauleiste lässt sich auch anklicken/antippen: einmal wählen, nochmals = bauen
       t.bw.forEach((el, nr) => { el.onclick = () => { Eingabe.ziffer = nr + 1; }; });
-      if (sp.geraet === 'tasten' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) Touch.baue(d);
+      if (sp.geraet === 'tasten' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) { Touch.baue(d); d.classList.add('mit-touch'); }
       this.teile.push(t);
     });
     this.groesse();
@@ -7600,11 +7873,44 @@ const Hud = {
       if (zu) x.closePath();
       x.lineWidth = breite; x.strokeStyle = farbe; x.stroke();
     };
+    const H = S.haupt, o = {};
+    // Schatten unter der Strecke: Die Karte wirkt wie ein kleines Relief
+    x.save(); x.translate(3, 4);
+    for (const w of S.wege) linie(w.pfad, false, 6, 'rgba(0,0,0,.3)');
+    linie(H, true, 9, 'rgba(0,0,0,.3)');
+    x.restore();
     for (const w of S.wege) linie(w.pfad, false, 6, 'rgba(0,0,0,.8)');
-    linie(S.haupt, true, 9, 'rgba(0,0,0,.85)');
+    linie(H, true, 9, 'rgba(0,0,0,.85)');
     for (const w of S.wege) linie(w.pfad, false, 3, w.art === 'abkuerzung' ? '#7ad67f' : '#c9c5b8');
-    linie(S.haupt, true, 5, '#f5f1e6');
-    const H = S.haupt; x.fillStyle = '#e0362c'; x.fillRect(this.kx + H.x[0] * f - 4, this.ky - H.z[0] * f - 4, 8, 8);
+    // Hauptstrecke: Die Höhe zeigt sich als Helligkeit (tief = dunkler, hoch = heller)
+    let y0 = 1e9, y1 = -1e9;
+    for (let i = 0; i < H.n; i++) { y0 = Math.min(y0, H.y[i]); y1 = Math.max(y1, H.y[i]); }
+    const st = Math.max(1, Math.round(H.n / 140));
+    x.lineWidth = 5;
+    for (let i = 0; i < H.n; i += st) {
+      x.beginPath(); x.moveTo(this.kx + H.x[i] * f, this.ky - H.z[i] * f);
+      for (let q = 1; q <= st; q++) { const j = (i + q) % H.n; x.lineTo(this.kx + H.x[j] * f, this.ky - H.z[j] * f); }
+      const g = Math.round(y1 - y0 > 3 ? 168 + 87 * ((H.y[i] - y0) / (y1 - y0)) : 245);
+      x.strokeStyle = 'rgb(' + g + ',' + Math.round(g * 0.985) + ',' + Math.round(g * 0.94) + ')'; x.stroke();
+    }
+    // Boost-Felder: kleine orange Pfeile in Fahrtrichtung
+    for (const b of S.boostfelder || []) {
+      H.ort(b.s, b.d, o); const px = this.kx + o.x * f, py = this.ky - o.z * f;
+      H.ort((b.s + 6) % S.laenge, b.d, o); const w = Math.atan2(-(this.ky - o.z * f - py), this.kx + o.x * f - px);
+      x.save(); x.translate(px, py); x.rotate(-w);
+      x.beginPath(); x.moveTo(5, 0); x.lineTo(-3, 4.5); x.lineTo(-1, 0); x.lineTo(-3, -4.5); x.closePath();
+      x.fillStyle = '#ff8a1e'; x.fill(); x.lineWidth = 1; x.strokeStyle = '#000'; x.stroke(); x.restore();
+    }
+    // Sehenswürdigkeiten: goldene Rauten
+    for (const d of S.def.deko || []) {
+      if (typeof Bauten === 'undefined' || !Bauten[d.art] || d.x === undefined) continue;
+      const px = this.kx + d.x * f, py = this.ky - d.z * f;
+      if (px < 8 || px > 248 || py < 8 || py > 248) continue;
+      x.beginPath(); x.moveTo(px, py - 6); x.lineTo(px + 5, py); x.lineTo(px, py + 6); x.lineTo(px - 5, py); x.closePath();
+      x.fillStyle = '#ffd23e'; x.fill(); x.lineWidth = 1.5; x.strokeStyle = '#3a2c00'; x.stroke();
+    }
+    x.fillStyle = '#e0362c'; x.fillRect(this.kx + H.x[0] * f - 4, this.ky - H.z[0] * f - 4, 8, 8);
+    x.lineWidth = 1.5; x.strokeStyle = '#fff'; x.strokeRect(this.kx + H.x[0] * f - 4, this.ky - H.z[0] * f - 4, 8, 8);
   },
 
   zeichneKarte(t, R, k) {
@@ -7664,11 +7970,20 @@ const Hud = {
       if (k.drift) { lade = clamp(k.driftZeit / (CONFIG.drift.stufe2 * k.w.driftLaden), 0, 1); farbe = k.driftStufe === 2 ? '#ff7a1a' : k.driftStufe === 1 ? '#4db8ff' : '#fff0a8'; }
       else if (k.boostZeit > 0) { lade = clamp(k.boostZeit / 1.5, 0, 1); farbe = '#ff7a1a'; }
       const lk = Math.round(lade * 50) + farbe;
-      if (a.lade !== lk) { a.lade = lk; t.lade.style.width = Math.round(lade * 100) + '%'; t.lade.style.background = farbe; }
+      if (a.lade !== lk) { a.lade = lk; t.lade.style.strokeDasharray = (lade * 100).toFixed(1) + ' 200'; t.lade.style.stroke = farbe; t.lade.style.opacity = lade > 0.01 ? 1 : 0; }
+      // Tacho-Nadel: 0 bis TACHO_MAX km/h über 260 Grad
+      const nw = Math.round((140 + 260 * clamp((Math.abs(k.v) * 3.6) / TACHO_MAX, 0, 1)) * 2) / 2;
+      if (a.nadel !== nw) { a.nadel = nw; t.nadel.style.transform = 'rotate(' + nw + 'deg)'; }
       // Abstand
       let ab;
-      if (k.rang === 1) { const zw = R.karts[R.reihenfolge[1]]; ab = zw ? 'Vorsprung ' + Math.max(0, R.rueckstand(zw)).toFixed(1) + ' s' : ''; }
-      else ab = 'Führender +' + Math.max(0, R.rueckstand(k)).toFixed(1) + ' s';
+      const hinter = R.karts[R.reihenfolge[k.rang]];      // der Fahrer direkt hinter mir (falls es einen gibt)
+      if (k.rang === 1) ab = hinter ? 'Vorsprung <b>' + Math.max(0, R.rueckstand(hinter)).toFixed(1) + ' s</b>' : '';
+      else {
+        const rk = Math.max(0, R.rueckstand(k)), vorn = R.karts[R.reihenfolge[k.rang - 2]];
+        ab = 'Führender <b>+' + rk.toFixed(1) + ' s</b>';
+        if (k.rang > 2 && vorn) ab += '<br>Vordermann <b>+' + Math.max(0, rk - Math.max(0, R.rueckstand(vorn))).toFixed(1) + ' s</b>';
+        if (hinter) ab += '<br>Verfolger <b>−' + Math.max(0, Math.max(0, R.rueckstand(hinter)) - rk).toFixed(1) + ' s</b>';
+      }
       if (k.windAktiv) ab += '<br>Windschatten!'; else if (k.windZeit > 0.3) ab += '<br>Windschatten lädt …';
       setze(t.abstand, 'ab', ab);
       // Baupunkte
@@ -8092,8 +8407,8 @@ const Menue = {
       '<div class="zeile"><label for="f-laut">Effekte</label><input type="range" id="f-laut" min="0" max="100" value="' + Math.round(D.lautstaerke * 100) + '"></div>' +
       '<div class="zeile"><label for="f-musik">Musik</label><input type="range" id="f-musik" min="0" max="100" value="' + Math.round(D.musik * 100) + '"></div>' +
       this.wahlZeile('Ton', 'stumm', [{ wert: false, text: 'An' }, { wert: true, text: 'Stumm' }], D.stumm, (v) => { D.stumm = v; App.tonSetzen(); }) +
-      this.wahlZeile('Grafik', 'grafik', [{ wert: 'niedrig', text: 'Niedrig' }, { wert: 'mittel', text: 'Mittel' }, { wert: 'hoch', text: 'Hoch' }], D.grafik, (v) => { D.grafik = v; Grafik.setzeQualitaet(v); }) +
-      '<p class="hinweis">Ruckelt das Spiel, stelle die Grafik auf «Niedrig». Die Einstellungen bleiben in diesem Browser gespeichert.</p>' +
+      this.wahlZeile('Grafik', 'grafik', Object.keys(GRAFIK_NAMEN).map((q) => ({ wert: q, text: GRAFIK_NAMEN[q] })), D.grafik, (v) => { D.grafik = v; D.grafikGemessen = true; Grafik.setzeQualitaet(v); Spiel.starteDemo(D.strecke); }) +
+      '<p class="hinweis">Beim ersten Start wählt das Spiel die Stufe nach einer kurzen Messung selbst. Ruckelt es, nimm eine tiefere Stufe. «Ultra» braucht eine starke Grafikkarte. Die Einstellungen bleiben in diesem Browser gespeichert.</p>' +
       '<div class="knoepfe"><button class="knopf" data-a="zurueck">Fertig</button></div></div>', { zurueck: () => { this.nameLesen(); Speicher.sichern(); this.haupt(); } });
     $('f-laut').oninput = (ev) => { D.lautstaerke = ev.target.value / 100; App.tonSetzen(); };
     $('f-musik').oninput = (ev) => { D.musik = ev.target.value / 100; App.tonSetzen(); };
@@ -8261,10 +8576,21 @@ const App = {
   },
 
   bereit() {
-    try { Grafik.qualitaet = Speicher.daten.grafik; Grafik.init($('bild')); }
+    const D = Speicher.daten, fest = this.parameter.get('grafik');      // ?grafik=hoch legt die Stufe für diesen Besuch fest (für Tests)
+    const messen = !(fest && GRAFIK_NAMEN[fest]) && !D.grafikGemessen;   // erster Start: Stufe selbst wählen
+    if (!GRAFIK_NAMEN[D.grafik]) D.grafik = 'mittel';
+    try { Grafik.qualitaet = fest && GRAFIK_NAMEN[fest] ? fest : messen ? 'hoch' : D.grafik; Grafik.init($('bild')); }
     catch (e) { Menue.fehler('Dein Browser kann hier keine 3D-Grafik (WebGL) anzeigen. Versuche es mit einem aktuellen Chrome, Firefox, Edge oder Safari.'); return; }
     this.tonSetzen(); Ton.musikGewollt = true;
     Spiel.starteDemo(Speicher.daten.strecke);
+    if (messen) {
+      // kurz messen, wie schnell dieses Gerät die Vorschau-Szene zeichnet, und die Grafik-Stufe danach wählen
+      let q = 'mittel';
+      try { q = Grafik.messeStufe(); } catch (e) { /* Messung nicht möglich: «Mittel» */ }
+      D.grafik = q; D.grafikGemessen = true; Speicher.sichern();
+      if (q !== Grafik.qualitaet) { Grafik.setzeQualitaet(q); Spiel.starteDemo(D.strecke); }
+      setTimeout(() => this.toast('Grafik «' + GRAFIK_NAMEN[q] + '» automatisch gewählt. Ändern kannst du sie in den Einstellungen.', 4500), 1500);
+    }
     const raum = this.parameter.get('raum');
     if (raum && typeof Online !== 'undefined') Online.beitretenDialog(raum); else Menue.haupt();
     requestAnimationFrame((t) => { this.letzte = t; this.bild(t); });
