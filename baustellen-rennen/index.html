@@ -200,6 +200,7 @@ input[type=range]{accent-color:var(--gold)}
 .bl-bot small{color:var(--leise);font-size:.75rem}
 .bl-robo{width:16px;height:16px;fill:var(--gold);vertical-align:-3px;margin-right:6px}
 .bl-name{overflow-wrap:anywhere}
+.bl-handy{display:none}
 .bl-neu{margin:.2em 0 .7em;color:var(--gold);font-weight:600;line-height:1.45}
 .sk-rekord{list-style:none;margin:6px 0 0;padding:0;font-size:.78rem;color:var(--leise);line-height:1.4}
 .sk-text .sk-rekord li{display:block;font-size:inherit}
@@ -211,7 +212,7 @@ input[type=range]{accent-color:var(--gold)}
 .dialog h2{font:650 1.45rem/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-style:normal;text-transform:none;letter-spacing:-.01em;text-shadow:none;color:var(--text);margin:0 0 8px}
 .dialog p{margin:0 0 10px;color:var(--leise)}
 .dialog .feld{display:block;width:100%;box-sizing:border-box;font-size:1.1rem;padding:10px 12px;margin:4px 0 14px}
-@media(max-width:560px){.bl-kopf{grid-template-columns:1fr}.bl-kopf canvas{width:110px;height:110px}.bl-datum{display:none}.bl-tabelle td,.bl-tabelle th{padding:4px 5px}.bl-bot small{display:block;margin-left:20px}.bl-robo{margin-right:4px}}
+@media(max-width:560px){.bl-kopf{grid-template-columns:1fr}.bl-kopf canvas{width:110px;height:110px}.bl-datum{display:none}.bl-tabelle td,.bl-tabelle th{padding:4px 5px}.bl-auto,.bl-was{display:none}.bl-handy{display:block;color:var(--leise);font-size:.75rem}}
 </style>
 </head>
 <body>
@@ -9860,12 +9861,14 @@ const Bestenliste = {
   // Tabelle: Platz (die ersten drei in Gold, Silber, Bronze), Name (Bots mit Symbol), Zeit, Auto, Datum
   tabelle(l, hervor) {
     if (!l.length) return '<p class="hinweis">Noch keine Zeiten. Fahr die erste Runde!</p>';
-    let h = '<table class="bl-tabelle"><tr><th class="zahl">Platz</th><th>Name</th><th class="zahl">Runde</th><th>Auto</th><th class="bl-datum">Datum</th></tr>';
+    let h = '<table class="bl-tabelle"><tr><th class="zahl">Platz</th><th>Name</th><th class="zahl">Runde</th><th class="bl-auto">Auto</th><th class="bl-datum">Datum</th></tr>';
     l.forEach((e, i) => {
       const p = i + 1, cls = [p <= 3 ? 'bl-p' + p : '', e.bot ? 'bl-bot' : '', hervor && hervor(e) ? 'ich' : ''].filter(Boolean).join(' ');
+      const bot = e.bot ? 'Bot' + (BL_STUFE[e.s] ? ' · ' + BL_STUFE[e.s] : '') : '', auto = esc(this.autoName(e.a));
+      // Auf dem Handy fällt die Spalte «Auto» weg: Auto (und bei Bots «Bot · Stärke») stehen dann klein unter dem Namen
       h += '<tr class="' + cls + '"><td class="zahl"><span class="bl-rang">' + p + '</span></td><td>' + (e.bot ? BL_ROBOTER : '') + '<span class="bl-name">' + esc(e.n) + '</span>' +
-        (e.bot ? ' <small>Bot' + (BL_STUFE[e.s] ? ' · ' + BL_STUFE[e.s] : '') + '</small>' : '') + '</td><td class="zahl">' + zeitText(e.z) + '</td><td>' + esc(this.autoName(e.a)) +
-        '</td><td class="bl-datum">' + this.datum(e.d) + '</td></tr>';
+        (bot ? ' <small class="bl-was">' + bot + '</small>' : '') + '<small class="bl-handy">' + (bot ? bot + ' · ' : '') + auto + '</small></td><td class="zahl">' + zeitText(e.z) +
+        '</td><td class="bl-auto">' + auto + '</td><td class="bl-datum">' + this.datum(e.d) + '</td></tr>';
     });
     return h + '</table>';
   },
