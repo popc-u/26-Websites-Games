@@ -582,6 +582,8 @@ const TAU = Math.PI * 2;
 const GRAFIK_NAMEN = { niedrig: 'Niedrig', mittel: 'Mittel', hoch: 'Hoch', ultra: 'Ultra' };      // Grafik-Stufen in dieser Reihenfolge
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
 const lerp = (a, b, t) => a + (b - a) * t;
+// kubische Hermite-Kurve von p0 nach p1 mit den Tangenten m0 und m1 (pro ganzen Abschnitt), t von 0 bis 1
+const hermite = (p0, m0, p1, m1, t) => { const t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * p0 + (t3 - 2 * t2 + t) * m0 + (3 * t2 - 2 * t3) * p1 + (t3 - t2) * m1; };
 const hyp = Math.hypot;
 
 // kürzeste Winkeldifferenz a − b im Bereich (−π, π]
@@ -1608,8 +1610,8 @@ class Rennen {
       // Bewegung
       x: o.x, z: o.z, y: o.y, vy: 0, luft: false, luftZeit: 0,
       richtung: w, blick: w, v: 0, lenk: 0, schubX: 0, schubZ: 0,
-      px: o.x, pz: o.z, py: o.y, pblick: w,     // Zustand vor dem letzten Schritt (für weiche Darstellung)
-      drift: 0, driftZeit: 0, driftStufe: 0, driftGesperrt: false, hop: 0,
+      px: o.x, pz: o.z, py: o.y, pblick: w, pv: 0, prichtung: w,     // Zustand vor dem letzten Schritt (für weiche Darstellung)
+      drift: 0, driftZeit: 0, driftStufe: 0, driftGesperrt: false, hop: 0, driftW: 0, driftWV: 0,   // driftW: sichtbarer Schräglauf, folgt dem Drift weich (nur Optik)
       boostZeit: 0, boostStaerke: 1, boostFeld: -1, windZeit: 0, windAktiv: false,
       schutzZeit: 0, lahmZeit: 0, schlamm: 0, geistZeit: 0, wandZeit: 0,
       // Position auf der Strecke
@@ -1635,8 +1637,8 @@ class Rennen {
     if (this.phase === 'countdown' && this.zeit >= 0) { this.phase = 'rennen'; this.melde('los', -1); }
     const frei = this.phase !== 'countdown';
     for (const k of this.karts) {
-      k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.blick;
-      if (k.typ === 'fern') continue;
+      if (k.typ === 'fern') continue;               // fremde Autos: Online.vorSchritt setzt den alten und den neuen Stand
+      k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.blick; k.pv = k.v; k.prichtung = k.richtung;
       let e = (eingaben && eingaben[k.idx]) || LEERE_EINGABE;
       if (k.bot && (k.typ === 'bot' || k.zielZeit != null)) e = k.bot.steuere(this, k, dt);
       k.eingabe = e;
@@ -1745,7 +1747,9 @@ class Rennen {
     if (bel) rate *= bel.lenk;
     if (k.v < 0) rate = -rate;
     k.richtung += rate * dt;
-    const blickZiel = k.richtung + k.drift * D.winkel + (k.drift ? 0 : k.lenk * 0.08 * anteil);
+    // Sichtbarer Schräglauf: folgt dem Drift weich (kritisch gedämpft), damit das Heck beim Einlenken und Aufrichten nicht ruckt. Nur Optik.
+    k.driftWV += ((k.drift * D.winkel - k.driftW) * 196 - k.driftWV * 28) * dt; k.driftW += k.driftWV * dt;
+    const blickZiel = k.richtung + k.driftW + (k.drift ? 0 : k.lenk * 0.08 * anteil);
     k.blick += winkelDiff(blickZiel, k.blick) * Math.min(1, 11 * dt);
 
     // Windschatten: dicht hinter einem anderen Fahrzeug
@@ -2017,6 +2021,7 @@ class Rennen {
     const i = Math.min(P.n - 1, Math.floor(s / P.ds));
     k.x = o.x; k.z = o.z; k.y = o.y; k.vy = 0; k.luft = false; k.v = 0;
     k.richtung = k.blick = Math.atan2(P.tz[i], P.tx[i]);
+    k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.prichtung = k.blick; k.pv = 0; k.driftW = k.driftWV = 0;   // nicht vom alten Ort her gleiten
     k.pfad = k.sicher.pfad;
     if (k.pfad > 0) k.wi = i; else k.mi = i;
     k.schubX = k.schubZ = 0; k.drift = 0; k.driftZeit = 0; k.driftStufe = 0; k.boostZeit = 0; k.lenk = 0;
@@ -3785,6 +3790,8 @@ Object.assign(Grafik, {
       const x = lerp(k.px, k.x, alpha), z = lerp(k.pz, k.z, alpha), y = lerp(k.py, k.y, alpha);
       const blick = k.pblick + winkelDiff(k.blick, k.pblick) * alpha;
       k.sx = x; k.sy = y; k.sz = z; k.sblick = blick;           // dargestellte Position (für Kamera und Anzeige)
+      k.sv = lerp(k.pv != null ? k.pv : k.v, k.v, alpha);       // dargestelltes Tempo und Fahrtrichtung (Federung und Kamera)
+      k.srichtung = k.prichtung != null ? k.prichtung + winkelDiff(k.richtung, k.prichtung) * alpha : k.richtung;
       this.bewegeAuto(o, k, x, y, z, blick, dt, R);
       if (o.grob && !o.inst) this.lod(o);
       this.effekte(o, k, x, y, z, blick, dt, R);
@@ -3835,11 +3842,14 @@ Object.assign(Grafik, {
     const x = k.sx != null ? k.sx : k.x, y = k.sy != null ? k.sy : k.y, z = k.sz != null ? k.sz : k.z;
     const frei = a.kart < 0;
     if (frei) a.dreh += dt * 0.12;
-    const ziel = k.richtung + k.drift * 0.12 + (frei ? 2.4 + Math.sin(a.dreh) * 0.9 : 0);
+    // Fahrtrichtung zwischen zwei Rechenschritten, Drift-Versatz weich (sonst springt das Ziel beim Einlenken und die Kamera ruckt)
+    if (a.drift == null || a.k !== k) { a.drift = k.drift * 0.12; a.k = k; }
+    a.drift += (k.drift * 0.12 - a.drift) * Math.min(1, 6 * dt);
+    const ziel = (k.srichtung != null ? k.srichtung : k.richtung) + a.drift + (frei ? 2.4 + Math.sin(a.dreh) * 0.9 : 0);
     if (a.yaw == null) { a.yaw = ziel; a.hy = y; }
     a.yaw += winkelDiff(ziel, a.yaw) * Math.min(1, (frei ? 1.5 : 5.5) * dt);
     a.hy += (y - a.hy) * Math.min(1, 9 * dt);
-    const tempo = clamp(k.v / F.vmax, 0, 1.3);
+    const tempo = clamp((k.sv != null ? k.sv : k.v) / F.vmax, 0, 1.3);
     const dist = frei ? 13 : 6.6 + tempo * 1.2, hoch = frei ? 5.5 : 3.1;
     const c = Math.cos(a.yaw), s = Math.sin(a.yaw);
     let ky = a.hy + hoch;
@@ -4959,8 +4969,16 @@ Object.assign(Grafik, {
     pa.needsUpdate = true; H.computeVertexNormals();
   },
   bewegeAuto(o, k, x, y, z, blick, dt, R) {
-    const A = o.aufbau, v = k.v, hop = k.hop > 0 ? Math.sin((1 - k.hop / 0.18) * Math.PI) * 0.22 : 0;
+    const A = o.aufbau, v = k.sv != null ? k.sv : k.v;
     if (o.blickAlt == null) { o.blickAlt = blick; o.vAlt = v; }
+    if (o.neig == null) { o.neig = k.luft ? 0 : Math.atan(k.steigung || 0); o.neigV = 0; o.luftHub = 0; o.phase = k.idx * 1.7; o.hopAlt = k.hop || 0; o.hopT = null; o.fy = y; o.fyV = 0; }
+    // Hüpfer beim Drift-Beginn: mit eigener Uhr pro Bild und weicher Form (sin²), damit er ohne Ruck abhebt und aufsetzt.
+    // Die Uhr läuft vor dem Zeichnen weiter, damit jedes Bild genau die Zeit seit dem letzten Bild zeigt (sonst ruckelt er bei ungleichen Bildzeiten).
+    if (k.hop > o.hopAlt + 1e-6 && o.hopT == null) o.hopT = -dt;
+    o.hopAlt = k.hop;
+    if (o.hopT != null) o.hopT += dt;
+    const hop = o.hopT != null ? 0.11 * Math.sin(Math.PI * Math.min(1, o.hopT / 0.28)) ** 2 : 0;
+    if (o.hopT != null && o.hopT >= 0.28) o.hopT = null;
     // Randstein: das Auto rüttelt
     const H = R.S.haupt, i = Math.floor(k.sHaupt / H.ds) % H.n, hb = H.hb[i >= 0 ? i : 0];
     o.aufRand = !k.luft && k.pfad === 0 && v > 4 && Math.abs(k.d) > hb - 0.95 && Math.abs(k.d) < hb + 0.3;
@@ -4974,18 +4992,33 @@ Object.assign(Grafik, {
       const h = Math.min(dt, 0.033);
       o.rollV += ((zielRoll - o.roll) * 110 - o.rollV * 12) * h; o.roll += o.rollV * h;
       o.nickV += ((zielNick - o.nick) * 110 - o.nickV * 12) * h; o.nick += o.nickV * h;
-      if (o.warLuft && !k.luft) o.hubV -= 1.1;                       // Landung: die Karosserie taucht ein
+      // Landung: die Karosserie federt mit einem Teil der Fallgeschwindigkeit ein (statt eines festen Stosses)
+      if (k.luft) o.vyLuft = k.vy || 0;
+      else if (o.warLuft) o.hubV += Math.max(-3, Math.min(0, o.vyLuft || 0) * 0.7);
       o.warLuft = k.luft;
-      o.hubV += (-o.hub * 170 - o.hubV * 13) * h; o.hub = clamp(o.hub + o.hubV * h, -0.1, 0.08);
+      o.hubV += (-o.hub * 170 - o.hubV * 13) * h; o.hub = clamp(o.hub + o.hubV * h, -0.2, 0.08);
+      o.luftHub += ((k.luft ? 0.03 : 0) - o.luftHub) * Math.min(1, 10 * dt);
+      // Neigung der Strasse (Steigung, Rampen): folgt weich und mit begrenzter Beschleunigung, statt an jeder Kante zu springen
+      const neigZiel = k.luft ? 0 : Math.atan(k.steigung);
+      o.neigV += clamp((neigZiel - o.neig) * 400 - o.neigV * 40, -32, 32) * h; o.neig += o.neigV * h;
       o.radWinkel += v * dt;
+      // Rütteln: weiche Schwingung statt Zufall in jedem Bild (Frequenz steigt mit dem Tempo)
+      o.phase += dt * Math.PI * 2 * (2.5 + Math.min(Math.abs(v), 30) * 0.15);
+      // Federung gegen Knicke im Höhenverlauf (Beginn einer Steigung, Rampe, Brücke): Die Räder bleiben auf der Strasse, der Aufbau folgt
+      // weich. Er übernimmt das Höhen-Tempo des Rechenschritts, nur der Knick wird über einige Bilder verteilt (höchstens 6 cm Versatz).
+      const vyZiel = (k.y - k.py) / SCHRITT;
+      if (k.luft || Math.abs(y - o.fy) > 0.3) { o.fy = y; o.fyV = vyZiel; }
+      else for (let n = Math.ceil(h / 0.008), q = 0; q < n; q++) { o.fyV += ((y - o.fy) * 150 + (vyZiel - o.fyV) * 24) * (h / n); o.fy += o.fyV * (h / n); }
+      o.fy = clamp(o.fy, y - 0.06, y + 0.06);
     }
+    const welle = (p) => (Math.sin(o.phase + p) + 0.5 * Math.sin(o.phase * 1.37 + p * 2.3 + 1.1)) / 1.5;
     o.gruppe.position.set(x, y + hop, -z);
-    o.gruppe.rotation.set(0, blick, k.luft ? 0 : Math.atan(k.steigung));
+    o.gruppe.rotation.set(0, blick, o.neig);
     const zittern = rau * Math.min(1, v / 12);
-    A.rotation.set(o.roll + (Math.random() - 0.5) * zittern * 1.4, 0, o.nick + (Math.random() - 0.5) * zittern);
-    A.position.y = o.hub + (k.luft ? 0.03 : 0) + (Math.random() - 0.5) * zittern * 0.6;
+    A.rotation.set(o.roll + welle(0) * zittern * 0.7, 0, o.nick + welle(2.1) * zittern * 0.5);
+    A.position.y = o.hub + o.luftHub + (o.fy - y) + welle(4.2) * zittern * 0.3;
     for (const r of o.raeder) {                                       // jedes Rad federt einzeln
-      r.ziel = k.luft ? -0.07 : (Math.random() - 0.5) * zittern * 2.4 - o.hub * 0.2;
+      r.ziel = k.luft ? -0.07 : welle(r.seite * 1.3 + (r.vorn ? 0.8 : 2.9)) * zittern * 1.2 - o.hub * 0.2;
       r.y += (r.ziel - r.y) * Math.min(1, 25 * dt);
       r.g.position.y = r.r + r.y;
       r.g.rotation.y = (r.seite < 0 ? Math.PI : 0) + (r.vorn ? k.lenk * 0.42 : 0);
@@ -8924,19 +8957,45 @@ const Online = {
     if (P.length && z[0] <= P[P.length - 1][0]) return;            // veraltet (Pakete können sich überholen)
     P.push(z); if (P.length > 14) P.shift();
   },
-  // Fremde Fahrzeuge zwischen zwei empfangenen Zuständen weich bewegen (100 ms in der Vergangenheit)
+  // Fremde Fahrzeuge zwischen zwei empfangenen Zuständen weich bewegen (100 ms in der Vergangenheit). Der Ort folgt einer Hermite-Kurve:
+  // Sie geht durch jeden Zustand und hat dort dessen Tempo und Fahrtrichtung, darum knickt die Bahn an den Paketen nicht (20 pro Sekunde,
+  // ferne Autos 10). Höhe und Blickrichtung laufen ebenso weich durch die Nachbarzustände. Gezeichnet wird zwischen dem alten und dem
+  // neuen Stand (px … und x …), Rennen.step lässt fremde Autos aus.
   vorSchritt(R) {
     const tr = R.zeit + SCHRITT - CONFIG.netz.puffer;
     for (const k of R.karts) {
       if (k.typ !== 'fern') continue;
+      k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.blick; k.pv = k.v; k.prichtung = k.richtung;
       const P = this.puffer[k.idx];
       if (!P || !P.length) continue;
-      while (P.length > 2 && P[1][0] <= tr) P.shift();
-      const a = P[0], b = P[1] || a, dt = b[0] - a[0];
+      while (P.length > 3 && P[2][0] <= tr) P.shift();                          // ein Zustand vor dem jetzigen Abschnitt bleibt (für die Tangenten)
+      let ia = 0;
+      while (ia + 1 < P.length && P[ia + 1][0] <= tr) ia++;
+      const a = P[ia], b = P[ia + 1] || a, dt = b[0] - a[0], vor = P[ia - 1], nach = P[ia + 2];
       const u = dt > 0.001 ? clamp((tr - a[0]) / dt, 0, 1 + 0.25 / dt) : 0;      // höchstens 0.25 s über das letzte Paket hinaus weiterrechnen
       const w = Math.min(u, 1);
-      k.x = a[1] + (b[1] - a[1]) * u; k.z = a[2] + (b[2] - a[2]) * u; k.y = a[3] + (b[3] - a[3]) * w;
-      k.richtung = a[4] + winkelDiff(b[4], a[4]) * w; k.blick = a[5] + winkelDiff(b[5], a[5]) * w;
+      if (b === a || dt <= 0.001) { k.x = a[1]; k.z = a[2]; k.y = a[3]; k.richtung = a[4]; k.blick = a[5]; }
+      else {
+        const ta = a[6] * dt, tb = b[6] * dt;                                   // Tangenten: Tempo × Paketabstand in Fahrtrichtung
+        const sprung = Math.hypot(b[1] - a[1], b[2] - a[2]) > Math.max(4, (Math.abs(a[6]) + Math.abs(b[6])) * dt * 1.5);   // Zurücksetzen o. Ä.
+        if (sprung) { k.x = a[1] + (b[1] - a[1]) * w; k.z = a[2] + (b[2] - a[2]) * w; }
+        else if (u <= 1) {
+          k.x = hermite(a[1], ta * Math.cos(a[4]), b[1], tb * Math.cos(b[4]), u);
+          k.z = hermite(a[2], ta * Math.sin(a[4]), b[2], tb * Math.sin(b[4]), u);
+        } else { k.x = b[1] + tb * Math.cos(b[4]) * (u - 1); k.z = b[2] + tb * Math.sin(b[4]) * (u - 1); }
+        // Höhe und Winkel: Catmull-Rom durch die Nachbarn (fehlt einer, gilt die Sehne)
+        const sehne = (q0, q1, t0, t1) => (q1 - q0) / Math.max(0.001, t1 - t0) * dt;
+        const yA = vor ? sehne(vor[3], b[3], vor[0], b[0]) : b[3] - a[3], yB = nach ? sehne(a[3], nach[3], a[0], nach[0]) : b[3] - a[3];
+        k.y = sprung ? a[3] + (b[3] - a[3]) * w : hermite(a[3], yA, b[3], yB, w);
+        const winkel = (j) => {                                                  // Winkel j über a, b und die Nachbarn ohne Sprung bei ±π
+          const wb = a[j] + winkelDiff(b[j], a[j]);
+          if (sprung) return a[j] + (wb - a[j]) * w;
+          const wv = vor ? a[j] - winkelDiff(a[j], vor[j]) : null, wn = nach ? wb + winkelDiff(nach[j], b[j]) : null;
+          const mA = wv != null ? sehne(wv, wb, vor[0], b[0]) : wb - a[j], mB = wn != null ? sehne(a[j], wn, a[0], nach[0]) : wb - a[j];
+          return hermite(a[j], mA, wb, mB, w);
+        };
+        k.richtung = winkel(4); k.blick = winkel(5);
+      }
       k.v = b[6]; k.lenk = b[7];
       const f = b[8];
       k.luft = !!(f & 1); k.drift = f & 2 ? 1 : f & 4 ? -1 : 0; k.driftStufe = (f >> 3) & 3; k.boostZeit = f & 32 ? 0.2 : 0; k.windAktiv = !!(f & 64);

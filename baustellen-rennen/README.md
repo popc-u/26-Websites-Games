@@ -479,6 +479,70 @@ Gemessen mit «Mittel»-Bots, je Strecke 100 Rennen (33 Fahrer: 40), Werte für 
 
 Mit dem Faktor verdient jeder Fahrer wieder fast so viele Baupunkte wie mit 8 Autos. Gebaut wird trotzdem kaum weniger, weil höchstens 6 Hindernisse gleichzeitig stehen und diese Grenze in grossen Feldern fast immer erreicht ist. Ein Hindernis im Pulk trifft mehr Autos: Am Bergpass fährt mit 33 Autos jedes rund 1,8-mal pro Rennen in eine Baustelle, mit 8 Autos 0,6-mal. Länger als 0,4 s steht dabei niemand still. Wer in grossen Feldern weniger Baustellen will, setzt `CONFIG.bp.feldExponent` höher (1 heisst: Baupunkte × 8 ÷ Fahrer).
 
+## Ruhigere Fahrt
+
+Stand 18.11.2026 (Etappe 3). Geändert ist nur, wie die Autos gezeichnet werden. Die Fahrphysik rechnet genau wie vorher: Gleiche Rennen mit gleicher Saat enden genau gleich, Höchsttempo, Beschleunigung, Lenkung und Drift sind unverändert.
+
+### Ruckel-Mass
+
+`tools/ruckeln.js` fährt auf jeder Strecke ein Rennen mit 8 «Mittel»-Bots (60 s, feste Saat) und lässt die Bildzeiten wie auf einem echten Gerät schwanken (12 bis 22 ms pro Bild). In jedem Bild schreibt es die dargestellte Lage jedes Autos auf: Höhe und Neigung des Aufbaus (Nicken, Rollen), Richtung und Ort. Ein **Ausreisser** ist eine Beschleunigung von Bild zu Bild über der Schwelle (auf 60 Bilder pro Sekunde umgerechnet: Höhe 1 cm, Nicken und Rollen 0,6°, Richtung 1,1°, Ort 2 cm). Jeder Ausreisser bekommt eine Ursache: Landung nach einem Sprung, Stoss (Wand, Rempler, Treffer), in der Luft, Randstein, sonst der Belag unter dem Auto. Dazu misst es die Kamera des eigenen Autos und spielt einen Online-Gast nach: Der Host schickt sein Bild 20-mal pro Sekunde wie im Spiel, jedes Paket kommt 40 bis 65 ms später an, und gemessen wird die Bahn der fremden Autos beim Gast.
+
+Gemessen am 18.11.2026 mit `tools/ruckeln.js`, je Strecke 60 s Rennen mit 8 Autos (rund 8 Auto-Minuten), vorher = Stand vor Etappe 3, nachher = Etappe 3, gleiche Saat und gleiche Bildzeiten. Gezählt sind Ausreisser in der Lage der eigenen Autos (Höhe, Nicken, Rollen, Richtung, Ort), in der Bahn der fremden Autos beim Online-Gast (Höhe, Richtung, Ort) und bei der Kamera:
+
+| Strecke | eigene Autos vorher | nachher | weniger | davon Asphalt | fremde Autos online vorher | nachher | weniger | Kamera |
+|---|---|---|---|---|---|---|---|---|
+| Kiesgrube | 2'247 | 140 | −94 % | 1'248 → 23 | 24'615 | 897 | −96 % | 91 → 0 |
+| Bergpass | 4'427 | 1'041 | −76 % | 2'290 → 192 | 29'027 | 1'524 | −95 % | 82 → 0 |
+| Paris | 7'761 | 362 | −95 % | 764 → 11 | 26'404 | 670 | −97 % | 95 → 0 |
+| Himalaya | 9'166 | 833 | −91 % | 0 → 0 | 29'505 | 1'917 | −94 % | 43 → 4 |
+| Ägypten | 2'467 | 527 | −79 % | 630 → 65 | 25'864 | 1'114 | −96 % | 30 → 1 |
+| New York | 2'826 | 44 | −98 % | 0 → 0 | 24'703 | 484 | −98 % | 52 → 0 |
+| **alle** | **28'894** | **2'947** | **−90 %** | **4'932 → 291** | **160'118** | **6'606** | **−96 %** | **393 → 5** |
+
+Eigene Autos nach Ursache und Belag, alle Strecken zusammen:
+
+| Ursache oder Belag | vorher | nachher | weniger |
+|---|---|---|---|
+| Pflaster | 10'115 | 105 | −99 % |
+| Asphalt | 4'932 | 291 | −94 % |
+| Schotter | 2'581 | 57 | −98 % |
+| Randstein | 2'537 | 80 | −97 % |
+| in der Luft | 1'993 | 880 | −56 % |
+| Landung | 1'854 | 1'032 | −44 % |
+| Schnee | 1'365 | 17 | −99 % |
+| Stoss (Wand, Rempler, Treffer) | 883 | 262 | −70 % |
+| nasse Strasse | 712 | 8 | −99 % |
+| Sand | 631 | 39 | −94 % |
+| Holz (Brücken) | 448 | 0 | −100 % |
+| Gitter (Brücken) | 323 | 0 | −100 % |
+| Fuss einer Schanze oder Rampe | 288 | 161 | −44 % |
+| Platten | 132 | 0 | −100 % |
+| Gelände neben der Strasse | 99 | 14 | −86 % |
+
+Nach Grösse: Höhe 9'708 → 2'390 (−75 %), Nicken 7'794 → 211 (−97 %), Rollen 9'994 → 79 (−99 %). Höhe, Nicken und Rollen zusammen 27'496 → 2'680 (−90 %). Bei den fremden Autos kamen 145'705 der 160'118 Ausreisser vom Netz (Pakete, Verspätung), nachher 3'562 (−98 %).
+
+- **Ziel «insgesamt mindestens 80 % weniger»:** erreicht (eigene Autos −90 %, fremde Autos −96 %, Kamera −99 %).
+- **Ziel «auf Asphalt keine Ausreisser mehr»:** nicht ganz erreicht, 4'932 → 291 (−94 %). Die übrigen liegen knapp über der Schwelle und kommen von Knicken im Höhenprofil der Strasse, fast alle am Bergpass (steile Kehren bergauf) und in Ägypten. Die Federung verteilt einen Knick auf einige Bilder, aber höchstens um 6 cm, damit der Aufbau sichtbar auf den Rädern bleibt. Die Knicke selbst liegen in der Strecke. Sie zu glätten ändert die Fahrphysik und gehört darum zum Strecken-Umbau.
+- **Was bleibt, ist gewollt:** 2'073 der 2'947 Ausreisser nachher sind Sprünge (in der Luft, Landung, Fuss einer Schanze). Dort gibt es weiter einen Stoss, nur weicher als vorher.
+
+**Fahrgefühl unverändert:** `tools/gleichcheck.js` fährt auf allen 6 Strecken je 6 Rennen mit 8 «Mittel»-Bots in der alten und der neuen Fassung: alle 36 Ergebnisse sind genau gleich. Damit sind Höchsttempo, Beschleunigung, Lenkung, Drift und die schnellste Runde des Optimierers unverändert (0 % statt der erlaubten 1 %).
+
+### Was das Holpern verursacht hat und was jetzt anders ist
+
+Das Spiel rechnet 60 Schritte pro Sekunde, zeichnet aber so oft, wie das Gerät kann, meist mit ungleichmässigen Abständen. Zwischen zwei Schritten zeichnet es die Autos zwischen dem alten und dem neuen Stand. Mehrere Dinge sind dabei an diesem Takt vorbei gesprungen:
+
+- **Fremde Autos online** (die grösste Ursache): Der Gast bekommt den Zustand jedes fremden Autos 20-mal pro Sekunde (ferne Autos 10-mal). Bisher fuhr er gerade von Paket zu Paket. An jedem Paket knickte die Bahn, und weil der Schritt danach den alten Stand überschrieb, sprang das Auto zwischen zwei Bildern zurück. Neu folgt der Ort einer Hermite-Kurve: Sie geht durch jeden empfangenen Zustand und hat dort dessen Tempo und Fahrtrichtung. Höhe und Blickrichtung laufen weich durch die Nachbarzustände. Fremde Autos rechnet der Gast nicht mehr selbst weiter (`Online.vorSchritt`, `hermite` in `10_config.js`).
+- **Rütteln auf dem Belag:** Der Aufbau bekam in jedem Bild eine neue Zufallszahl. Bei schwankender Bildrate zitterte er darum ungleichmässig. Neu ist es eine weiche Schwingung, die mit dem Tempo schneller wird, gleich stark wie bisher (Randstein, Kies und Pflaster spürt man weiter).
+- **Steigung und Rampen:** Die Neigung des Autos sprang an jeder Kante des Höhenprofils auf den neuen Wert. Neu folgt sie weich und mit begrenzter Beschleunigung.
+- **Landung:** Nach jedem Sprung tauchte die Karosserie mit einem festen Stoss ein. Neu federt sie mit einem Teil der Fallgeschwindigkeit ein, kleine Hüpfer also kaum, hohe Sprünge deutlich.
+- **Hüpfer beim Drift-Beginn und Schräglauf:** Beide folgten dem Rechenschritt und setzten hart ein. Neu hat der Hüpfer eine eigene Uhr, die genau mit der Zeit jedes Bildes läuft, und eine weiche Form (11 cm hoch, 0,28 s lang). Der sichtbare Schräglauf folgt dem Drift gedämpft (nur Optik, die Fahrtrichtung rechnet wie vorher).
+- **Knicke im Höhenprofil** (Beginn einer Steigung, Kuppe, Brückenkante): Das Auto folgte dem Profil hart. Neu bleiben die Räder auf der Strasse, und der Aufbau federt weich nach: Er übernimmt das Höhen-Tempo jedes Rechenschritts, nur der Knick wird über einige Bilder verteilt (höchstens 6 cm Versatz).
+- **Kamera:** Sie nahm die Fahrtrichtung und das Tempo des letzten Rechenschritts und sprang beim Driftbeginn zur Seite. Neu nimmt sie die Werte zwischen zwei Schritten und schwenkt beim Drift weich ein.
+
+### Beweis
+
+Bildfolge in Zeitlupe (48 Bilder, 50 ms pro Bild), links vorher, rechts nachher: Kiesgrube, 6 s nach dem Start, Sicht eines Online-Gasts mitten im Feld, gleiche Saat und gleiche ungleichmässige Bildzeiten (12 bis 22 ms). Vorher zucken die fremden Autos vor der Kamera bei jedem Paket vor und zurück, nachher fahren sie gleichmässig. Die Datei liegt im Projektordner unter `rundenzeit-lobby/e3-ruckeln-vorher-nachher.gif`, erzeugt mit `tools/ruckelbild.js`.
+
 ## Wichtigste CONFIG-Werte
 
 Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
@@ -555,6 +619,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 
 - Der Online-Modus ist mit zwei Browsern gegen einen lokalen Vermittlungsserver getestet (Lobby, Rennen, Ergebnis, Revanche, Bot-Übernahme), ebenso die Fehlerfälle beim Beitritt (falscher Code, Host antwortet nicht, Netz blockiert, Vermittler nicht erreichbar). Über den öffentlichen PeerJS-Server im echten Internet konnte ich ihn in meiner Testumgebung nicht ausprobieren. Ein erster Versuch mit zwei Geräten scheiterte am 13.11.2026 beim Beitritt. Die Ursache ist noch offen, die Diagnose-Zeile unter der Fehlermeldung soll sie zeigen. Zwischen Geräten in verschiedenen Netzen braucht es manchmal einen TURN-Server, und die mitgelieferten von PeerJS sind nicht immer erreichbar.
 - **Grosse Lobbys:** 22 Menschen sind mit 22 Browserfenstern auf einem Rechner gegen einen lokalen Vermittlungsserver getestet, nicht mit 22 echten Geräten in verschiedenen Netzen. Der Host rechnet alle Autos und schickt allen Gästen die Daten. Mit 33 Autos sollte darum ein Laptop oder Computer der Host sein, kein Handy. Auf Ägypten und New York steht das Feld noch wie bisher vorne, weil die Ziellinie dort kurz nach einer Kurve liegt (wird mit den Strecken-Umbauten behoben).
+- **Ruhigere Fahrt:** Auf Asphalt bleiben wenige Ausreisser an Knicken im Höhenprofil der Strasse, vor allem am Bergpass und in Ägypten (291 statt 4'932 in je 60 s mit 8 Autos auf allen Strecken). Sie verschwinden erst, wenn das Höhenprofil beim Strecken-Umbau weicher wird.
 - Die Bildrate ist nur mit Software-Grafik geprüft. Ruckelt es auf einem Gerät, hilft die Grafikstufe «Niedrig».
 - Die Touch-Steuerung ist eingebaut, aber nicht getestet.
 - Einen Grand-Prix-Modus gibt es nicht.
