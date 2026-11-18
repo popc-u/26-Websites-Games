@@ -375,7 +375,7 @@ Selbst nachmessen: `index.html?sim=200` öffnen (dauert einige Minuten). Seit Ve
 
 ## «Schwer»-Bots
 
-Ein «Schwer»-Bot fährt wie ein Profi: perfekte Linie ohne Zufallsfehler, späte Bremspunkte, Drift schon in sanfteren Kurven (mit Mini-Turbo), jedes Boost-Feld, sieht jedes Hindernis rechtzeitig und hat keine schlechten Tage. Er nutzt dieselbe Fahrphysik wie der Spieler und hat zusätzlich 3 % mehr Höchsttempo (`CONFIG.bots.stufen.schwer.tempo`, höchstens erlaubt sind 3 %). «Leicht» und «Mittel» sind unverändert.
+Ein «Schwer»-Bot fährt wie ein Profi: perfekte Linie ohne Zufallsfehler, späte Bremspunkte, Drift schon in sanfteren Kurven (mit Mini-Turbo), jedes Boost-Feld, sieht jedes Hindernis rechtzeitig und hat keine schlechten Tage. Er nutzt dieselbe Fahrphysik wie der Spieler und hat zusätzlich 3 % mehr Höchsttempo (`CONFIG.bots.stufen.schwer.tempo`, höchstens erlaubt sind 3 %). «Leicht» und «Mittel» sind unverändert. Seit Fassung 1.3 fährt er die Ideallinie, solange niemand in der Nähe ist, und sonst wie alle Bots seine eigene Spur (siehe «Bots auf verschiedenen Spuren»).
 
 **Siege eines «Schwer»-Bots gegen 7 «Mittel»-Bots** (je 200 Rennen pro Strecke, Autos jedes Mal neu zugelost, mit Bauen):
 
@@ -399,7 +399,7 @@ Mit seinem Tempo-Vorteil ist der «Schwer»-Bot also auf jeder Strecke schneller
 
 ## «Ultra»-Bots
 
-«Ultra» ist die Stufe über «Schwer», wählbar gegen Bots, im Split-Screen und online («Ultra · unschlagbar»). Ein «Ultra»-Bot fährt mit derselben Fahrphysik wie der Spieler, so gut es diese erlaubt: Kurventempo, Bremspunkte und Drift sind pro Strecke mit dem Optimierer gesucht (`tools/ultra.js`, mit vier verschiedenen Autos geprüft, damit sie für jedes Auto passen). Er macht keine Fehler, nimmt jedes Boost-Feld mit, sieht jedes Hindernis und hat 8 % mehr Höchsttempo (`CONFIG.bots.stufen.ultra.tempo`), am Himalaya 12 % (`CONFIG.bots.stufen.ultra.strecken.himalaya.tempo`, siehe unten). Er holt nicht künstlich auf. Seine Baupunkte gibt er vor allem für sich selbst aus (Abkürzung, Rampe), Hindernisse baut er selten und Pylonen nie.
+«Ultra» ist die Stufe über «Schwer», wählbar gegen Bots, im Split-Screen und online («Ultra · unschlagbar»). Ein «Ultra»-Bot fährt mit derselben Fahrphysik wie der Spieler, so gut es diese erlaubt: Kurventempo, Bremspunkte und Drift sind pro Strecke mit dem Optimierer gesucht (`tools/ultra.js`, mit vier verschiedenen Autos geprüft, damit sie für jedes Auto passen). Er macht keine Fehler, nimmt jedes Boost-Feld mit, sieht jedes Hindernis und hat 8 % mehr Höchsttempo (`CONFIG.bots.stufen.ultra.tempo`), am Himalaya 12 % (`CONFIG.bots.stufen.ultra.strecken.himalaya.tempo`, siehe unten). Er holt nicht künstlich auf. Seine Baupunkte gibt er vor allem für sich selbst aus (Abkürzung, Rampe), Hindernisse baut er selten und Pylonen nie. Wie «Schwer» fährt er seit Fassung 1.3 allein die Ideallinie und im Verkehr seine eigene Spur.
 
 **Schnellste Runde** (Sportwagen, beste fliegende Runde ohne andere Fahrer; der Optimierer hat hier 200 Versuche, darum weichen seine Zeiten leicht von der Tabelle bei «Schwer» ab):
 
@@ -840,6 +840,121 @@ Pro Strecke gewinnt «Schwer» Kiesgrube 100,0 %, Bergpass 97,0 %, Paris 100,0 %
 | Online alle mit denselben Werten, ältere Fassung bekommt einen Hinweis | Fassung 1.2 wird geprüft, Hinweis in der Lobby, Start gesperrt | erreicht |
 | Bestenliste: alle alten Zeiten bleiben sichtbar (Nachtrag 18.11.2026, Johanns Wunsch) | alle Zeiten in der Liste der Strecke, `tools/erhaltentest.js` 20 von 20 | erreicht |
 
+## Bots auf verschiedenen Spuren
+
+Stand 18.11.2026, Version 1.3 (Etappe 3 des Auftrags «Auto-Fähigkeiten, Bots, Leistung, Strecken»). Geändert ist nur, wohin die Bots lenken. Die Fahrphysik, die Autos und die Strecken sind unverändert.
+
+### Was die Bots jetzt anders machen
+
+- **Lieblingsspur auf Geraden:** Jeder Bot wählt rechts, Mitte oder links und fährt dort mit etwas Abstand zum Rand. Im Mittel alle 25 Sekunden wählt er neu und zieht weich hinüber. Dabei meidet er volle Spuren: Er zählt die Autos von 15 m hinter bis 60 m vor sich in jedem Drittel der Strasse und wählt ein Drittel umso seltener, je mehr dort fahren.
+- **Eigene Linie durch die Kurven:** Pro Rennen fährt jeder Bot etwas enger oder weiter als die Ideallinie und lenkt etwas früher oder später ein. Starke Bots bleiben näher an der Ideallinie: «Leicht» bis 1 m daneben und 6 m früher oder später, «Mittel» 0,7 m und 4 m, «Schwer» 0,35 m und 2 m, «Ultra» 0,15 m und 1 m.
+- **Vor der Kurve:** Ab 55 m vor einer Kurve zieht der Bot von seiner Spur zu seiner Kurvenlinie, je näher die Kurve, desto mehr. 12 m nach der Kurve geht er zurück auf seine Spur.
+- **Kein Gänsemarsch:** Ist ein Bot weniger als 15 m hinter einem anderen und weniger als 2,2 m seitlich daneben, fährt er seitlich versetzt dahinter, auch in Kurven. Fährt er trotzdem 2 Sekunden genau hinter einem anderen her (weniger als 1,2 m seitlich), wählt er ein anderes Drittel.
+- **Windschatten:** Wer ihn sucht, fährt 1,4 m versetzt dahinter. Bis 2 m seitlich wirkt er noch.
+- **Boost-Felder:** Jeder Bot entscheidet bei jeder Durchfahrt neu, ob er das Feld mitnimmt: seltener, je weiter es neben seiner Spur liegt, öfter, wenn er hinten liegt, und seltener, wenn knapp vor ihm schon jemand darauf zufährt. «Schwer», «Ultra» und Autos mit starkem Schub von Rampen und Boost-Feldern nehmen jedes Feld mit.
+- **«Schwer» und «Ultra»:** Allein fahren sie die Ideallinie wie bisher. Sobald jemand bis 40 m vor oder 20 m hinter ihnen fährt, nehmen sie ihre Spur und gehen in 2 Sekunden ganz hinüber.
+- **Abkürzungen und Umleitungen:** Eine Abkürzung darf nur fahren, wer sie gebaut hat, und eine Umleitung schickt alle auf den langen Weg. Auf den heutigen Strecken gibt es dort also nichts zu wählen. Gabelungen, an denen jeder Bot bei jeder Durchfahrt neu entscheidet, kommen mit den neuen Strecken (Etappe 4 und 5).
+
+### Messungen vorher und nachher
+
+11 Bots (3 «Leicht», 4 «Mittel», 3 «Schwer», 1 «Ultra»), Autos und Startplätze zugelost, mit Bauen, 3 Runden, 40 Rennen pro Strecke, vorher und nachher mit gleichem Zufall (`node tools/spuren.js 40`, mit `VORHER=` für den Stand vor der Etappe). Gezählt werden nur fahrende Bots (über 5 m/s). Gerade heisst: im Umkreis von 20 m nirgends enger als 250 m Radius, Kurve: enger als 60 m. Gänsemarsch heisst: Ein Bot fährt weniger als 15 m hinter einem anderen und weniger als 1 m seitlich daneben (Anteil der Zeit).
+
+| Messung (alle 6 Strecken, 240 Rennen) | vorher | nachher | Ziel |
+|---|---|---|---|
+| Seitliche Streuung auf Geraden | 1,10 m | 3,09 m (2,8-mal) | mindestens doppelt ✓ |
+| Rechts / Mitte / links auf Geraden | 0,8 / 19,6 / 79,5 % | 22,2 / 45,3 / 32,5 % | jedes Drittel mindestens 20 % ✓ |
+| Seitliche Streuung in Kurven | 1,16 m | 1,38 m | |
+| Rechts / Mitte / links in Kurven | 25,3 / 13,6 / 61,1 % | 24,7 / 16,7 / 58,6 % | |
+| Gänsemarsch auf Geraden | 37,2 % | 17,2 % (−54 %) | −60 % ✗ |
+| Gänsemarsch auf Geraden ab 12 s nach dem Start | 28,0 % | 9,7 % (−65 %) | |
+| Gänsemarsch überall | 31,2 % | 19,5 % (−38 %) | |
+| Boost-Felder: Durchfahrten mit Schub | 92,2 % | 88,0 % | |
+| Eigene Abkürzung genommen (Fahrten pro Rennen) | 74,0 % (1,2) | 80,2 % (1,5) | |
+| Berührungen zwischen Bots pro Rennen | 99,9 | 88,6 (−11 %) | höchstens +10 % ✓ |
+| Zurücksetzen | 1 Mal in 240 Rennen | 2 Mal in 240 Rennen | höchstens +10 % ✗ |
+| Stillstand pro Rennen (alle Bots zusammen) | 0,28 s | 0,41 s (+49 %) | höchstens +10 % ✗ |
+
+**Pro Strecke auf Geraden** (Streuung, rechts / Mitte / links, Gänsemarsch):
+
+| Strecke | vorher | nachher |
+|---|---|---|
+| Kiesgrube | 1,07 m · 0 / 12 / 88 % · 39,5 % | 3,01 m · 19 / 46 / 34 % · 22,9 % |
+| Bergpass | 1,35 m · 3 / 24 / 73 % · 33,4 % | 3,24 m · 25 / 44 / 31 % · 14,7 % |
+| Paris | 0,94 m · 0 / 12 / 88 % · 32,5 % | 2,86 m · 18 / 48 / 34 % · 16,2 % |
+| Himalaya | 1,11 m · 0 / 18 / 82 % · 32,6 % | 3,26 m · 23 / 41 / 36 % · 14,4 % |
+| Ägypten | 1,01 m · 0 / 17 / 83 % · 44,3 % | 3,06 m · 22 / 47 / 31 % · 19,1 % |
+| New York | 1,03 m · 1 / 28 / 72 % · 40,8 % | 3,03 m · 22 / 47 / 31 % · 19,3 % |
+
+**«Schwer» und «Ultra»** (wie in Etappe 2: `node tools/faehig.js 100 stark,ultra` und `node tools/ultraauto.js`):
+
+| | vorher (Etappe 2) | nachher |
+|---|---|---|
+| «Schwer» gewinnt gegen 7 «Mittel» | 98,7 % (schwächstes Auto 96,4 %) | 98,2 % (schwächstes Auto 96,4 %) |
+| «Ultra» gewinnt gegen 7 «Schwer» | 99,3 % (schwächstes Auto 98,3 %) | 99,5 % (schwächstes Auto 98,1 %) |
+| Schnellste Runde «Ultra» allein, 8 Autos × 6 Strecken | | im Mittel gleich (−1,6 bis +1,9 %) |
+| «Ultra» schneller als der Optimierer, kleinster Vorsprung | 4,2 % (Pick-up, Bergpass) | 4,8 % (Transporter, Bergpass) |
+
+Pro Strecke gewinnt «Schwer» Kiesgrube 99 %, Bergpass 96 %, Paris 100 %, Himalaya 98 %, Ägypten 100 %, New York 96 % und «Ultra» Kiesgrube 99 %, Bergpass 100 %, Paris 100 %, Himalaya 99 %, Ägypten 99 %, New York 100 %.
+
+**Bilder** (`tools/spurbild.js`, Kiesgrube, 11 Bots, fester Blick von oben, vorher und nachher gleich): im Projektordner unter `leistung/` `e3-vorher-start.png`, `e3-nachher-start.png` (30 m nach der Startlinie, 3,2 s nach dem Start), `e3-vorher-gerade.png`, `e3-nachher-gerade.png` (Gerade bei 560 m, rund 20 s nach dem Start) und alle vier zusammen in `e3-uebersicht.png`. Vorher fahren alle in einer Reihe links, nachher verteilen sie sich über die ganze Strasse. Die Messdaten stehen in `leistung/messungen-etappe3.tgz`.
+
+### CONFIG-Werte dieser Etappe
+
+| Wert | Bedeutung |
+|---|---|
+| `bots.spuren.anteil` | 0,6 bis 0,95: so weit liegt die Spur rechts oder links neben der Mitte (Anteil der halben Fahrbahn ohne Rand) |
+| `bots.spuren.mitte` | 0,25: so weit streut die mittlere Spur um die Mitte |
+| `bots.spuren.rand` | 1,4 m Abstand der Spur vom Fahrbahnrand |
+| `bots.spuren.wechsel`, `tempo` | im Mittel alle 25 s eine neue Spur, hinüber mit 0,3 der halben Fahrbahn pro Sekunde |
+| `bots.spuren.meiden` | 2: volle Spuren meiden, Gewicht eines Drittels = 1 ÷ (1 + 2 × Autos dort) |
+| `bots.spuren.kurveAb`, `kurveVoll` | ab 1/400 (Radius 400 m) beginnt eine Kurve, ab 1/150 fährt der Bot ganz auf seiner Kurvenlinie |
+| `bots.spuren.vorlauf`, `nachlauf` | 55 m vor der Kurve beginnt er hinüberzuziehen, 12 m danach geht er zurück |
+| `bots.spuren.abstand` | 2,2 m seitlicher Versatz hinter einem Vordermann (unter 15 m) |
+| `bots.spuren.folgen` | 2 s genau dahinter, dann wählt er ein anderes Drittel |
+| `bots.spuren.windVersatz` | 1,4 m Versatz im Windschatten |
+| `bots.spuren.profiWechsel` | 0,5: so schnell wechseln «Schwer» und «Ultra» zwischen Ideallinie (allein) und Spur (im Verkehr), Anteil pro Sekunde |
+| `bots.spuren.boostWeg`, `boostHinten`, `boostVerkehr` | 0,35, 0,2, 0,25: weniger Lust auf ein Boost-Feld neben der eigenen Spur, mehr Lust weiter hinten, weniger, wenn schon jemand darauf zufährt |
+| `bots.stufen.*.kurvenStreu` | 1,0 / 0,7 / 0,35 / 0,15 m: eigene Kurvenlinie neben der Ideallinie («Leicht», «Mittel», «Schwer», «Ultra») |
+| `bots.stufen.*.einlenkStreu` | 6 / 4 / 2 / 1 m: so viel früher oder später lenkt der Bot ein |
+| `version` | 1.3: Online müssen alle dieselbe Fassung haben |
+
+### Entscheidungen
+
+- **«Schwer» und «Ultra» allein auf der Ideallinie:** Mit einer Spur auf jeder Geraden fuhr «Ultra» allein bis 2,8 % langsamere Runden. Dann wäre er nicht mehr überall 4 % schneller als der Optimierer gewesen. Darum fahren die Profis allein die Ideallinie und nehmen ihre Spur nur, wenn jemand in der Nähe ist. Ihre schnellsten Runden sind damit im Mittel gleich wie vorher.
+- **Volle Spuren meiden:** Mit der Regel für die Profis kam das rechte Drittel auf Geraden nur noch auf 17,8 %, weil die Ideallinie auf den heutigen Strecken auf Geraden fast immer links liegt (vorher 79,5 % aller Durchfahrten im linken Drittel). Statt die Bots einfach öfter nach rechts zu schicken, meiden sie jetzt volle Spuren. Das verlangt der Auftrag ohnehin für die Wege («volle Wege meiden»). Danach kam das rechte Drittel auf 22,2 %.
+- **Versatz hinter dem Vordermann:** Verglichen habe ich mehrere Varianten (je 20 Rennen pro Strecke): 1,6, 2,2 und 2,7 m seitlicher Versatz, versetzt losfahrende Startreihen, schnellerer und seltenerer Spurwechsel. Mit 2,7 m gab es wieder mehr Gänsemarsch und mehr Berührungen, weil die Bots dann oft hinter dem Nächsten landen. Die anderen Varianten änderten wenig. Gewählt habe ich 2,2 m.
+- **Stillstand:** Fünf Abhilfen habe ich ausprobiert (kein Versatz vor engen Kurven, nach der Kurve weicher zurück auf die Spur, keine eigene Kurvenlinie, früher auf die Kurvenlinie, nach einer Abkürzung zuerst die Ideallinie). Keine half deutlich, darum ist keine davon im Spiel. Woher der Stillstand kommt, steht unter «Grenzen».
+- **Boost-Felder:** Vorher zog jeder Bot nur teilweise zum Feld hin, je nach seiner Lust darauf. Jetzt entscheidet er bei jeder Durchfahrt ja oder nein und zieht bei ja ganz hinüber. So nimmt nicht mehr jeder Bot jedes Feld halb mit, sondern mancher lässt es aus (88,0 statt 92,2 % der Durchfahrten mit Schub).
+- **Fassung 1.3:** Die Bots fahren anders als in Fassung 1.2. Online müssen darum alle die Seite neu laden, damit alle mit derselben Fassung fahren (Hinweis in der Lobby wie bisher).
+
+### Grenzen
+
+- **Gänsemarsch:** −54 % auf Geraden statt −60 %. Fast der ganze Rest entsteht in den ersten Sekunden nach dem Start, solange das Feld in den drei Spalten der Startaufstellung fährt. Ab 12 s nach dem Start sind es −65 %. In Kurven fahren alle Bots nahe an der Ideallinie, dort bleibt mehr Gänsemarsch.
+- **Stillstand:** 0,41 statt 0,28 s pro Rennen, alle 11 Bots zusammen. Die ganze Zunahme kommt von zwei Stellen: dem Ende der Abkürzung in Ägypten und dem Ende der zweiten Abkürzung am Himalaya. Wer dort seine eigene Abkürzung fährt, bleibt beim Zurückfahren auf die Strasse oft kurz am Rand hängen, schon vor dieser Etappe (Ägypten 5, Himalaya 27 Mal in 40 Rennen). Jetzt fahren die Bots dort öfter eine eigene Abkürzung (Ägypten 0,7 statt 0,1 Mal pro Rennen) und bleiben darum öfter hängen (27 und 58 Mal). Beide Strecken werden in Etappe 5 neu gebaut, dann prüfe ich die Einmündungen.
+- **Zurücksetzen:** 2 statt 1 Mal in 240 Rennen. Das ist zu selten für eine sichere Aussage, zählt aber formal als nicht erreicht.
+- **Wege:** Auf den heutigen Strecken gibt es keine Gabelungen, und eine Abkürzung darf nur fahren, wer sie gebaut hat. Die Ziele zu den Wegen (jeder Weg 30 bis 70 %, die Hälfte der Bots nimmt beide Wege, höchstens 65 % gleicher Weg wie der Vordermann) und die Minikarte mit Bots auf verschiedenen Wegen kommen mit den neuen Strecken in Etappe 4 und 5.
+- In Kurven streuen die Bots nur wenig mehr als vorher (1,38 statt 1,16 m), weil sie dort ihrer Kurvenlinie nahe an der Ideallinie folgen. So ist es gewollt: Die Kurve schnell zu fahren ist wichtiger.
+
+### Ziele dieser Etappe
+
+| Ziel | Ergebnis | |
+|---|---|---|
+| Zuerst messen, wo die Bots heute fahren | Tabelle oben, vorher | erreicht |
+| Lieblingsspur auf Geraden, eigene Linie durch die Kurven, starke Bots näher an der Ideallinie | siehe oben | erreicht |
+| Spurwechsel zum Überholen, für Windschatten, Hindernisse und Boost-Felder | siehe oben | erreicht |
+| Boost-Felder: bei jeder Durchfahrt neu entscheiden (Spur, Verkehr, Lage im Rennen) | siehe oben | erreicht |
+| Auf Geraden mindestens doppelt so starke Streuung | 2,8-mal (3,09 statt 1,10 m) | erreicht |
+| Jedes Drittel der Strasse mindestens 20 % | 22,2 / 45,3 / 32,5 % | erreicht |
+| Gänsemarsch −60 % | −54 % auf Geraden (ab 12 s nach dem Start −65 %) | **nicht erreicht** |
+| Berührungen höchstens +10 % | −11 % | erreicht |
+| Zurücksetzen höchstens +10 % | 2 statt 1 Mal in 240 Rennen | **nicht erreicht** |
+| Stillstand höchstens +10 % | +49 % (0,41 statt 0,28 s pro Rennen) | **nicht erreicht** |
+| «Schwer» gewinnt fast immer gegen 7 «Mittel» | 98,2 % | erreicht |
+| «Ultra» gewinnt mindestens 99 % gegen 7 «Schwer» | 99,5 % | erreicht |
+| «Ultra» mindestens 4 % schneller als der Optimierer | kleinster Vorsprung 4,8 % | erreicht |
+| Bilder vom Start und von einer Geraden, vorher und nachher | im Projektordner unter `leistung/` | erreicht |
+| Wege an Gabelungen, Minikarte mit Bots auf verschiedenen Wegen | Gabelungen kommen mit Etappe 4 und 5 | offen |
+
 ## Wichtigste CONFIG-Werte
 
 Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
@@ -867,6 +982,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `bots.stufen` | Mut 0,76 / 0,83 / 1,04 / 1,18 bis 1,30 | Fahrkönnen der Bots leicht, mittel, schwer, ultra («Ultra» je Strecke eigene Werte) |
 | `bots.stufen.schwer` | `profi`, `bremsen` 34, `driftAb` 0,5, `tempo` 1,03 | Profi ohne Fehler, spätere Bremspunkte, früher Drift, 3 % Tempo-Vorteil (höchstens erlaubt) |
 | `bots.stufen.ultra` | `tempo` 1,08 (Himalaya 1,12), `strecken`, `hindernisse` 0,15, `pylonen` 0, `umsichtig` | 8 % Tempo-Vorteil, am Himalaya 12 %, Fahr-Einstellungen pro Strecke vom Optimierer, baut nur selten Hindernisse und nie Pylonen, weicht vorausschauend aus |
+| `bots.spuren` | Spur 0,6 bis 0,95 der halben Fahrbahn, neue Spur alle 25 s, `meiden` 2, `abstand` 2,2 m | Lieblingsspur auf Geraden, volle Spuren meiden, kein Gänsemarsch (siehe «Bots auf verschiedenen Spuren») |
 | `bots.pylonen` | 0,4 | so oft wie früher setzen Bots Pylonen (1 = wie bis 17.11.2026, 0 = nie) |
 | `bots.schlammSparen` | 0,5 | so oft sparen Bots ihre Punkte, statt ein Schlammloch zu bauen (0 = nie, wie bis 17.11.2026) |
 | `grafik.auto` | 3,5 / 8 / 16 ms | so schnell muss ein Bild auf «Hoch» sein für «Ultra», «Hoch», «Mittel» |

@@ -287,7 +287,7 @@ input[type=range]{accent-color:var(--gold)}
    Längen in Metern, Zeiten in Sekunden, Tempo in m/s (30 m/s = 108 km/h).
    ══════════════════════════════════════════════════════════════════════════ */
 const CONFIG = {
-  version: '1.2',
+  version: '1.3',
 
   // ── Fahrphysik ──────────────────────────────────────────────────────────
   fahren: {
@@ -511,18 +511,20 @@ const CONFIG = {
       //            linie: seitliche Ungenauigkeit in m      drift: Anteil der Kurven, in denen sie driften
       //            sehen: Wahrscheinlichkeit, ein Hindernis rechtzeitig zu sehen
       //            bauen: Bau-Freude (0–1)                  fehler: Fahrfehler pro Minute
-      leicht: { mut: 0.76, linie: 1.5, drift: 0.50, sehen: 0.75, bauen: 0.45, fehler: 1.6 },
-      mittel: { mut: 0.83, linie: 0.9, drift: 0.90, sehen: 0.92, bauen: 0.75, fehler: 0.8 },
+      //            kurvenStreu: so weit (m) darf die eigene Kurvenlinie innen oder aussen neben der Ideallinie liegen (Etappe 3)
+      //            einlenkStreu: so viele m früher oder später lenkt der Bot in Kurven ein (Etappe 3)
+      leicht: { mut: 0.76, linie: 1.5, drift: 0.50, sehen: 0.75, bauen: 0.45, fehler: 1.6, kurvenStreu: 1.0, einlenkStreu: 6 },
+      mittel: { mut: 0.83, linie: 0.9, drift: 0.90, sehen: 0.92, bauen: 0.75, fehler: 0.8, kurvenStreu: 0.7, einlenkStreu: 4 },
       // «Schwer» ist ein Profi und fast unschlagbar: perfekte Linie, keine Fehler, sieht jedes Hindernis, trifft jedes Boost-Feld,
       // bremst spät (bremsen: Verzögerung in m/s², mit der er rechnet; die anderen rechnen vorsichtig mit 22) und driftet
       // schon in sanfteren Kurven (driftAb). tempo: Tempo-Vorteil auf das Höchsttempo (1.03 = 3 %, mehr ist nicht erlaubt).
-      schwer: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.03 },
+      schwer: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.03, kurvenStreu: 0.35, einlenkStreu: 2 },
       // «Ultra» fährt, so gut es die Fahrphysik erlaubt: Fahr-Einstellungen pro Strecke vom Optimierer (tools/ultra.js, mit
       // mehreren Autos geprüft), jedes Boost-Feld, keine Fehler, sieht jedes Hindernis. tempo: Tempo-Vorteil (1.08 = 8 %; nur am Himalaya
       // 1.12, so am 17.11.2026 entschieden, weil «Ultra» dort mit 8 % nur 91 % statt 99 % der Rennen gegen «Schwer» gewinnt).
       // hindernisse: Anteil der Hindernisse, die er baut (er spart vor allem für Abkürzung und Rampe); pylonen: 0 = setzt keine.
       // umsichtig: fährt vor einem Nebenweg früh auf dessen Seite und lenkt nie mehr in eine Abzweigung, die schon hinter ihm liegt.
-      ultra: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.08, hindernisse: 0.15, pylonen: 0, umsichtig: true,
+      ultra: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.08, hindernisse: 0.15, pylonen: 0, umsichtig: true, kurvenStreu: 0.15, einlenkStreu: 1,
         strecken: {           // gemessen mit tools/ultra.js (200 Versuche, Tempo-Vorteil 8 %, vier Autos)
           kiesgrube: { mut: 1.3, bremsen: 46, driftAb: 0.5, drift: 1 }, bergpass: { mut: 1.18, bremsen: 36, driftAb: 0.2, drift: 1 },
           paris: { mut: 1.18, bremsen: 24, driftAb: 0.33, drift: 1 }, himalaya: { mut: 1.27, bremsen: 39, driftAb: 0.25, drift: 0.88, tempo: 1.12 },
@@ -539,6 +541,27 @@ const CONFIG = {
     vorausZeit: 0.42,      // Bots zielen auf einen Punkt, der so viele Sekunden voraus liegt
     sichtweite: 75,        // so weit voraus beachten Bots Hindernisse (m)
     boostSicht: 40,        // so weit vor einem Boost-Feld ziehen Bots langsam zu ihm hin (m)
+    // Etappe 3: Jeder Bot hat pro Rennen seine eigene Art zu fahren: eine Lieblingsspur auf Geraden (rechts, Mitte oder links)
+    // und eine eigene Linie durch die Kurven (stufen.*.kurvenStreu, einlenkStreu). Vor Kurven zieht er von seiner Spur zur Kurvenlinie.
+    spuren: {
+      anteil: [0.6, 0.95],   // Lieblingsspur rechts oder links: so viel der halben Fahrbahn (ohne Rand) neben der Mitte
+      rand: 1.4,             // m: so viel Abstand hält die Spur vom Fahrbahnrand
+      kurveAb: 1 / 400,      // ab dieser Krümmung der Ideallinie (1/m) beginnt eine Kurve …
+      kurveVoll: 1 / 150,    // … ab dieser fährt der Bot ganz auf seiner Kurvenlinie
+      vorlauf: 55,           // m: so weit vor einer Kurve beginnt er, von seiner Spur zur Kurvenlinie zu ziehen
+      nachlauf: 12,          // m: so lange nach einer Kurve bleibt er noch auf der Linie
+      wechsel: 25,           // s: im Mittel so oft wählt ein Bot eine neue Lieblingsspur
+      tempo: 0.3,            // so schnell wechselt er die Spur (Anteil der halben Fahrbahn pro Sekunde)
+      folgen: 2,             // s: fährt er so lange genau hinter einem anderen her (unter 15 m, unter 1,2 m seitlich), wählt er eine andere Spur
+      windVersatz: 1.4,      // m: so weit seitlich versetzt fährt er im Windschatten (bis 2 m wirkt er)
+      abstand: 2.2,          // m: so weit seitlich neben der Spur des Vordermanns fährt er, wenn er weniger als 15 m dahinter ist (kein Gänsemarsch, auch in Kurven)
+      mitte: 0.25,           // Mittelspur: so weit (Anteil der halben Fahrbahn) streut sie um die Mitte
+      meiden: 2,             // volle Spuren meiden: Gewicht eines Drittels = 1 / (1 + meiden × Autos dort, 15 m hinter bis 60 m vor ihm)
+      profiWechsel: 0.5,     // «Schwer» und «Ultra»: so schnell (Anteil pro Sekunde) wechseln sie zwischen Ideallinie (allein) und Spur (im Verkehr)
+      boostWeg: 0.35,        // Boost-Feld: so viel weniger Lust, je weiter es neben der eigenen Spur liegt (ganze halbe Fahrbahn)
+      boostHinten: 0.2,      //   … so viel mehr Lust, wer hinten liegt
+      boostVerkehr: 0.25,    //   … so viel weniger, wenn knapp vor ihm schon jemand darauf zufährt
+    },
     // Die Bots kennen ihr Auto: Sie richten sich nach den Faktoren aus CONFIG.faehigkeit (nicht nach dem Namen des Autos)
     auto: {
       durchTreffer: 0.5,   // Hindernisse: Bremsfaktor bis hier → fährt durch Pylonen statt auszuweichen (Panzerwagen)
@@ -2674,7 +2697,97 @@ class Bot {
     this.bauLust = clamp(A.bauen * (1 - w.baukosten) + A.bauen * 0.5 * (w.bpLaden - 1), -0.15, 0.3);
     if (this.driftPlus > 0) this.driftLust = z() < p.drift + this.driftPlus;
     if (w.rampe >= 1.25) this.boostLust = 1;                                    // starker Schub von Boost-Feldern: jedes mitnehmen
+    this.boostImmer = !!p.profi || w.rampe >= 1.25;
+    // Eigene Art zu fahren in diesem Rennen (Etappe 3): Lieblingsspur auf Geraden, eigene Linie durch die Kurven
+    this.waehleSpur(z);
+    this.spurIst = this.spurZiel;
+    this.spurGewicht = 1;                                       // 1 = ganz auf der Spur; Profis allein: 0 = Ideallinie (steuere)
+    this.spurUhr = CONFIG.bots.spuren.wechsel * (0.5 + z());
+    this.weite = (z() * 2 - 1) * (p.kurvenStreu || 0);         // m: Kurvenlinie weiter aussen (+) oder enger innen (−)
+    this.einlenk = (z() * 2 - 1) * (p.einlenkStreu || 0);      // m: früher (+) oder später (−) einlenken
+    this.boostNimmt = {};                                       // Boost-Feld → bei dieser Durchfahrt mitnehmen?
+    this.seiteLieb = z() < 0.5 ? -1 : 1;                        // weicht lieber rechts (−1) oder links (+1) aus
     this.o = { x: 0, z: 0, y: 0 };
+  }
+
+  // Neue Lieblingsspur: rechts (−1), Mitte (0) oder links (+1). Im Rennen meidet er volle Spuren: Er zählt die Autos von 15 m hinter
+  // bis 60 m vor ihm in jedem Drittel der Fahrbahn und wählt ein Drittel umso seltener, je mehr dort fahren. ohne: dieses Drittel nicht.
+  waehleSpur(z, R, k, ohne) {
+    const A = CONFIG.bots.spuren, g = [1, 1, 1];
+    if (R && k && A.meiden > 0) {
+      const n = [0, 0, 0], L = R.S.laenge, H = R.S.haupt;
+      for (const o of R.karts) {
+        if (o === k || o.pfad !== 0 || o.zielZeit != null) continue;
+        const v = rundenDiff(o.sHaupt, k.sHaupt, L);
+        if (v < -15 || v > 60) continue;
+        const lage = o.d / Math.max(1, H.hb[o.mi] || 5);
+        n[lage < -1 / 3 ? 0 : lage > 1 / 3 ? 2 : 1]++;
+      }
+      for (let i = 0; i < 3; i++) g[i] = 1 / (1 + A.meiden * n[i]);
+    }
+    if (ohne !== undefined) g[ohne + 1] = 0;
+    let x = z() * (g[0] + g[1] + g[2]), t = -1;
+    while (t < 1 && x >= g[t + 1]) { x -= g[t + 1]; t++; }
+    this.spurArt = t;
+    // −1 … +1: Anteil der halben Fahrbahn, rechts negativ; die Mittelspur streut etwas um die Mitte
+    this.spurZiel = t === 0 ? (z() * 2 - 1) * A.mitte : t * (A.anteil[0] + (A.anteil[1] - A.anteil[0]) * z());
+  }
+
+  // Wie kurvig die Ideallinie bei i ist (0 Gerade … 1 Kurve), mit Vorlauf und Nachlauf; einmal pro Strecke berechnet
+  static kurvig(S) {
+    if (S._kurvig) return S._kurvig;
+    const A = CONFIG.bots.spuren, H = S.haupt, n = H.n, g = new Float32Array(n), c = new Float32Array(n);
+    for (let i = 0; i < n; i++) g[i] = clamp((Math.abs(S.idealKr[i]) - A.kurveAb) / (A.kurveVoll - A.kurveAb), 0, 1);
+    const vor = Math.round(A.vorlauf / H.ds), nach = Math.round(A.nachlauf / H.ds);
+    for (let i = 0; i < n; i++) {
+      let m = 0;
+      for (let j = -nach; j <= vor && m < 1; j++) {
+        const x = g[(i + j + n) % n];
+        // weit voraus zählt eine Kurve weniger: der Bot zieht weich zur Linie
+        const w = j <= 0 ? 1 : 1 - (j / (vor + 1)) * 0.85;
+        if (x * w > m) m = x * w;
+      }
+      c[i] = m;
+    }
+    return (S._kurvig = c);
+  }
+
+  // Eigene Linie des Bots an der Stelle sm (Hauptstrecke): auf Geraden die Lieblingsspur, in Kurven die Ideallinie,
+  // früher oder später eingelenkt und etwas enger oder weiter
+  linieBei(S, sm, i) {
+    const H = S.haupt, c = Bot.kurvig(S)[i];
+    let dK = S.ideal[i];
+    if (this.einlenk || this.weite) {
+      const j = ((Math.floor((sm + this.einlenk) / H.ds) % H.n) + H.n) % H.n, kr = S.idealKr[j];
+      dK = S.ideal[j] - Math.sign(kr) * this.weite * clamp(Math.abs(kr) * 150, 0, 1);      // Innenseite hat das Vorzeichen der Krümmung
+    }
+    if (c >= 1) return dK;
+    // Spur auf der Geraden. Die Profis («Schwer» und «Ultra») fahren allein die Ideallinie und nehmen ihre Spur nur im Verkehr
+    // (spurGewicht), damit ihre Rundenzeiten bleiben; alle anderen fahren immer ihre Spur.
+    const spur = this.spurIst * Math.max(0, H.hb[i] - CONFIG.bots.spuren.rand), w = this.spurGewicht;
+    const dS = w >= 1 ? spur : S.ideal[i] + (spur - S.ideal[i]) * w;
+    return dS + (dK - dS) * c;
+  }
+
+  // Boost-Feld voraus: bei jeder Durchfahrt neu entscheiden, ob der Bot es mitnimmt (nach Spur, Verkehr und Lage im Rennen)
+  boostEntscheiden(R, k, z) {
+    const S = R.S, L = S.laenge, A = CONFIG.bots.spuren;
+    if (!S.boostfelder.length || k.pfad !== 0) return;
+    for (const f of S.boostfelder) {
+      let vor = wegVor(k.s, f.s, L); if (vor > L / 2) vor -= L;
+      if (vor < -f.laenge / 2 - 2 || vor > CONFIG.bots.boostSicht + 25) { if (vor < 0 || vor > L / 3) delete this.boostNimmt[f.nr]; continue; }
+      if (this.boostNimmt[f.nr] !== undefined) continue;
+      if (this.boostImmer) { this.boostNimmt[f.nr] = true; continue; }
+      const hb = Math.max(1, S.haupt.hb[k.mi] || 5), meine = this.spurIst * Math.max(0, hb - A.rand);
+      const platz = R.reihenfolge.indexOf(k.idx) / Math.max(1, R.karts.length - 1);      // 0 vorne … 1 hinten
+      let p = this.boostLust - A.boostWeg * Math.min(1, Math.abs(f.d - meine) / hb) + A.boostHinten * platz;
+      for (const o of R.karts) {
+        if (o === k || o.pfad !== 0) continue;
+        const dv = rundenDiff(o.sHaupt, k.sHaupt, L);
+        if (dv > 0 && dv < 14 && Math.abs(o.d - f.d) < 1.6) { p -= A.boostVerkehr; break; }
+      }
+      this.boostNimmt[f.nr] = z() < clamp(p, 0.15, 1);
+    }
   }
 
   // Punkt «voraus» Meter vor dem Fahrzeug entlang seiner Route. Gibt die Krümmung dort zurück.
@@ -2705,7 +2818,7 @@ class Bot {
     }
     const i = Math.floor(sm / H.ds) % H.n;
     const lim = H.hb[i] - 1.3;
-    let d = clamp(S.ideal[i] + versatz, -lim, lim);
+    let d = clamp(this.linieBei(S, sm, i) + versatz, -lim, lim);
     if (this.abschneiden > 0 && !this.frei) {
       // Geländewagen: enge Kurven innen über den Rand abkürzen, wo dort Platz ist (kein Abgrund, genug Rand bis zur Wand)
       const kr = S.idealKr[i], innen = kr > 0 ? 1 : -1, ak = Math.abs(kr), K = CONFIG.bots.auto.abschneidenKr;
@@ -2729,7 +2842,7 @@ class Bot {
         let vor = wegVor(sm, f.s, L); if (vor > L / 2) vor -= L;
         if (vor > sicht || vor < -f.laenge / 2 - 1.5) continue;
         const w = vor > 0 ? clamp((sicht - vor) / (sicht * 0.6), 0, 1) : 1;
-        d += (f.d - d) * w * this.boostLust;
+        if (this.boostNimmt[f.nr]) d += (f.d - d) * w;
         break;
       }
     }
@@ -2830,6 +2943,16 @@ class Bot {
     e.bauArt = null;
     this.planeWeg(R, k);
     this.sucheLuecke(R, k);
+    this.boostEntscheiden(R, k, z);
+    // ab und zu eine neue Lieblingsspur, weich hinüberziehen
+    this.spurUhr -= dt;
+    if (this.spurUhr <= 0) { this.spurUhr = CONFIG.bots.spuren.wechsel * (0.5 + z()); this.waehleSpur(z, R, k); }
+    this.spurIst += clamp(this.spurZiel - this.spurIst, -CONFIG.bots.spuren.tempo * dt, CONFIG.bots.spuren.tempo * dt);
+    if (this.p.profi) {                 // Verkehr: jemand bis 40 m vor oder 20 m hinter ihm auf der Hauptstrecke
+      let verkehr = false;
+      for (const o of R.karts) { if (o === k || o.pfad !== 0 || o.zielZeit != null) continue; const v = rundenDiff(o.sHaupt, k.sHaupt, L); if (v > -20 && v < 40) { verkehr = true; break; } }
+      this.spurGewicht = clamp(this.spurGewicht + (verkehr ? 1 : -1) * CONFIG.bots.spuren.profiWechsel * dt, 0, 1);
+    }
 
     // kleine Ungenauigkeiten und gelegentliche Fahrfehler
     this.rauschUhr -= dt;
@@ -2856,8 +2979,33 @@ class Bot {
           // schwer gegen leichter: nur halb ausweichen und den anderen beim Vorbeifahren wegschieben (Rempeln)
           seit += seite * (this.rempler && o.w.masse < k.w.masse * 0.7 ? CONFIG.bots.auto.rempelSeite : 3.0 + this.gedraenge);
         } else if (k.w.wind >= 0.8 && Math.abs(krHier) < 0.006 * Math.min(2.5, k.w.wind) && vor > 4 && !k.windAktiv) {      // starker Windschatten: öfter dahinter einreihen
-          seit += clamp(dd, -2, 2) * 0.8;      // dahinter einreihen (Windschatten)
+          // in den Windschatten, aber leicht versetzt (bis 2 m seitlich wirkt er noch): nicht genau in der Spur des Vordermanns
+          seit += clamp(dd - Math.sign(dd || this.spurZiel || 1) * CONFIG.bots.spuren.windVersatz, -2, 2) * 0.8;
+        } else if (vor < 15 && k.pfad === 0) {
+          // nicht genau in der Spur des Vordermanns (Gänsemarsch): seitlich versetzt dahinter, auch in Kurven.
+          // Gemessen ohne das eigene Ausweichen, sonst pendelt er hin und her.
+          const A = CONFIG.bots.spuren.abstand, rb = k.d - this.ausweich - o.d;
+          if (Math.abs(rb) < A) {
+            let seite = Math.abs(rb) > 0.2 ? Math.sign(rb) : (Math.sign(this.spurZiel) || this.seiteLieb);
+            const hb = R.S.haupt.hb[k.mi];
+            if (Math.abs(o.d + seite * A) > hb - 1.2) seite = -seite;
+            seit += seite * A - rb;
+          }
         }
+      }
+    }
+    // Fährt er länger genau hinter einem anderen her (Gänsemarsch), wählt er eine andere Spur
+    if (k.zielZeit == null && k.pfad === 0) {
+      let hinter = false;
+      for (const o of R.karts) {
+        if (o === k || o.pfad !== 0) continue;
+        const vor = rundenDiff(o.sHaupt, k.sHaupt, L);
+        if (vor > 0.5 && vor < 15 && Math.abs(o.d - k.d) < 1.2) { hinter = true; break; }
+      }
+      this.folgeZeit = hinter ? (this.folgeZeit || 0) + dt : 0;
+      if (this.folgeZeit > CONFIG.bots.spuren.folgen) {
+        this.folgeZeit = 0;
+        this.waehleSpur(z, R, k, this.spurArt);
       }
     }
     this.ausweich += (clamp(seit, -3.4, 3.4) - this.ausweich) * Math.min(1, 3.5 * dt);
