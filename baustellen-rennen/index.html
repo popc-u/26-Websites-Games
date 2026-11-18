@@ -220,6 +220,23 @@ input[type=range]{accent-color:var(--gold)}
 .dialog h2{font:650 1.45rem/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-style:normal;text-transform:none;letter-spacing:-.01em;text-shadow:none;color:var(--text);margin:0 0 8px}
 .dialog p{margin:0 0 10px;color:var(--leise)}
 .dialog .feld{display:block;width:100%;box-sizing:border-box;font-size:1.1rem;padding:10px 12px;margin:4px 0 14px}
+/* Konto: «Mit Google anmelden» nach Googles Vorgaben (dunkle Fassung: Grund #131314, Rand #8E918F, Schrift #E3E3E3, farbiges G) */
+.konto{margin-top:16px;padding-top:14px;border-top:1px solid var(--linie);display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.konto .konto-satz{flex-basis:100%;margin:0;font-size:.78rem;line-height:1.35}
+.google-knopf{pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px 0 12px;background:#131314;color:#e3e3e3;border:1px solid #8e918f;border-radius:20px;font:500 14px/20px Roboto,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:.25px;white-space:nowrap;transition:background .15s}
+.google-knopf:hover,.google-knopf:focus-visible{background:#1f2023;outline:none}
+.google-knopf:focus-visible{box-shadow:0 0 0 2px var(--gold)}
+.google-knopf .g-logo{width:20px;height:20px;flex:none}
+.konto.an>span{font-size:.92rem;color:var(--text)}
+.konto.an .knopf{font-size:.85rem;padding:6px 10px 5px}
+.konto-bild{width:32px;height:32px;border-radius:50%;flex:none;object-fit:cover;border:1px solid var(--linie)}
+.konto-bild.leer{display:inline-flex;align-items:center;justify-content:center;background:var(--gold);color:var(--tinte);font-weight:700}
+.dialog .name-frei{color:#7fe08a}.dialog .name-besetzt{color:#ff9d8f}
+#toast{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.bl-haken{width:15px;height:15px;vertical-align:-2px;margin-left:5px;flex:none}
+.bl-haken circle{fill:#3fb54a}.bl-haken path{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bl-anmelden{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:4px 0 8px;padding:9px 12px;border:1px solid var(--linie);border-radius:12px;background:rgba(255,255,255,.04);font-size:.82rem;color:var(--leise)}
+.bl-anmelden span{flex:1 1 220px}
 @media(max-width:560px){.bl-kopf{grid-template-columns:1fr}.bl-kopf canvas{width:110px;height:110px}.bl-datum{display:none}.bl-tabelle td,.bl-tabelle th{padding:4px 5px}.bl-auto,.bl-was{display:none}.bl-handy{display:block;color:var(--leise);font-size:.75rem}}
 </style>
 </head>
@@ -511,7 +528,8 @@ const CONFIG = {
     server: 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app',   // Adresse der Datenbank, z. B. 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app'
     // Web-App-Kennungen aus der Firebase-Konsole (öffentlich, kein Passwort) für «Mit Google anmelden». Leer = Knopf ausgeblendet.
     firebase: { apiKey: 'AIzaSyA8KFQDt2VVmbPhvLQu1xBBxReJysS6b_s', authDomain: 'baustellen-rennen.firebaseapp.com', projectId: 'baustellen-rennen', appId: '1:981666688893:web:7febbe2003b37e696f2614' },
-    pfad: 'bestenliste/v1',// Ordner in der Datenbank (v1 = Aufbau der Einträge, passt zu den Regeln in der README)
+    pfad: 'bestenliste/v2',// Ordner der gemeinsamen Liste: v2 = nur mit Google-Anmeldung, jeder Eintrag mit Konto-Nummer (Regeln: tools/regeln.js)
+    pfadAlt: 'bestenliste/v1',   // alte Liste aus der Zeit ohne Anmeldung: wird nur noch gelesen und ohne Häkchen gezeigt ('' = nicht mehr zeigen)
     zeitlimit: 6,          // s: so lange wird auf die Datenbank gewartet, danach gilt «keine Verbindung»
     frisch: 60,            // s: so lange gilt eine geladene Liste, danach wird sie beim Öffnen neu geladen («Aktualisieren» lädt sofort)
     nochmals: 15,          // s: nach einem Fehler frühestens so spät wieder versuchen (ausser mit «Aktualisieren»)
@@ -9558,7 +9576,9 @@ const Menue = {
   fahrerZeilen(immerWahl) {
     const D = Speicher.daten, neu = () => { if (this.beiProfil) this.beiProfil(); this.schau(); };
     this.schauZufall = D.zufallsAuto && !immerWahl;
-    return '<div class="zeile"><label for="f-name">Name</label><input class="feld" id="f-name" maxlength="14" autocomplete="off" value="' + esc(D.name) + '"></div>' +
+    const konto = Konto.angemeldet();                 // angemeldet: der Spielname des Kontos, ändern nur im Hauptmenü
+    return '<div class="zeile"><label for="f-name">Name</label><input class="feld" id="f-name" maxlength="14" autocomplete="off" value="' + esc(konto ? Konto.name() : D.name) + '"' +
+      (konto ? ' readonly title="Name deines Kontos (ändern im Hauptmenü)"' : '') + '></div>' +
       '<div class="schau"><canvas id="schau"></canvas><div class="schau-text" id="schau-text"></div></div>' +
       (this.schauZufall ? '' : this.wahlZeile('Auto', 'fahrzeug', FAHRZEUG_LISTE, D.fahrzeug, (v) => { D.fahrzeug = v; neu(); })) +
       this.wahlZeile('Lack', 'farbe', FARB_LISTE, D.farbe, (v) => { D.farbe = v; neu(); });
@@ -9576,7 +9596,10 @@ const Menue = {
     if (this.schauZufall) { let i = Math.floor(Math.random() * FAHRZEUGE.length); zeig(i, true); this.schauTakt = setInterval(() => { i = (i + 1) % FAHRZEUGE.length; zeig(i, true); }, 2600); }
     else zeig(D.fahrzeug, false);
   },
-  nameLesen() { const f = $('f-name'); if (f) Speicher.daten.name = (f.value.trim() || 'Spieler').slice(0, 14); },
+  nameLesen() {
+    const f = $('f-name');
+    if (Konto.angemeldet()) Speicher.daten.name = Konto.name(); else if (f) Speicher.daten.name = (f.value.trim() || 'Spieler').slice(0, 14);
+  },
 
   // Bots mit zufälligen Namen und noch freien Farben
   botFahrer(anzahl, stufe, belegt) {
@@ -9607,13 +9630,14 @@ const Menue = {
     }
     html += '<div class="knoepfe"><button class="knopf los" data-a="bots">Gegen Bots</button><button class="knopf" data-a="lokal">Lokal am selben Gerät</button>' +
       '<button class="knopf" data-a="erstellen">Online: Raum erstellen</button><button class="knopf" data-a="beitreten">Online: Raum beitreten</button>' +
-      '<button class="knopf zweit" data-a="bestenliste">Bestenlisten</button><button class="knopf zweit" data-a="steuerung">Steuerung</button><button class="knopf zweit" data-a="einstellungen">Einstellungen</button></div></div>';
+      '<button class="knopf zweit" data-a="bestenliste">Bestenlisten</button><button class="knopf zweit" data-a="steuerung">Steuerung</button><button class="knopf zweit" data-a="einstellungen">Einstellungen</button></div>' +
+      Konto.menueHtml() + '</div>';
     const online = (f) => { if (typeof Online !== 'undefined') f(); else App.toast('Der Online-Modus ist in dieser Version noch nicht eingebaut.'); };
-    this.zeige('haupt', html, {
+    this.zeige('haupt', html, Object.assign(Konto.menueAktionen(), {
       bots: () => this.bots(), lokal: () => this.lokal(),
       erstellen: () => online(() => Online.erstellen()), beitreten: () => online(() => Online.beitretenDialog()),
       steuerung: () => this.steuerung(() => this.haupt()), einstellungen: () => this.einstellungen(), bestenliste: () => Bestenliste.seite(D.strecke, ''),
-    });
+    }));
   },
 
   bots() {
@@ -9635,6 +9659,7 @@ const Menue = {
   lokalLesen() {
     const D = Speicher.daten;
     for (let i = 0; i < 4; i++) { const f = $('f-name' + i); if (f) D.lokal[i].name = (f.value.trim() || 'Spieler ' + (i + 1)).slice(0, 14); }
+    if (Konto.angemeldet()) D.lokal[0].name = Konto.name();       // Spieler 1 fährt mit dem Konto
   },
   lokal() {
     this.wahlen = {};
@@ -9644,7 +9669,9 @@ const Menue = {
       this.wahlZeile('Zufalls-Auto', 'zufall', EIN_AUS, D.zufallsAuto, (v) => { this.lokalLesen(); D.zufallsAuto = v; this.lokal(); }) + '<div class="spalten">';
     for (let i = 0; i < D.lokalAnzahl; i++) {
       const p = D.lokal[i];
-      html += '<div class="karte"><div class="zeile"><label for="f-name' + i + '">Spieler ' + (i + 1) + '</label><input class="feld" id="f-name' + i + '" maxlength="14" autocomplete="off" value="' + esc(p.name) + '"></div>' +
+      const konto = i === 0 && Konto.angemeldet();
+      html += '<div class="karte"><div class="zeile"><label for="f-name' + i + '">Spieler ' + (i + 1) + '</label><input class="feld" id="f-name' + i + '" maxlength="14" autocomplete="off" value="' + esc(konto ? Konto.name() : p.name) + '"' +
+        (konto ? ' readonly title="Name deines Kontos (ändern im Hauptmenü)"' : '') + '></div>' +
         this.wahlZeile('Steuerung', 'g' + i, GERAETE_LISTE, p.geraet, (v) => { p.geraet = v; }) +
         (D.zufallsAuto ? '' : this.wahlZeile('Auto', 'fz' + i, FAHRZEUG_LISTE, p.fahrzeug, (v) => { p.fahrzeug = v; })) +
         this.wahlZeile('Lack', 'fb' + i, FARB_LISTE, p.farbe, (v) => { p.farbe = v; }) + '</div>';
@@ -9891,6 +9918,7 @@ const App = {
     try { Grafik.qualitaet = fest && GRAFIK_NAMEN[fest] ? fest : messen ? 'hoch' : D.grafik; Grafik.init($('bild')); }
     catch (e) { Menue.fehler('Dein Browser kann hier keine 3D-Grafik (WebGL) anzeigen. Versuche es mit einem aktuellen Chrome, Firefox, Edge oder Safari.'); return; }
     this.tonSetzen(); Ton.musikGewollt = true;
+    Konto.start();                                    // «Mit Google anmelden» (Teil 14): Anmeldung von früher wiederherstellen
     Spiel.starteDemo(Speicher.daten.strecke);
     if (messen) {
       // kurz messen, wie schnell dieses Gerät die Vorschau-Szene zeichnet, und die Grafik-Stufe danach wählen
@@ -9942,9 +9970,12 @@ const App = {
 // Menschen: pro Name und Auto die besten Zeiten (CONFIG.bestenliste.proName). Bots: pro Auto nur der schnellste Bot aller Zeiten.
 // Die Liste eines Autos zeigt dessen Zeiten und den schnellsten Bot mit diesem Auto. Die Gesamtliste nimmt pro Name die beste
 // Zeit über alle Autos und genau einen Bot: den schnellsten, der je auf dieser Strecke gefahren ist.
+// Mit Google-Anmeldung (Teil 14, Konto) tragen Einträge die Konto-Nummer u. Ein Konto steht einmal da, auch nach einem Namenswechsel,
+// und bekommt ein Häkchen. Alte Einträge ohne Konto (gemeinsame Liste v1, dieses Gerät vor dem Anmelden) bleiben sichtbar, ohne Häkchen.
 const BL_VERSION = 1;
 const BL_STUFE = { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer', ultra: 'Ultra' };
 const BL_ARTIKEL = { limo: 'der' };                 // «mit der Limousine», sonst «mit dem …»
+const BL_HAKEN = '<svg class="bl-haken" viewBox="0 0 16 16" role="img" aria-label="angemeldet"><title>Angemeldeter Spieler</title><circle cx="8" cy="8" r="8"/><path d="M4.4 8.3 6.9 10.8 11.8 5.6"/></svg>';
 const BL_ROBOTER = '<svg class="bl-robo" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2h2v3h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h4zM8.5 9.5a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm7 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM9 15h6v1.6H9zM1 10h2v5H1zm20 0h2v5h-2z"/></svg>';
 
 // Kleines Fenster im Stil des Spiels (statt Browser-Dialog): Text, Knöpfe, auf Wunsch ein Eingabefeld
@@ -9972,7 +10003,7 @@ const Dialog = {
 const Bestenliste = {
   daten: null, aktiv: false, fahrer: [], modus: '', streckenId: '', neu: [], rekordText: '', ohneSpeicher: false,
   blStrecke: '', blAuto: '', kartenId: null,
-  netz: {}, quelle: 'alle', sendet: false, schlangeMem: null, erstesFertig: false,   // gemeinsame Liste (siehe unten)
+  netz: {}, quelle: 'alle', sendet: false, schlangeMem: null,          // gemeinsame Liste (siehe unten)
 
   // ── Speicher ───────────────────────────────────────────────────────────
   laden() {
@@ -9989,7 +10020,8 @@ const Bestenliste = {
     for (const id of Object.keys(d.strecken)) {
       const s = d.strecken[id];
       if (!s || typeof s !== 'object') continue;
-      const eigen = (e, x) => ((e.o === 0 || e.o === 1) ? Object.assign(x, { o: e.o }) : x);   // o: 1 = auf diesem Gerät gefahren (fehlt bei alten Einträgen)
+      // o: 1 = auf diesem Gerät gefahren (fehlt bei alten Einträgen), u: Konto-Nummer (gefahren mit Google-Anmeldung)
+      const eigen = (e, x) => { if (e.o === 0 || e.o === 1) x.o = e.o; if (typeof e.u === 'string' && e.u) x.u = e.u; return x; };
       const menschen = Array.isArray(s.menschen) ? s.menschen.filter(gut).map((e) => eigen(e, { n: e.n.trim().slice(0, 14), z: e.z, a: e.a, d: +e.d || 0, m: String(e.m || '') })) : [];
       const bots = {};
       if (s.bots && typeof s.bots === 'object') for (const a of Object.keys(s.bots)) { const e = s.bots[a]; if (gut(e)) bots[e.a] = eigen(e, { n: e.n.trim().slice(0, 20), z: e.z, a: e.a, s: String(e.s || ''), d: +e.d || 0, m: String(e.m || '') }); }
@@ -10014,14 +10046,18 @@ const Bestenliste = {
   // Sortierte Liste einer Kategorie: auto = '' für die Gesamtliste, sonst die id eines Autos
   // quelle: 'alle' = dieses Gerät und die gemeinsame Liste (sobald geladen), 'geraet' = nur dieses Gerät
   liste(id, auto, quelle) {
-    const proName = Math.max(1, CONFIG.bestenliste.proName | 0);
-    // stabil sortiert: Bei gleicher Zeit kommt der Eintrag dieses Geräts vor dem gleichen aus der gemeinsamen Liste
-    const alle = this.eintraege(id, quelle).filter((e) => !auto || e.a === auto).sort((x, y) => x.z - y.z);
+    const proName = Math.max(1, CONFIG.bestenliste.proName | 0), ganz = this.eintraege(id, quelle);
+    // stabil sortiert: Bei gleicher Zeit kommt der Eintrag mit Häkchen zuerst, sonst der dieses Geräts vor dem aus der gemeinsamen Liste
+    const alle = ganz.filter((e) => !auto || e.a === auto).sort((x, y) => x.z - y.z || (x.u ? 0 : 1) - (y.u ? 0 : 1));
+    // Gruppen: ein Konto (u) steht einmal da, auch unter mehreren Namen. Ein Eintrag ohne Konto zählt zum Konto, das diesen Namen trägt.
+    const kontoVon = {};
+    for (const e of ganz) if (e.u && !e.bot) kontoVon[this.schluessel(e.n)] = e.u;
+    const gruppe = (e) => (e.u ? 'u:' + e.u : kontoVon[this.schluessel(e.n)] ? 'u:' + kontoVon[this.schluessel(e.n)] : 'n:' + this.schluessel(e.n));
     const zahl = {}, aus = [];
     let bot = null;
     for (const e of alle) {
       if (e.bot) { if (!bot) bot = e; continue; }
-      const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName) aus.push(e);
+      const k = gruppe(e); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName) aus.push(e);
     }
     if (bot) aus.push(bot);
     return aus.sort((x, y) => x.z - y.z);
@@ -10029,7 +10065,7 @@ const Bestenliste = {
   eintraege(id, quelle) {
     const S = this.strecke(id), l = S.menschen.slice(), N = this.netz[id];
     for (const a of Object.keys(S.bots)) l.push(Object.assign({ bot: true }, S.bots[a]));
-    if (quelle !== 'geraet' && N && N.eintraege) for (const e of N.eintraege) l.push(e);
+    if (quelle !== 'geraet' && N) for (const e of (N.neu || []).concat(N.alt || [])) l.push(e);
     return l;
   },
   platz(id, auto, e) { const i = this.liste(id, auto).indexOf(e); return i + 1; },     // 0 = nicht (mehr) in der Liste
@@ -10038,7 +10074,7 @@ const Bestenliste = {
     const S = this.strecke(id), C = CONFIG.bestenliste, proName = Math.max(1, C.proName | 0);
     const andere = S.menschen.filter((e) => e.a !== auto), diese = S.menschen.filter((e) => e.a === auto).sort((x, y) => x.z - y.z);
     const zahl = {}, bleiben = [];
-    for (const e of diese) { const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName && bleiben.length < C.speichern) bleiben.push(e); }
+    for (const e of diese) { const k = e.u ? 'u:' + e.u : 'n:' + this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName && bleiben.length < C.speichern) bleiben.push(e); }
     S.menschen = andere.concat(bleiben);
   },
   merkeRekord() {
@@ -10052,9 +10088,13 @@ const Bestenliste = {
     this.laden();
     this.neu = []; this.modus = (konfig && konfig.modus) || ''; this.streckenId = R.S.id;
     this.aktiv = !App.debug && ['bots', 'lokal', 'online'].includes(this.modus);
+    // Der erste Mensch an diesem Gerät ist Spieler 1: Ist das Gerät angemeldet, fährt er mit dem Konto (Name und Häkchen)
+    let erster = true;
     this.fahrer = R.karts.map((k, i) => {
       const f = (konfig && konfig.fahrer[i]) || {}, bot = f.typ === 'bot' || !!f.istBot;   // online kommen Bots beim Gast als «fern» mit istBot
-      return { kart: i, name: String(k.name || f.name || '').trim() || (bot ? 'Bot' : 'Spieler'), auto: k.fahrzeug, stufe: f.stufe || '', bot, lokal: f.typ === 'mensch' };
+      const lokal = f.typ === 'mensch', spieler1 = lokal && erster, konto = spieler1 && Konto.angemeldet() ? Konto.nutzer.uid : '';
+      if (lokal) erster = false;
+      return { kart: i, name: konto ? Konto.name() : String(k.name || f.name || '').trim() || (bot ? 'Bot' : 'Spieler'), auto: k.fahrzeug, stufe: f.stufe || '', bot, lokal, spieler1, konto };
     });
     this.merkeRekord();
     if (this.aktiv) this.ladeNetz(this.streckenId);         // Rekord aus der gemeinsamen Liste, kommt während des Countdowns
@@ -10072,21 +10112,23 @@ const Bestenliste = {
     if (f.bot) {                                                    // Bots: pro Auto nur der schnellste aller Zeiten
       const alt = S.bots[f.auto];
       if (alt && alt.z <= z) return null;
-      const eigen = this.modus !== 'online' || Online.host;          // Bot-Zeiten lädt nur das Gerät hoch, das das Rennen leitet
+      const eigen = this.modus !== 'online' || Online.host;          // Bot-Zeiten lädt nur das Gerät hoch, das das Rennen leitet (und nur angemeldet)
       S.bots[f.auto] = { n: f.name.slice(0, 20), z, a: f.auto, s: f.stufe, d: jetzt, m: this.modus, o: eigen ? 1 : 0 };
-      if (eigen) this.vormerken(id, S.bots[f.auto], true);
+      if (eigen && Konto.angemeldet()) this.vormerken(id, S.bots[f.auto], true, Konto.nutzer.uid);
       this.sichern(); this.merkeRekord();
       return null;
     }
-    const k = this.schluessel(f.name), meine = (auto) => this.liste(id, auto).filter((x) => !x.bot && this.schluessel(x.n) === k);
+    // eigene Einträge: mit Konto die des Kontos (und alte ohne Konto unter seinem Namen), ohne Konto alle unter diesem Namen
+    const k = this.schluessel(f.name), meine = (auto) => this.liste(id, auto).filter((x) => !x.bot && (f.konto ? x.u === f.konto || (!x.u && this.schluessel(x.n) === k) : this.schluessel(x.n) === k));
     const vorG = meine(''), vorA = meine(f.auto);
     if (vorA.length >= proName && z >= vorA[vorA.length - 1].z) return null;      // nicht besser als die eigenen Zeiten mit diesem Auto
     const besserG = vorG.length < proName || z < vorG[vorG.length - 1].z;
     const e = { n: f.name.slice(0, 14), z, a: f.auto, d: jetzt, m: this.modus, o: f.lokal ? 1 : 0 };
+    if (f.konto) e.u = f.konto;
     S.menschen.push(e);
-    if (f.lokal) this.vormerken(id, e, false);                     // online lädt jeder nur seine eigenen Zeiten hoch
+    if (f.konto) this.vormerken(id, e, false, f.konto);            // hochgeladen wird nur, wer angemeldet ist (online jeder seine eigenen Zeiten)
     this.ordne(id, f.auto); this.sichern(); this.merkeRekord();
-    this.neu.push({ id, e, kart: f.kart, lokal: f.lokal });
+    this.neu.push({ id, e, kart: f.kart, lokal: f.lokal, spieler1: f.spieler1 });
     const r = { besserG, platzG: this.platz(id, '', e), platzA: this.platz(id, f.auto, e), auto: f.auto, persoenlich: vorG.length > 0 && besserG };
     r.text = this.meldung(r);
     return r;
@@ -10121,7 +10163,19 @@ const Bestenliste = {
     return '<div class="karte bl-ergebnis"><h3>Bestenliste ' + esc(def ? def.name : id) + ' · schnellste Runde</h3>' +
       (zeilen.length ? '<p class="bl-neu">Neu in der Liste: ' + neuHtml + '</p>' : '') +
       this.tabelle(this.liste(id, '').slice(0, 5), (e) => neuGesetzt.has(e)) +
+      '<div id="bl-ergebnis-anmelden">' + (this.mitNetz() && this.ergebnisText() ? this.anmeldeHinweis(this.ergebnisText()) : '') + '</div>' +
       (this.ohneSpeicher ? '<p class="hinweis">Dieser Browser speichert nichts: Die Liste gilt nur bis zum Neuladen.</p>' : '') + '</div>';
+  },
+  // Hinweis im Ergebnis, wenn Spieler 1 eine neue Zeit hat, aber nicht angemeldet ist
+  ergebnisText() {
+    return this.aktiv && this.neu.some((x) => x.spieler1 && !x.e.u) ? 'Nicht angemeldet: Deine Zeit bleibt auf diesem Gerät. Melde dich an, dann kommt sie in die gemeinsame Liste.' : '';
+  },
+  // Meldet sich Spieler 1 im Ergebnis an, kommen die neuen Zeiten aus diesem Rennen mit dem Kontonamen in die gemeinsame Liste
+  nachRennenAnmelden() {
+    if (!this.aktiv || !Konto.angemeldet() || Konto.nutzer.offline) return;
+    const N = Konto.nutzer;
+    for (const x of this.neu) if (x.spieler1 && !x.e.u) { x.e.n = N.name; x.e.u = N.uid; this.vormerken(x.id, x.e, false, N.uid); this.ordne(x.id, x.e.a); }
+    this.sichern(); this.merkeRekord();
   },
   nachRennen() {
     const D = Speicher.daten, ich = this.neu.filter((x) => x.lokal);
@@ -10136,9 +10190,7 @@ const Bestenliste = {
       { text: 'Speichern', klasse: 'los', f: (wert) => {
         const n = String(wert || '').trim().slice(0, 14);
         if (!n) return;
-        D.name = n; Speicher.sichern(); this.umbenennen(eintraege, n);
-        for (const x of eintraege) this.vormerken(x.id, x.e, false);   // erst mit richtigem Namen in die gemeinsame Liste
-        this.sende();
+        D.name = n; Speicher.sichern(); this.umbenennen(eintraege, n);   // in die gemeinsame Liste kommt die Zeit erst mit Anmeldung (Nachliefern)
       } },
       { text: 'Später', klasse: 'zweit', abbruch: true },
     ]);
@@ -10153,10 +10205,26 @@ const Bestenliste = {
   },
 
   // ── Gemeinsame Liste für alle Geräte (Online-Datenbank) ──────────────────
-  // Gelesen wird pro Strecke die ganze Liste. Hochgeladen wird nur, was auf diesem Gerät gefahren wurde (online jeder seine
-  // eigenen Zeiten, Bot-Zeiten nur der Host). Ohne Verbindung warten die Zeiten in einer Schlange im Browser.
+  // Gelesen wird pro Strecke die ganze Liste (v2 mit Konten, dazu die alte v1 ohne Konten, nur noch lesen). Hochgeladen wird nur mit
+  // Google-Anmeldung, was auf diesem Gerät gefahren wurde: Zeiten von Spieler 1 mit dem Kontonamen, Bot-Zeiten nur vom Gerät, das das
+  // Rennen leitet. Ohne Verbindung warten die Zeiten in einer Schlange im Browser.
   mitNetz() { return !!(CONFIG.bestenliste.server || '').trim() && typeof fetch === 'function'; },
-  adresse(id) { const C = CONFIG.bestenliste; return C.server.trim().replace(/\/+$/, '') + '/' + C.pfad + '/' + encodeURIComponent(id) + '.json'; },
+  // Adresse einer Stelle in der Datenbank (pfad ohne «.json»), mit Ausweis des Kontos zum Schreiben
+  url(pfad, token) {
+    const t = this.testDb(), q = [];
+    if (t && t.ns) q.push('ns=' + encodeURIComponent(t.ns));
+    if (token) q.push('auth=' + encodeURIComponent(token));
+    return (t ? t.db : CONFIG.bestenliste.server.trim().replace(/\/+$/, '')) + '/' + pfad + '.json' + (q.length ? '?' + q.join('&') : '');
+  },
+  // Nur für Tests: ?db=http://127.0.0.1:9001&ns=demo-… nimmt den Firebase-Emulator auf diesem Rechner (andere Adressen gelten nicht)
+  testDb() {
+    if (this.testDbMem === undefined) {
+      const db = App.parameter.get('db') || '';
+      this.testDbMem = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(db) ? { db, ns: App.parameter.get('ns') || '' } : null;
+    }
+    return this.testDbMem;
+  },
+  adresse(id, alt, token) { const C = CONFIG.bestenliste; return this.url((alt ? C.pfadAlt : C.pfad) + '/' + encodeURIComponent(id), token); },
   // Anfrage mit Zeitlimit; nie ein Fehler nach aussen: { ok, status, j } (status 0 = keine Verbindung)
   async anfrage(url, opt) {
     const ctl = typeof AbortController === 'function' ? new AbortController() : null;
@@ -10173,15 +10241,19 @@ const Bestenliste = {
     let L = 0; try { L = holeStrecke(id).laenge || 0; } catch (e) { L = 0; }
     return Math.max(CONFIG.bestenliste.minRunde, L / (CONFIG.fahren.vmax * CONFIG.bestenliste.mindestTempo));
   },
-  // Antwort der Datenbank prüfen: nur gültige, mögliche Zeiten mit bekanntem Auto und erlaubtem Namen
-  ausNetz(id, j) {
+  // Antwort der Datenbank prüfen: nur gültige, mögliche Zeiten mit bekanntem Auto und erlaubtem Namen. mitKonto: neue Liste (v2),
+  // dort trägt jeder Eintrag die Konto-Nummer u.
+  ausNetz(id, j, mitKonto) {
     const aus = [], min = this.mindestZeit(id);
     if (!j || typeof j !== 'object') return aus;
     for (const v of Object.values(j)) {
       if (!v || typeof v !== 'object' || typeof v.n !== 'string' || typeof v.z !== 'number' || !isFinite(v.z) || typeof v.a !== 'string') continue;
       const bot = v.b === true, n = v.n.trim();
       if (!n || n.length > (bot ? 20 : 14) || v.z < min || v.z > 600 || !FAHRZEUGE.some((f) => f.id === v.a) || this.verboten(n)) continue;
-      aus.push({ n, z: Math.round(v.z * 1000) / 1000, a: v.a, d: +v.d || 0, s: bot ? String(v.s || '').slice(0, 10) : '', bot, netz: true });
+      if (mitKonto && (typeof v.u !== 'string' || !v.u)) continue;
+      const e = { n, z: Math.round(v.z * 1000) / 1000, a: v.a, d: +v.d || 0, s: bot ? String(v.s || '').slice(0, 10) : '', bot, netz: true };
+      if (mitKonto && !bot) e.u = v.u;
+      aus.push(e);
     }
     return aus;
   },
@@ -10189,13 +10261,15 @@ const Bestenliste = {
   // sofort mit «Aktualisieren». Vorher wartende Zeiten hochladen. Ergebnis: true, wenn eine Antwort (oder ein Fehler) neu da ist.
   ladeNetz(id, sofort) {
     if (!this.mitNetz() || !STRECKEN[id]) return Promise.resolve(false);
-    const C = CONFIG.bestenliste, N = this.netz[id] || (this.netz[id] = { ok: false, zeit: 0, versuch: 0, eintraege: null });
+    const C = CONFIG.bestenliste, N = this.netz[id] || (this.netz[id] = { ok: false, zeit: 0, versuch: 0, neu: null, alt: null });
     if (N.laedt) return N.laedt;
     if (!sofort && N.versuch && Date.now() - N.versuch < (N.ok ? C.frisch : C.nochmals) * 1000) return Promise.resolve(false);
-    this.erstesHochladen();
     N.versuch = Date.now();
-    N.laedt = this.sende().then(() => this.anfrage(this.adresse(id))).then((r) => {
-      if (r.ok && (r.j === null || typeof r.j === 'object')) { N.ok = true; N.zeit = Date.now(); N.eintraege = this.ausNetz(id, r.j); }
+    const gut = (r) => r && r.ok && (r.j === null || typeof r.j === 'object');
+    // Die alte Liste ändert sich nicht mehr: einmal pro Besuch laden
+    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(id)), C.pfadAlt && !N.alt ? this.anfrage(this.adresse(id, true)) : null])).then(([r, rAlt]) => {
+      if (gut(rAlt)) N.alt = this.ausNetz(id, rAlt.j, false);
+      if (gut(r)) { N.ok = true; N.zeit = Date.now(); N.neu = this.ausNetz(id, r.j, true); }
       else N.ok = false;                                        // alte Liste bleiben lassen, Stand-Zeile sagt «keine Verbindung»
       N.laedt = null;
       if (id === this.streckenId) this.merkeRekord();
@@ -10218,6 +10292,15 @@ const Bestenliste = {
       N.ok ? 'Alle Spieler · Stand ' + uhr(N.zeit) : N.zeit ? 'Keine Verbindung · Stand ' + uhr(N.zeit) : 'Keine Verbindung: nur dieses Gerät';
     if (n) t += ' · ' + n + (n === 1 ? ' Zeit wartet' : ' Zeiten warten') + ' aufs Hochladen';
     el.textContent = t;
+    const a = $('bl-anmelden');
+    if (a) a.innerHTML = this.anmeldeHinweis();
+  },
+  // Ohne Anmeldung: kurzer Hinweis mit dem Knopf «Mit Google anmelden» (bei der gemeinsamen Liste und im Ergebnis)
+  anmeldeHinweis(text) {
+    if (!Konto.eingerichtet() || Konto.angemeldet()) return '';
+    if (Konto.nutzer) return '<p class="hinweis">Wähl im Hauptmenü noch deinen Spielnamen, dann kommen deine Zeiten in die gemeinsame Liste.</p>';
+    return '<div class="bl-anmelden"><span>' + (text || 'Neue Zeiten kommen nur mit Anmeldung in die gemeinsame Liste. Einträge mit ' + BL_HAKEN + ' stammen von angemeldeten Spielern.') +
+      '</span>' + Konto.knopf() + '</div>';
   },
   // Warteschlange zum Hochladen (im Browser gespeichert, ohne Speicher bis zum Neuladen)
   schlange() {
@@ -10228,44 +10311,63 @@ const Bestenliste = {
     return this.schlangeMem;
   },
   schlangeSichern() { try { localStorage.setItem(CONFIG.bestenliste.schluessel + '-senden', JSON.stringify(this.schlange())); } catch (e) { /* ohne Speicher */ } },
-  // «Spieler» (noch kein eigener Name) und unerwünschte Namen kommen nicht in die gemeinsame Liste
-  vormerken(id, e, bot) {
-    if (!this.mitNetz() || (!bot && this.schluessel(e.n) === 'spieler') || this.verboten(e.n)) return;
-    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '' });
+  // Nur mit Konto (u). Unerwünschte Namen kommen nicht in die gemeinsame Liste.
+  vormerken(id, e, bot, u) {
+    if (!this.mitNetz() || !u || this.verboten(e.n)) return;
+    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });
     this.schlangeSichern();
   },
-  // Beim ersten Start mit eingetragener Datenbank die bisherigen eigenen Zeiten dieses Geräts einmal hochladen
-  erstesHochladen() {
-    const C = CONFIG.bestenliste, merker = C.schluessel + '-hochgeladen';
-    if (this.erstesFertig) return;
-    this.erstesFertig = true;
-    let war = ''; try { war = localStorage.getItem(merker) || ''; } catch (e) { war = ''; }
-    if (war === C.server.trim()) return;
-    const D = Speicher.daten, ich = new Set([this.schluessel(D.name)].concat((D.lokal || []).map((p) => this.schluessel(p && p.name))));
-    const daten = this.daten || this.laden();
+  // Nach dem ersten Anmelden eines Kontos auf diesem Gerät: die Zeiten, die hier vorher gefahren wurden, einmal mit dem Kontonamen
+  // nachliefern. Dazu zählen Spieler 1 (Namen vor dem Konto, Speicher.daten.vorKonto, oder noch «Spieler») und die Bots aus Rennen,
+  // die dieses Gerät geleitet hat. Spieler 2 bis 4 im Split-Screen und Gäste online bleiben auf dem Gerät.
+  nachliefern() {
+    const N = Konto.nutzer, merker = CONFIG.bestenliste.schluessel + '-nachgeliefert';
+    if (!this.mitNetz() || !Konto.angemeldet() || N.offline) return;
+    let fertig = [];
+    try { const j = JSON.parse(localStorage.getItem(merker) || '[]'); if (Array.isArray(j)) fertig = j; } catch (e) { fertig = []; }
+    if (fertig.includes(N.uid)) return;
+    const D = Speicher.daten, ich = new Set(['spieler', 'spieler 1'].concat((D.vorKonto || []).map((n) => this.schluessel(n))));
+    const daten = this.daten || this.laden(), hier = (e) => e.o === 1 || (e.o === undefined && e.m !== 'online');
     for (const id of Object.keys(daten.strecken)) {
       const S = daten.strecken[id];
-      // ältere Einträge ohne Merker: alles ausser Online-Rennen, dort nur die eigenen Namen
-      for (const e of S.menschen) if (e.o === 1 || (e.o === undefined && (e.m !== 'online' || ich.has(this.schluessel(e.n))))) this.vormerken(id, e, false);
-      for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (e.o === 1 || (e.o === undefined && e.m !== 'online')) this.vormerken(id, e, true); }
+      for (const e of S.menschen) if (!e.u && hier(e) && ich.has(this.schluessel(e.n))) { e.n = N.name; e.u = N.uid; this.vormerken(id, e, false, N.uid); }
+      for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (hier(e)) this.vormerken(id, e, true, N.uid); }
+      for (const f of FAHRZEUGE) this.ordne(id, f.id);
     }
-    try { localStorage.setItem(merker, C.server.trim()); } catch (e) { /* egal */ }
+    fertig.push(N.uid);
+    try { localStorage.setItem(merker, JSON.stringify(fertig)); } catch (e) { /* egal */ }
+    this.sichern();
+  },
+  // Anmelden, Abmelden oder neuer Spielname: Nachliefern, Warteschlange senden, offene Seiten nachführen
+  nachKontoWechsel() {
+    if (Konto.angemeldet() && !Konto.nutzer.offline) { this.nachliefern(); this.nachRennenAnmelden(); this.sende(); }
+    this.merkeRekord();
+    if (Menue.offen === 'bestenliste' && $('bl-liste')) this.zeichneSeite();
+    const h = $('bl-ergebnis-anmelden');
+    if (h) h.innerHTML = this.ergebnisText() ? this.anmeldeHinweis(this.ergebnisText()) : '';
   },
   // Schlange abarbeiten: angenommene und von den Regeln abgelehnte Einträge fallen weg, ohne Verbindung später nochmals.
   // Ohne «Content-Type» ist es eine einfache Anfrage (keine Vorab-Anfrage nötig); die Datenbank liest den Text als JSON.
+  // Gesendet wird nur, was zum angemeldeten Konto gehört (u), Menschen immer unter dem aktuellen Kontonamen. Zeiten eines anderen
+  // Kontos warten, bis es wieder angemeldet ist. Einträge ohne Konto (alte Schlange für v1) fallen weg.
   async sende() {
     if (!this.mitNetz() || this.sendet) return;
     const l = this.schlange();
-    if (!l.length) return;
+    for (let i = l.length - 1; i >= 0; i--) if (!l[i].u) l.splice(i, 1);
+    if (!l.length || !Konto.angemeldet()) return;
     this.sendet = true;
     try {
-      while (l.length) {
-        const x = l[0];
-        const r = await this.anfrage(this.adresse(x.id), { method: 'POST', body: JSON.stringify({ n: x.n, z: x.z, a: x.a, b: x.b, s: x.s, d: { '.sv': 'timestamp' } }) });
+      const a = await Konto.ausweis();
+      if (!a) return;
+      for (let i = 0; i < l.length;) {
+        const x = l[i];
+        if (x.u !== a.uid) { i++; continue; }
+        const n = x.b ? x.n : Konto.name();
+        const r = await this.anfrage(this.adresse(x.id, false, a.t), { method: 'POST', body: JSON.stringify({ n, z: x.z, a: x.a, b: x.b, s: x.s, u: a.uid, d: { '.sv': 'timestamp' } }) });
         if (!r.ok && (r.status === 0 || r.status === 429 || r.status >= 500)) break;
-        l.splice(0, 1); this.schlangeSichern();
+        l.splice(i, 1); this.schlangeSichern();
         const N = this.netz[x.id];
-        if (r.ok && N && N.eintraege) N.eintraege.push({ n: x.n, z: x.z, a: x.a, d: Date.now(), s: x.s, bot: x.b, netz: true });
+        if (r.ok && N && N.neu) { const e = { n, z: x.z, a: x.a, d: Date.now(), s: x.s, bot: x.b, netz: true }; if (!x.b) e.u = a.uid; N.neu.push(e); }
       }
     } finally { this.sendet = false; }
     this.zeigeStand();
@@ -10280,7 +10382,7 @@ const Bestenliste = {
       const p = i + 1, cls = [p <= 3 ? 'bl-p' + p : '', e.bot ? 'bl-bot' : '', hervor && hervor(e) ? 'ich' : ''].filter(Boolean).join(' ');
       const bot = e.bot ? 'Bot' + (BL_STUFE[e.s] ? ' · ' + BL_STUFE[e.s] : '') : '', auto = esc(this.autoName(e.a));
       // Auf dem Handy fällt die Spalte «Auto» weg: Auto (und bei Bots «Bot · Stärke») stehen dann klein unter dem Namen
-      h += '<tr class="' + cls + '"><td class="zahl"><span class="bl-rang">' + p + '</span></td><td>' + (e.bot ? BL_ROBOTER : '') + '<span class="bl-name">' + esc(e.n) + '</span>' +
+      h += '<tr class="' + cls + '"><td class="zahl"><span class="bl-rang">' + p + '</span></td><td>' + (e.bot ? BL_ROBOTER : '') + '<span class="bl-name">' + esc(e.n) + '</span>' + (e.u && !e.bot ? BL_HAKEN : '') +
         (bot ? ' <small class="bl-was">' + bot + '</small>' : '') + '<small class="bl-handy">' + (bot ? bot + ' · ' : '') + auto + '</small></td><td class="zahl">' + zeitText(e.z) +
         '</td><td class="bl-auto">' + auto + '</td><td class="bl-datum">' + this.datum(e.d) + '</td></tr>';
     });
@@ -10307,7 +10409,8 @@ const Bestenliste = {
     const kategorien = [{ wert: '', text: 'Gesamt' }].concat(FAHRZEUGE.map((f) => ({ wert: f.id, text: f.name })));
     const netz = this.mitNetz();
     Menue.zeige('bestenliste', '<div class="tafel breit"><h2>Bestenlisten</h2><p class="hinweis">Schnellste Runde auf jeder Strecke, gesamt und für jedes Auto' +
-      (netz ? ', von allen Spielern' : '') + '. Jeder Name steht einmal da. Von den Bots steht nur der schnellste aller Zeiten in der Liste.</p>' +
+      (netz ? ', von allen Spielern' : '') + '. Jeder Name steht einmal da. Von den Bots steht nur der schnellste aller Zeiten in der Liste.' +
+      (Konto.eingerichtet() ? ' ' + BL_HAKEN + ' = angemeldeter Spieler.' : '') + '</p><div id="bl-anmelden"></div>' +
       Menue.wahlZeile('Strecke', 'blStrecke', Object.keys(STRECKEN).map((s) => ({ wert: s, text: STRECKEN[s].name })), this.blStrecke, (v) => { this.blStrecke = v; this.zeichneSeite(); }) +
       Menue.wahlZeile('Liste', 'blAuto', kategorien, this.blAuto, (v) => { this.blAuto = v; this.zeichneSeite(); }) +
       (netz ? Menue.wahlZeile('Zeigen', 'blQuelle', [{ wert: 'alle', text: 'Alle Spieler' }, { wert: 'geraet', text: 'Dieses Gerät' }], this.quelle, (v) => { this.quelle = v; this.zeichneSeite(); }) : '') +
@@ -10340,6 +10443,249 @@ const Bestenliste = {
       { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; weg(''); this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
       { text: 'Abbrechen', klasse: 'zweit', abbruch: true },
     ]);
+  },
+};
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 14: Konto – «Mit Google anmelden» (Firebase Authentication im Popup-Fenster)
+   ══════════════════════════════════════════════════════════════════════════ */
+// Wer sich anmeldet, wählt einmal einen Spielnamen. Ein Name gehört genau einem Konto: Er ist in der Datenbank reserviert, wer zuerst
+// kommt, bekommt ihn. In die gemeinsame Bestenliste kommen nur Zeiten angemeldeter Spieler, immer mit ihrem Kontonamen.
+// In der Datenbank stehen nur der Spielname und die Konto-Nummer (uid), nie die E-Mail-Adresse oder das Bild:
+//   namen/<schlüssel> = { u: uid, n: Name }      Schlüssel = Name in Kleinbuchstaben («Lena» und «lena» sind derselbe Name)
+//   konten/<uid>      = { n: Name, k: Schlüssel }
+// Die Bibliothek (Firebase «compat», feste Version) kommt über CDN. Lädt sie nicht oder fehlt das Netz, läuft das Spiel ohne Anmeldung.
+const FIREBASE_VERSION = '13.2.0';
+const FIREBASE_QUELLEN = (datei) => ['https://www.gstatic.com/firebasejs/' + FIREBASE_VERSION + '/' + datei, 'https://cdn.jsdelivr.net/npm/firebase@' + FIREBASE_VERSION + '/' + datei];
+// Das farbige «G» nach Googles Vorgaben für Anmeldeknöpfe, als eingebettete Grafik
+const GOOGLE_G = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>' +
+  '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>' +
+  '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>' +
+  '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+
+const Konto = {
+  zustand: 'aus',          // aus (keine Firebase-Kennungen) · datei (als Datei geöffnet) · laedt · bereit · fehler (Bibliothek nicht geladen)
+  nutzer: null,            // angemeldet: { uid, name ('' = noch keiner gewählt), schluessel, bild, vorschlag, offline }
+  auth: null, gewollt: false, pruefTakt: null,
+  merker: 'baustellenrennen-konto',          // im Browser: { uid, n } des zuletzt angemeldeten Kontos (für den Start ohne Netz)
+
+  eingerichtet() { const f = CONFIG.bestenliste.firebase || {}; return !!(f.apiKey && f.authDomain && f.projectId && Bestenliste.mitNetz()); },
+  angemeldet() { return !!(this.nutzer && this.nutzer.name); },
+  name() { return this.angemeldet() ? this.nutzer.name : ''; },
+
+  // Beim Start: Bibliothek gleich laden, wenn dieses Gerät schon angemeldet war (die Anmeldung bleibt nach dem Neuladen erhalten),
+  // sonst kurz danach. Sie muss beim Tippen auf den Knopf schon da sein: Ein Popup darf nur direkt beim Tippen aufgehen.
+  start() {
+    if (!this.eingerichtet()) { this.zustand = 'aus'; return; }
+    // Der Knopf steht an mehreren Stellen (Hauptmenü, Bestenliste, Ergebnis) und wird teils neu gezeichnet: ein Klick-Lauscher für alle
+    document.addEventListener('click', (ev) => {
+      const b = ev.target && ev.target.closest ? ev.target.closest('.google-knopf') : null;
+      if (!b) return;
+      ev.preventDefault(); Ton.start(); Ton.spiele('klick'); this.anmelden();
+    });
+    if (location.protocol === 'file:') { this.zustand = 'datei'; return; }
+    const war = this.gemerkt();
+    if (war) this.nutzer = { uid: war.uid, name: war.n, schluessel: '', bild: '', vorschlag: '', offline: true };   // bis die Bibliothek bestätigt
+    setTimeout(() => this.lade(), war ? 0 : 1500);
+  },
+  gemerkt() { try { const j = JSON.parse(localStorage.getItem(this.merker) || 'null'); return j && typeof j.uid === 'string' ? j : null; } catch (e) { return null; } },
+  merke(an) {
+    try { if (an && this.nutzer) localStorage.setItem(this.merker, JSON.stringify({ uid: this.nutzer.uid, n: this.nutzer.name || '' })); else localStorage.removeItem(this.merker); } catch (e) { /* ohne Speicher */ }
+  },
+  lade() {
+    if (this.zustand === 'laedt' || this.zustand === 'bereit') return;
+    this.zustand = 'laedt';
+    const fehler = () => { this.zustand = 'fehler'; this.aktualisiereAnzeige(); };
+    ladeSkript(FIREBASE_QUELLEN('firebase-app-compat.js'), () => ladeSkript(FIREBASE_QUELLEN('firebase-auth-compat.js'), () => {
+      try {
+        const f = CONFIG.bestenliste.firebase;
+        const app = firebase.apps && firebase.apps.length ? firebase.app() : firebase.initializeApp({ apiKey: f.apiKey, authDomain: f.authDomain, projectId: f.projectId, appId: f.appId });
+        this.auth = app.auth();
+        const emu = App.parameter.get('authEmulator') || '';      // nur für Tests: ?authEmulator=http://127.0.0.1:9099 (nur dieser Rechner)
+        if (/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(emu)) this.auth.useEmulator(emu, { disableWarnings: true });
+        this.zustand = 'bereit';
+        this.auth.onAuthStateChanged((u) => this.wechsel(u));
+      } catch (e) { fehler(); }
+    }, fehler), fehler);
+  },
+
+  // Anmeldung kommt, geht oder wurde nach dem Neuladen wiederhergestellt
+  async wechsel(u) {
+    if (!u) {
+      const war = this.nutzer;
+      this.nutzer = null; this.merke(false); this.aktualisiereAnzeige();
+      if (war) Bestenliste.nachKontoWechsel();
+      return;
+    }
+    const vorname = String(u.displayName || '').trim().split(/\s+/)[0] || '';
+    const alt = this.nutzer && this.nutzer.uid === u.uid ? this.nutzer : null;
+    this.nutzer = { uid: u.uid, name: alt ? alt.name : '', schluessel: '', bild: u.photoURL || '', vorschlag: this.saeubere(vorname), offline: true };
+    this.aktualisiereAnzeige();
+    const r = await this.lies('konten/' + u.uid);
+    if (!this.nutzer || this.nutzer.uid !== u.uid) return;         // inzwischen abgemeldet
+    if (r.ok) {
+      this.nutzer.offline = false;
+      if (r.j && typeof r.j.n === 'string' && r.j.n) { this.nutzer.name = r.j.n; this.nutzer.schluessel = String(r.j.k || ''); }
+      else this.nutzer.name = '';
+    }
+    this.merke(true);
+    if (this.angemeldet()) this.uebernimmName();
+    this.aktualisiereAnzeige();
+    Bestenliste.nachKontoWechsel();
+    if (r.ok && !this.nutzer.name && this.gewollt) this.nameDialog(this.nutzer.vorschlag, '');   // erstes Anmelden: Spielnamen wählen
+    this.gewollt = false;
+  },
+  // Der Kontoname ersetzt das Namensfeld («Dein Auto», online und Spieler 1 im Split-Screen). Die Namen von vorher merkt sich das
+  // Spiel einmal: Zeiten unter diesen Namen liefert die Bestenliste nach dem ersten Anmelden mit dem Kontonamen nach.
+  uebernimmName() {
+    const D = Speicher.daten, n = this.nutzer.name;
+    if (!Array.isArray(D.vorKonto)) D.vorKonto = [D.name, D.lokal && D.lokal[0] ? D.lokal[0].name : ''].filter((x) => typeof x === 'string' && x.trim());
+    D.name = n; if (D.lokal && D.lokal[0]) D.lokal[0].name = n;
+    Speicher.sichern();
+    for (const id of ['f-name', 'f-name0']) { const f = $(id); if (f) { f.value = n; f.readOnly = true; f.title = 'Name deines Kontos (ändern im Hauptmenü)'; } }
+  },
+
+  // ── Anmelden und Abmelden ──────────────────────────────────────────────
+  // Muss direkt im Klick laufen (ohne vorheriges Warten), sonst blockieren Browser das Popup
+  anmelden() {
+    if (this.zustand === 'datei') { this.hinweis('datei'); return; }
+    if (this.inApp()) { this.hinweis('app'); return; }
+    if (this.zustand === 'fehler') { this.zustand = 'aus'; this.lade(); App.toast('Die Anmeldung wird nochmals geladen. Tippe gleich nochmals auf «Mit Google anmelden».', 4000); return; }
+    if (this.zustand !== 'bereit' || !this.auth) { App.toast('Die Anmeldung lädt noch. Tippe in einem Moment nochmals.', 2500); return; }
+    const p = new firebase.auth.GoogleAuthProvider();
+    p.setCustomParameters({ prompt: 'select_account' });
+    this.gewollt = true;
+    this.auth.signInWithPopup(p).catch((e) => { this.gewollt = false; this.fehler(e); });
+  },
+  abmelden() {
+    if (this.auth) this.auth.signOut().catch(() => {});
+    else { this.nutzer = null; this.merke(false); this.aktualisiereAnzeige(); }
+    for (const id of ['f-name', 'f-name0']) { const f = $(id); if (f) { f.readOnly = false; f.title = ''; } }
+    App.toast('Abgemeldet. Neue Zeiten bleiben auf diesem Gerät.', 2500);
+  },
+  // Browser in Apps wie WhatsApp oder Instagram: Google lässt dort keine Anmeldung zu
+  inApp() { return /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|MicroMessenger|Snapchat|TikTok|musical_ly|Twitter|LinkedInApp|GSA\/|; wv\)/i.test(navigator.userAgent || ''); },
+  hinweis(art) {
+    const T = {
+      datei: ['Anmelden geht nur auf der Webseite', 'Du hast das Spiel als Datei geöffnet. Anmelden geht nur, wenn es im Internet liegt (zum Beispiel auf popc-u.github.io). Spielen kannst du trotzdem, die Bestenliste dieses Geräts funktioniert wie immer.'],
+      app: ['Im richtigen Browser öffnen', 'Du hast das Spiel in einer App geöffnet (zum Beispiel WhatsApp oder Instagram). Dort lässt Google keine Anmeldung zu. Öffne den Link in Safari oder Chrome: Tippe oben auf «…» oder das Teilen-Symbol und dann auf «Im Browser öffnen».'],
+    }[art];
+    Dialog.zeige('<h2>' + T[0] + '</h2><p>' + T[1] + '</p>', [{ text: 'OK', klasse: 'los', abbruch: true }]);
+  },
+  // Fehlermeldungen von Firebase: freundlich und genau
+  fehler(e) {
+    const c = String((e && e.code) || '').replace(/^auth\//, '');
+    if (c === 'popup-closed-by-user' || c === 'cancelled-popup-request' || c === 'user-cancelled') { App.toast('Anmeldung abgebrochen.', 2200); return; }
+    const host = location.hostname || location.host;
+    const T = {
+      'popup-blocked': ['Anmelde-Fenster blockiert', 'Der Browser hat das Fenster für die Anmeldung blockiert. Erlaube Popups für diese Seite (meist ein Symbol rechts in der Adresszeile) und tippe nochmals auf «Mit Google anmelden».'],
+      'unauthorized-domain': ['Adresse nicht freigegeben', 'Die Adresse «' + esc(host) + '» ist für die Anmeldung noch nicht freigegeben. In der Firebase-Konsole muss sie unter Authentication → Settings → Authorized domains eingetragen werden.'],
+      'operation-not-allowed': ['Google-Anmeldung ausgeschaltet', 'In der Firebase-Konsole ist die Anmeldung mit Google nicht eingeschaltet (Authentication → Sign-in method → Google).'],
+      'network-request-failed': ['Keine Verbindung', 'Google ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es nochmals.'],
+      'web-storage-unsupported': ['Browser speichert nichts', 'Dieser Browser erlaubt der Seite keinen Speicher (zum Beispiel ein privates Fenster). Ohne Speicher geht die Anmeldung nicht.'],
+      'operation-not-supported-in-this-environment': ['Anmelden geht hier nicht', 'In dieser Umgebung geht die Anmeldung nicht. Öffne das Spiel in Safari, Chrome, Firefox oder Edge.'],
+      'internal-error': ['Anmelden hat nicht geklappt', 'Google hat die Anmeldung abgebrochen. Häufige Ursache: Der Browser blockiert Cookies von Drittanbietern. Versuche es nochmals oder in einem anderen Browser.'],
+    }[c] || ['Anmelden hat nicht geklappt', 'Fehler: ' + esc(c || 'unbekannt') + '. Versuche es nochmals.'];
+    Dialog.zeige('<h2>' + T[0] + '</h2><p>' + T[1] + '</p>', [{ text: 'OK', klasse: 'los', abbruch: true }]);
+  },
+
+  // ── Spielname: wählen, prüfen, reservieren ──────────────────────────────
+  saeubere(n) { return String(n || '').replace(/[^\p{L}\p{N} _'-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 14); },
+  schluessel(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); },
+  nameFehler(n) {
+    if (n.length < 2) return 'Der Name braucht mindestens 2 Zeichen.';
+    if (n.length > 14) return 'Höchstens 14 Zeichen.';
+    if (!/^[\p{L}\p{N}][\p{L}\p{N} _'-]*$/u.test(n)) return 'Erlaubt sind Buchstaben, Ziffern, Leerzeichen, Bindestrich, Unterstrich und Apostroph.';
+    const k = this.schluessel(n);
+    if (k === 'spieler' || /^bot\b/.test(k)) return 'Diesen Namen kann man nicht wählen.';
+    if (Bestenliste.verboten(n)) return 'Dieser Name ist nicht erlaubt.';
+    return '';
+  },
+  nameDialog(wert, text) {
+    if (!this.nutzer) return;
+    const aendern = !!this.nutzer.name;
+    Dialog.zeige('<h2>' + (aendern ? 'Spielnamen ändern' : 'Wähl deinen Spielnamen') + '</h2><p>So stehst du in der gemeinsamen Bestenliste. Ein Name gehört nur einem Konto, höchstens 14 Zeichen.' +
+      (aendern ? ' Dein alter Name wird dann wieder frei.' : '') + '</p>' +
+      '<input class="feld" id="dlg-name" maxlength="14" autocomplete="off" spellcheck="false" value="' + esc(wert || '') + '" aria-label="Spielname" aria-describedby="dlg-name-info">' +
+      '<p class="hinweis" id="dlg-name-info" aria-live="polite">' + esc(text || '') + '</p>', [
+      { text: 'Speichern', klasse: 'los', f: (w) => this.nameSpeichern(w) },
+      { text: aendern ? 'Abbrechen' : 'Später', klasse: 'zweit', abbruch: true },
+    ]);
+    const feld = $('dlg-name');
+    if (feld) { feld.oninput = () => this.pruefeLive(feld.value); if (wert && !text) this.pruefeLive(wert); }
+  },
+  // Beim Tippen prüfen, ob der Name frei ist (kurz nach der letzten Taste)
+  pruefeLive(w) {
+    clearTimeout(this.pruefTakt);
+    const info = $('dlg-name-info'), n = String(w || '').trim().replace(/\s+/g, ' ');
+    if (!info) return;
+    const f = this.nameFehler(n);
+    if (f) { info.textContent = n ? f : ''; info.className = 'hinweis'; return; }
+    info.textContent = 'Prüfe …'; info.className = 'hinweis';
+    this.pruefTakt = setTimeout(async () => {
+      const frei = await this.istFrei(n), el = $('dlg-name-info'), feld = $('dlg-name');
+      if (!el || !feld || feld.value.trim().replace(/\s+/g, ' ') !== n) return;
+      el.textContent = frei === null ? '' : frei ? '«' + n + '» ist frei.' : '«' + n + '» ist schon vergeben.';
+      el.className = 'hinweis ' + (frei === null ? '' : frei ? 'name-frei' : 'name-besetzt');
+    }, 350);
+  },
+  // true = frei (oder schon meiner), false = vergeben, null = unbekannt (keine Verbindung)
+  async istFrei(n) {
+    const r = await this.lies('namen/' + encodeURIComponent(this.schluessel(n)));
+    if (!r.ok) return null;
+    return !r.j || !this.nutzer || r.j.u === this.nutzer.uid;
+  },
+  async nameSpeichern(w) {
+    const N = this.nutzer;
+    if (!N) return;
+    const n = String(w || '').trim().replace(/\s+/g, ' '), f = this.nameFehler(n);
+    if (f) { this.nameDialog(n, f); return; }
+    if (n === N.name) return;
+    const frei = await this.istFrei(n);
+    if (frei === false) { this.nameDialog(n, '«' + n + '» ist schon vergeben. Wähl einen anderen Namen.'); return; }
+    const k = this.schluessel(n), daten = {};
+    daten['namen/' + k] = { u: N.uid, n };
+    daten['konten/' + N.uid] = { n, k };
+    if (N.schluessel && N.schluessel !== k) daten['namen/' + N.schluessel] = null;        // alter Name wird frei
+    const r = await this.schreibe(daten);
+    if (r.ok) {
+      N.name = n; N.schluessel = k; N.offline = false; this.merke(true); this.uebernimmName(); this.aktualisiereAnzeige();
+      App.toast('Dein Spielname ist jetzt «' + n + '».', 2600);
+      Bestenliste.nachKontoWechsel();
+    } else if (r.status === 401 || r.status === 403) this.nameDialog(n, '«' + n + '» geht nicht (schon vergeben oder nicht erlaubt). Wähl einen anderen Namen.');
+    else this.nameDialog(n, 'Keine Verbindung zur Datenbank. Versuch es gleich nochmals.');
+  },
+
+  // ── Datenbank mit Anmeldung (REST, ?auth=<ID-Token>) ─────────────────────
+  // Ausweis für die Datenbank: { t: ID-Token (erneuert sich selbst), uid } oder null (nicht angemeldet, Bibliothek nicht da)
+  async ausweis() {
+    const u = this.auth && this.auth.currentUser;
+    if (!u) return null;
+    try { return { t: await u.getIdToken(), uid: u.uid }; } catch (e) { return null; }
+  },
+  async token() { const a = await this.ausweis(); return a ? a.t : ''; },
+  async lies(pfad) { const t = await this.token(); return Bestenliste.anfrage(Bestenliste.url(pfad, t)); },
+  // Mehrere Stellen auf einmal (alles oder nichts): Name reservieren, Konto ändern, alten Namen freigeben
+  async schreibe(daten) {
+    const t = await this.token();
+    if (!t) return { ok: false, status: 0 };
+    return Bestenliste.anfrage(Bestenliste.url('', t), { method: 'PATCH', body: JSON.stringify(daten) });
+  },
+
+  // ── Anzeige im Hauptmenü ────────────────────────────────────────────────
+  menueHtml() {
+    if (this.zustand === 'aus') return '';
+    const N = this.nutzer, satz = '<p class="hinweis konto-satz">Für die gemeinsame Bestenliste. Gespeichert werden nur dein Spielname und eine Konto-Nummer, nie deine E-Mail-Adresse oder dein Bild.</p>';
+    if (!N) return '<div class="konto">' + this.knopf() + satz + '</div>';
+    const bild = N.bild ? '<img class="konto-bild" src="' + esc(N.bild) + '" alt="" referrerpolicy="no-referrer">' : '<span class="konto-bild leer" aria-hidden="true">' + esc((N.name || '?').slice(0, 1).toUpperCase()) + '</span>';
+    if (!N.name) return '<div class="konto an">' + bild + '<span>Angemeldet. Wähl noch deinen Spielnamen.</span><button class="knopf klein" data-a="kontoName">Spielnamen wählen</button><button class="knopf klein zweit" data-a="abmelden">Abmelden</button></div>';
+    return '<div class="konto an">' + bild + '<span>Angemeldet als <b>' + esc(N.name) + '</b>' + (N.offline ? ' <small class="hinweis">(offline)</small>' : '') + '</span>' +
+      '<button class="knopf klein zweit" data-a="kontoName">Name ändern</button><button class="knopf klein zweit" data-a="abmelden">Abmelden</button></div>';
+  },
+  knopf() { return '<button class="google-knopf" type="button">' + GOOGLE_G + '<span>Mit Google anmelden</span></button>'; },
+  menueAktionen() { return { abmelden: () => this.abmelden(), kontoName: () => this.nameDialog(this.nutzer && this.nutzer.name ? this.nutzer.name : (this.nutzer && this.nutzer.vorschlag) || '', '') }; },
+  aktualisiereAnzeige() {
+    if (Menue.offen === 'haupt' && !$('dialog')) Menue.haupt();
+    if (Menue.offen === 'bestenliste') Bestenliste.zeigeStand();
   },
 };
 App.start();

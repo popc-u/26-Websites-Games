@@ -114,21 +114,64 @@ Baustellen gelten nur für Fahrer, die beim Bauen vor dir lagen. Für alle ander
 Jede Strecke hat eine Bestenliste mit der schnellsten Runde: eine Gesamtliste und eine Liste für jedes der 8 Autos. Im Hauptmenü unter «Bestenlisten» wechselt man mit ◀ ▶ die Strecke und die Liste.
 
 - **Was zählt:** die schnellste Runde, nicht die Gesamtzeit, weil die Rundenzahl einstellbar ist. Jede fertig gefahrene Runde zählt, auch wenn das Rennen danach abgebrochen wird. Alle Modi zählen: gegen Bots, Split-Screen und online. Simulationen und der Debug-Modus (`?debug=1`) zählen nicht.
-- **Menschen:** Jeder steht mit dem Namen da, den er für sich eingegeben hat, und zwar nur einmal pro Liste mit seiner besten Zeit (Gross- und Kleinschreibung zählt nicht). In der Liste eines Autos steht die beste Zeit mit diesem Auto.
+- **Menschen:** Jeder steht mit seinem Namen da, und zwar nur einmal pro Liste mit seiner besten Zeit (Gross- und Kleinschreibung zählt nicht). In die gemeinsame Liste kommen neue Zeiten nur von Spielern, die mit Google angemeldet sind, immer unter ihrem eigenen Spielnamen und mit grünem Häkchen (siehe «Mit Google anmelden»). In der Liste eines Autos steht die beste Zeit mit diesem Auto.
 - **Bots:** Pro Liste steht nur ein einziger Bot drin, der schnellste aller Zeiten: in der Gesamtliste der schnellste Bot auf dieser Strecke, in der Liste eines Autos der schnellste Bot mit diesem Auto. Er ist mit einem Symbol und «Bot» markiert und steht auf dem Platz, der zu seiner Zeit passt. Fährt ein Bot schneller, ersetzt er den alten.
 - **Anzeige:** Die ersten drei Plätze sind in Gold, Silber und Bronze markiert, zu jedem Eintrag stehen Auto und Datum. In der Streckenwahl stehen der Rundenrekord und die ersten drei, im Rennen steht der Rekord unter der Rundenzeit. Bei einer neuen Bestzeit erscheint kurz «Neuer Rekord!», «Rekord mit dem Rennwagen!» oder «Platz 3 in der Bestenliste». Im Ergebnis steht, wer neu in der Liste ist, die neuen Einträge sind hervorgehoben.
 - **Name:** Heisst man noch «Spieler», fragt das Spiel nach dem ersten Eintrag einmal nach dem Namen. Ändern geht wie bisher im Menü. Ein neuer Name gilt für neue Einträge, alte behalten ihren Namen.
-- **Alle Spieler:** Ist eine Datenbank eingetragen (siehe «Gemeinsame Bestenliste einrichten»), zeigt die Bestenliste die Zeiten von allen Geräten. Jedes Gerät lädt nur die Zeiten seiner eigenen Spieler hoch: gegen Bots und im Split-Screen alle am Gerät, online jeder seine eigenen. Bot-Zeiten lädt das Gerät hoch, das das Rennen leitet (online der Host). Hochgeladen werden nur Name, Rundenzeit, Auto, Strecke, Bot-Stärke und Datum, sonst nichts. Den Namen «Spieler» lädt das Spiel nicht hoch, es fragt zuerst nach dem richtigen Namen.
-- **Gleiche Regeln für alle Geräte:** Jeder Name steht pro Liste einmal mit seiner besten Zeit, egal auf welchem Gerät sie gefahren wurde (gleicher Name heisst gleiche Person). Pro Liste steht ein Bot, der schnellste von allen Geräten.
+- **Alle Spieler:** Ist eine Datenbank eingetragen (siehe «Gemeinsame Bestenliste einrichten»), zeigt die Bestenliste die Zeiten von allen Geräten. Jedes Gerät lädt nur die Zeiten seiner eigenen Spieler hoch: gegen Bots und im Split-Screen alle am Gerät, online jeder seine eigenen. Bot-Zeiten lädt das Gerät hoch, das das Rennen leitet (online der Host). Hochladen kann nur ein angemeldetes Gerät, und nur Name, Rundenzeit, Auto, Strecke, Bot-Stärke, Datum und die Konto-Nummer, sonst nichts. Im Split-Screen kommt nur Spieler 1 mit dem Konto in die gemeinsame Liste, die anderen bleiben in der Liste des Geräts.
+- **Gleiche Regeln für alle Geräte:** Jedes Konto steht pro Liste einmal mit seiner besten Zeit, egal auf welchem Gerät sie gefahren wurde, auch wenn es seinen Namen geändert hat. Einträge aus der Zeit ohne Anmeldung (bis 18.11.2026) zählen wie früher nach Namen und stehen ohne Häkchen da, bis ihre Strecke umgebaut ist. Pro Liste steht ein Bot, der schnellste von allen Geräten.
 - **Aktualisieren:** Die Liste wird beim Öffnen der Bestenliste und der Streckenwahl frisch geladen (höchstens einmal pro Minute), der Knopf «Aktualisieren» lädt sofort. Die Zeile über der Liste zeigt den Stand, zum Beispiel «Alle Spieler · Stand 14:05» oder «Keine Verbindung: nur dieses Gerät». Mit «Zeigen: Alle Spieler / Dieses Gerät» wechselt man zwischen der gemeinsamen Liste und der Liste des Geräts. Eigene neue Zeiten stehen sofort drin, auch bevor sie hochgeladen sind, und bleiben hervorgehoben. Den Rekord in der Streckenwahl und im Rennen nimmt das Spiel aus der gemeinsamen Liste, geladen vor dem Rennstart, nie während des Rennens.
 - **Ohne Verbindung:** Das Spiel läuft wie gewohnt mit der Liste des Geräts. Zeiten, die noch nicht hochgeladen sind, merkt sich das Gerät und lädt sie beim nächsten Mal hoch, die Stand-Zeile zeigt, wie viele warten. Langsame, fehlende oder kaputte Antworten führen nie zu einem Fehler: Nach 6 s gilt «Keine Verbindung».
-- **Bisherige Zeiten:** Beim ersten Start mit eingetragener Datenbank lädt jedes Gerät seine bisherigen eigenen Zeiten einmal hoch.
-- **Schutz:** Namen erscheinen immer als Text. Namen mit unerwünschten Wörtern (Liste in `CONFIG.bestenliste.verboten`) werden weder hochgeladen noch gezeigt. Runden unter der Mindestzeit einer Strecke (Streckenlänge geteilt durch das doppelte Höchsttempo, zum Beispiel 23,2 s in der Kiesgrube) lehnt die Datenbank ab und das Spiel zeigt sie nicht. Ganz verhindern lässt sich Schummeln ohne eigenen Server nicht (siehe «Bekannte Grenzen»), falsche Einträge kannst du in der Datenbank löschen.
+- **Bisherige Zeiten:** Nach dem ersten Anmelden lädt das Gerät die Zeiten, die vorher auf ihm gefahren wurden, einmal mit dem Kontonamen hoch.
+- **Schutz:** Namen erscheinen immer als Text. Namen mit unerwünschten Wörtern (Liste in `CONFIG.bestenliste.verboten`) werden weder hochgeladen noch gezeigt. Runden unter der Mindestzeit einer Strecke (Streckenlänge geteilt durch das doppelte Höchsttempo, zum Beispiel 23,2 s in der Kiesgrube) zeigt das Spiel nicht, die Datenbank lehnt alles unter 20 s ab. Ganz verhindern lässt sich Schummeln ohne eigenen Server nicht (siehe «Bekannte Grenzen»), falsche Einträge kannst du in der Datenbank löschen.
 - **Speichern:** Die Liste des Geräts liegt im Browser, getrennt von den Einstellungen. Online gefahrene Rennen tragen dort die Zeiten aller Mitspieler ein. In einem privaten Fenster gilt sie nur bis zum Neuladen. Unter «Einstellungen» löscht «Bestenliste löschen» eine Strecke oder alle, aber nur auf diesem Gerät, die gemeinsame Liste bleibt. Ohne eingetragene Datenbank verhält sich alles wie bisher: Jedes Gerät hat nur seine eigene Liste.
+
+## Mit Google anmelden
+
+Seit dem 18.11.2026 kommen neue Zeiten nur noch von angemeldeten Spielern in die gemeinsame Bestenliste, immer unter ihrem eigenen Spielnamen. Ohne Anmeldung spielt man ganz normal, die Liste des Geräts funktioniert wie bisher.
+
+- **Knopf:** Unten im Hauptmenü steht «Mit Google anmelden» (gestaltet nach Googles Vorgaben, das farbige «G» ist im Code gezeichnet). Die Anmeldung läuft in einem kleinen Google-Fenster (Popup) über Firebase Authentication. Die Bibliothek kommt über CDN mit fester Version (Firebase 13.2.0). Lädt sie nicht oder fehlt das Netz, läuft das Spiel ohne Anmeldung weiter.
+- **Angemeldet** zeigt das Menü «Angemeldet als Name» mit dem Google-Bild (nur auf diesem Gerät, nie in der Datenbank), «Name ändern» und «Abmelden». Die Anmeldung bleibt nach dem Neuladen erhalten. Der Spielname steht fest im Namensfeld bei «Dein Auto», online und für Spieler 1 im Split-Screen.
+- **Spielname:** Beim ersten Anmelden wählt man einen Namen (Vorschlag: der Vorname aus dem Google-Konto), 2 bis 14 Zeichen, Buchstaben, Ziffern, Leerzeichen, Bindestrich, Unterstrich und Apostroph, ohne verbotene Wörter. Ein Name gehört genau einem Konto, wer zuerst kommt. Schon beim Tippen sagt das Spiel, ob er frei oder vergeben ist. Ändert man ihn, wird der alte Name frei. Gross- und Kleinschreibung zählt nicht («Lena» und «lena» sind derselbe Name).
+- **Was hochgeladen wird:** Zeiten von Spieler 1 mit dem Kontonamen (im Split-Screen nur Spieler 1, online jeder seine eigenen). Bot-Zeiten lädt wie bisher nur das Gerät hoch, das das Rennen leitet, und nur, wenn es angemeldet ist. Zeiten, die man auf diesem Gerät vor dem ersten Anmelden gefahren ist (unter dem bisherigen Namen oder «Spieler»), liefert das Spiel nach dem ersten Anmelden einmal mit dem Kontonamen nach, mit dem Datum des Nachlieferns. Meldet man sich im Ergebnis an, kommt auch die Zeit aus diesem Rennen nach.
+- **Häkchen:** In der Bestenliste tragen Einträge angemeldeter Spieler ein grünes Häkchen. Ein Konto steht einmal da, auch wenn es seinen Namen geändert hat. Die bisherigen Einträge (Liste `v1`, ohne Anmeldung) bleiben sichtbar, ohne Häkchen, bis ihre Strecke umgebaut ist. Ohne Anmeldung steht bei der gemeinsamen Liste und im Ergebnis ein kurzer Hinweis mit dem Knopf.
+- **Datenschutz:** In der Datenbank stehen nur der Spielname, die Konto-Nummer (eine zufällige Kennung von Firebase) und die Zeiten, nie die E-Mail-Adresse oder das Bild. Diesen Satz zeigt das Spiel auch beim Knopf. Die E-Mail-Adressen der Konten sieht nur der Besitzer des Firebase-Projekts in der Konsole unter Authentication → Users.
+
+**Wenn es nicht geht, sagt das Spiel es genau:**
+
+| Fall | Meldung im Spiel |
+|---|---|
+| Spiel als Datei per Doppelklick geöffnet | «Anmelden geht nur auf der Webseite» (zum Beispiel auf popc-u.github.io), spielen geht trotzdem |
+| Domain in Firebase nicht freigegeben | «Adresse nicht freigegeben»: nennt die Domain, die unter Authentication → Settings → Authorized domains fehlt |
+| Popup blockiert | «Anmelde-Fenster blockiert»: Popups für die Seite erlauben, nochmals tippen |
+| Popup geschlossen | kurze Meldung «Anmeldung abgebrochen» |
+| Kein Netz | «Keine Verbindung»: Internet prüfen, nochmals versuchen |
+| Browser in einer App (WhatsApp, Instagram, Facebook, TikTok …) | «Im richtigen Browser öffnen»: so geht es in Safari oder Chrome |
+| Google-Anmeldung in Firebase ausgeschaltet | «Google-Anmeldung ausgeschaltet»: wo man sie einschaltet |
+| Privates Fenster ohne Speicher, Cookies blockiert | eigene Meldung mit dem Grund |
+
+### Was Johann tun muss
+
+1. **Prüfen** (laut dir schon erledigt): In der [Firebase-Konsole](https://console.firebase.google.com) im Projekt «baustellen-rennen» unter **Authentication → Sign-in method** steht «Google» auf «Aktiviert». Unter **Authentication → Settings → Authorized domains** steht `popc-u.github.io`. Weitere Domains nur, wenn du das Spiel auch dort hochlädst (zum Beispiel `deinname.netlify.app`).
+2. **Web-App:** erledigt. Die Kennungen (`apiKey`, `authDomain`, `projectId`, `appId`) stehen in `CONFIG.bestenliste.firebase`. Sie sind öffentlich, kein Passwort.
+3. **Neue Regeln veröffentlichen, bevor du den Pull Request zusammenführst:** Realtime Database → Reiter **Regeln** → den ganzen Text löschen, den Text unten («Regeln zum Kopieren») einfügen → **Veröffentlichen**. Erst danach den Pull Request zusammenführen. In der Reihenfolge andersherum klappt die Namenswahl erst, wenn die Regeln da sind. Ab den neuen Regeln kann die alte Version des Spiels nichts mehr hochladen (ihre Zeiten bleiben auf dem Gerät).
+4. **Freiwillig:** Unter Authentication → Sign-in method → Google kannst du den «Öffentlichen Namen des Projekts» setzen, zum Beispiel «Baustellen-Rennen». Diesen Namen zeigt das Google-Fenster beim Anmelden.
+
+### Prüfliste für Handy und Laptop
+
+Auf `https://popc-u.github.io/26-Websites-Games/baustellen-rennen/`, nachdem die Regeln veröffentlicht und der Pull Request zusammengeführt ist:
+
+1. **Laptop:** Seite öffnen, unten im Menü «Mit Google anmelden». Im Google-Fenster ein Konto wählen. Das Spiel fragt nach dem Spielnamen und schlägt deinen Vornamen vor. Speichern: Das Menü zeigt «Angemeldet als …».
+2. «Gegen Bots» öffnen: Das Namensfeld zeigt deinen Spielnamen und lässt sich nicht ändern. Eine Runde fahren. Unter «Bestenlisten» steht dein Name mit grünem Häkchen.
+3. Seite neu laden: Du bist noch angemeldet.
+4. **Handy** (Safari oder Chrome): Seite öffnen, mit einem anderen Google-Konto anmelden. Denselben Spielnamen wie auf dem Laptop eintippen: Das Spiel sagt «schon vergeben». Einen anderen Namen wählen, eine Runde fahren. Auf dem Laptop «Bestenlisten» → «Aktualisieren»: Beide Namen stehen mit Häkchen da.
+5. Auf dem Handy «Abmelden», eine Runde fahren: Im Ergebnis steht der Hinweis mit dem Knopf, die Zeit kommt nicht in die gemeinsame Liste.
+6. Den Link per WhatsApp an dich selbst schicken und dort öffnen: Beim Anmelden kommt «Im richtigen Browser öffnen».
+7. In der Firebase-Konsole unter Realtime Database → Daten: `bestenliste` → `v2` → Strecke hat die neuen Einträge mit `u` (Konto-Nummer), dazu `namen` und `konten`. Nirgends steht eine E-Mail-Adresse.
 
 ## Gemeinsame Bestenliste einrichten
 
-Damit alle Geräte dieselbe Liste sehen, braucht das Spiel eine kleine Online-Datenbank. Gewählt habe ich die **Firebase Realtime Database** von Google: Der Gratis-Tarif «Spark» braucht keine Kreditkarte und pausiert nicht, wenn eine Woche niemand spielt. Das Spiel erreicht die Datenbank direkt mit `fetch`, ohne zusätzliche Bibliothek, von GitHub Pages, itch.io, Netlify und per Doppelklick. Regeln in der Datenbank legen fest, was erlaubt ist, und in der Firebase-Konsole kannst du Einträge löschen. Der Gratis-Tarif reicht weit (1 GB Speicher, 10 GB Download pro Monat, ein Eintrag hat rund 100 Byte). Nicht gewählt habe ich Supabase, weil Gratis-Projekte nach einer Woche ohne Nutzung pausieren, und einfache JSON-Speicher ohne Regeln, weil dort jeder alles löschen könnte.
+Damit alle Geräte dieselbe Liste sehen, braucht das Spiel eine kleine Online-Datenbank. Gewählt habe ich die **Firebase Realtime Database** von Google: Der Gratis-Tarif «Spark» braucht keine Kreditkarte und pausiert nicht, wenn eine Woche niemand spielt. Das Spiel erreicht die Datenbank direkt mit `fetch`, für die Anmeldung lädt es die Firebase-Bibliothek. Lesen geht von überall, auch per Doppelklick, anmelden nur auf freigegebenen Adressen wie GitHub Pages (siehe «Mit Google anmelden»). Regeln in der Datenbank legen fest, was erlaubt ist, und in der Firebase-Konsole kannst du Einträge löschen. Der Gratis-Tarif reicht weit (1 GB Speicher, 10 GB Download pro Monat, ein Eintrag hat rund 100 Byte). Nicht gewählt habe ich Supabase, weil Gratis-Projekte nach einer Woche ohne Nutzung pausieren, und einfache JSON-Speicher ohne Regeln, weil dort jeder alles löschen könnte.
 
 Das machst du einmal, es dauert rund 10 Minuten:
 
@@ -137,10 +180,10 @@ Das machst du einmal, es dauert rund 10 Minuten:
 3. **Datenbank:** Links im Menü unter «Build» (oder «Erstellen») auf «Realtime Database» klicken, dann «Datenbank erstellen». Als Standort «Belgien (europe-west1)» wählen, dann «Im gesperrten Modus starten» und «Aktivieren». Wichtig: «Realtime Database», nicht «Firestore».
 4. **Regeln:** Oben den Reiter «Regeln» öffnen, den ganzen Text dort löschen, den Text unten («Regeln zum Kopieren») einfügen und auf «Veröffentlichen» klicken.
 5. **Adresse:** Im Reiter «Daten» steht oben die Adresse der Datenbank, zum Beispiel `https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app/`. Schick mir diese Adresse, dann trage ich sie ein. Sie ist nicht geheim: Sie steht später im Spiel, so wie die Zugangsdaten des Umweg-Servers, geschützt wird die Datenbank durch die Regeln. Selbst eintragen geht auch: `index.html` mit einem Texteditor öffnen, nach `server: ''` suchen und die Adresse zwischen die beiden Anführungszeichen schreiben, also `server: 'https://…firebasedatabase.app',`. Speichern und die Datei wie gewohnt hochladen.
-6. **Prüfen:** Das Spiel öffnen und «Bestenlisten» wählen. Über der Liste steht nach einem Moment «Alle Spieler · Stand …». Steht dort «Keine Verbindung», stimmt die Adresse nicht oder die Regeln fehlen. Nach einer gefahrenen Runde erscheint in Firebase im Reiter «Daten» unter `bestenliste` → `v1` → Strecke ein neuer Eintrag. Dann auf einem zweiten Gerät (zum Beispiel dem Handy) eine Runde auf derselben Strecke fahren: Nach «Aktualisieren» müssen auf beiden Geräten beide Namen stehen.
-7. **Einträge löschen:** Im Reiter «Daten» `bestenliste` → `v1` → die Strecke aufklappen. Jeder Eintrag hat eine lange Kennung (zum Beispiel `-NxYz…`) und darin `n` (Name), `z` (Zeit in Sekunden), `a` (Auto), `b` (Bot ja oder nein), `s` (Bot-Stärke) und `d` (Datum). Mit der Maus auf den Eintrag zeigen und auf das Löschen-Zeichen (✕ oder Papierkorb) klicken. Jede Verbesserung ist ein eigener Eintrag, ein Name kann also mehrmals vorkommen: Bei einem Schummler alle seine Einträge löschen. In der Konsole darfst du löschen, die Regeln gelten nur für das Spiel. Auf dem Gerät, auf dem die Zeit gefahren wurde, bleibt sie in dessen eigener Liste, bis man sie dort unter «Einstellungen» löscht.
+6. **Prüfen:** Das Spiel öffnen und «Bestenlisten» wählen. Über der Liste steht nach einem Moment «Alle Spieler · Stand …». Steht dort «Keine Verbindung», stimmt die Adresse nicht oder die Regeln fehlen. Nach einer Runde mit Anmeldung erscheint in Firebase im Reiter «Daten» unter `bestenliste` → `v2` → Strecke ein neuer Eintrag. Dann auf einem zweiten Gerät (zum Beispiel dem Handy) eine Runde auf derselben Strecke fahren: Nach «Aktualisieren» müssen auf beiden Geräten beide Namen stehen.
+7. **Einträge löschen:** Im Reiter «Daten» `bestenliste` → `v2` → die Strecke aufklappen (alte Einträge ohne Anmeldung stehen unter `v1`). Jeder Eintrag hat eine lange Kennung (zum Beispiel `-NxYz…`) und darin `n` (Name), `z` (Zeit in Sekunden), `a` (Auto), `b` (Bot ja oder nein), `s` (Bot-Stärke), `u` (Konto-Nummer) und `d` (Datum). Mit der Maus auf den Eintrag zeigen und auf das Löschen-Zeichen (✕ oder Papierkorb) klicken. Jede Verbesserung ist ein eigener Eintrag, ein Name kann also mehrmals vorkommen: Bei einem Schummler alle Einträge mit seiner Konto-Nummer löschen. Sperren kannst du sein Konto unter Authentication → Users («Konto deaktivieren»). In der Konsole darfst du löschen, die Regeln gelten nur für das Spiel. Auf dem Gerät, auf dem die Zeit gefahren wurde, bleibt sie in dessen eigener Liste, bis man sie dort unter «Einstellungen» löscht.
 
-**Regeln zum Kopieren** (die Mindestzeit jeder Strecke rechnet das Spiel selbst aus):
+**Regeln zum Kopieren** (Stand 18.11.2026, mit Google-Anmeldung; erzeugt mit `tools/regeln.js`, geprüft mit 39 Fällen im Firebase-Emulator):
 
 ```json
 {
@@ -150,15 +193,21 @@ Das machst du einmal, es dauert rund 10 Minuten:
     "bestenliste": {
       "v1": {
         "$strecke": {
+          ".read": true
+        }
+      },
+      "v2": {
+        "$strecke": {
           ".read": true,
+          ".validate": "$strecke.matches(/^[a-z0-9-]{1,24}$/)",
           "$eintrag": {
-            ".write": "!data.exists() && newData.exists()",
-            ".validate": "newData.hasChildren(['n', 'z', 'a', 'b', 'd'])",
+            ".write": "auth != null && !data.exists() && newData.exists()",
+            ".validate": "newData.hasChildren(['n', 'z', 'a', 'b', 'u', 'd']) && (newData.child('b').val() === true || (root.child('konten').child(auth.uid).child('n').val() === newData.child('n').val() && root.child('namen').child(root.child('konten').child(auth.uid).child('k').val()).child('u').val() === auth.uid))",
             "n": {
               ".validate": "newData.isString() && newData.val().length >= 1 && (newData.val().length <= 14 || (newData.val().length <= 20 && newData.parent().child('b').val() === true))"
             },
             "z": {
-              ".validate": "newData.isNumber() && newData.val() <= 600 && (($strecke === 'kiesgrube' && newData.val() >= 23.2) || ($strecke === 'bergpass' && newData.val() >= 21.5) || ($strecke === 'paris' && newData.val() >= 23.4) || ($strecke === 'himalaya' && newData.val() >= 22.8) || ($strecke === 'aegypten' && newData.val() >= 24.6) || ($strecke === 'newyork' && newData.val() >= 22.7))"
+              ".validate": "newData.isNumber() && newData.val() >= 20 && newData.val() <= 600"
             },
             "a": {
               ".validate": "newData.isString() && newData.val().matches(/^(sport|limo|panzer|transporter|gelaende|pickup|renn|rallye)$/)"
@@ -169,6 +218,9 @@ Das machst du einmal, es dauert rund 10 Minuten:
             "s": {
               ".validate": "newData.isString() && newData.val().matches(/^(leicht|mittel|schwer|ultra)?$/)"
             },
+            "u": {
+              ".validate": "newData.val() === auth.uid"
+            },
             "d": {
               ".validate": "newData.val() === now"
             },
@@ -178,12 +230,44 @@ Das machst du einmal, es dauert rund 10 Minuten:
           }
         }
       }
+    },
+    "namen": {
+      "$k": {
+        ".read": true,
+        ".write": "auth != null && (!data.exists() || data.child('u').val() === auth.uid) && (newData.exists() || newData.parent().parent().child('konten').child(auth.uid).child('k').val() !== $k)",
+        ".validate": "newData.hasChildren(['u', 'n']) && newData.child('n').val().toLowerCase() === $k && newData.parent().parent().child('konten').child(auth.uid).child('k').val() === $k",
+        "u": {
+          ".validate": "newData.val() === auth.uid"
+        },
+        "n": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 14"
+        },
+        "$anderes": {
+          ".validate": false
+        }
+      }
+    },
+    "konten": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid && newData.exists()",
+        ".validate": "newData.hasChildren(['n', 'k']) && newData.child('k').val() === newData.child('n').val().toLowerCase() && newData.parent().parent().child('namen').child(newData.child('k').val()).child('u').val() === auth.uid && (!data.exists() || data.child('k').val() === newData.child('k').val() || !newData.parent().parent().child('namen').child(data.child('k').val()).exists())",
+        "n": {
+          ".validate": "newData.isString() && newData.val().length >= 2 && newData.val().length <= 14"
+        },
+        "k": {
+          ".validate": "newData.isString()"
+        },
+        "$anderes": {
+          ".validate": false
+        }
+      }
     }
   }
 }
 ```
 
-Was die Regeln erlauben: Lesen darf jeder, schreiben nur neue Einträge, ändern und löschen niemand (ausser dir in der Konsole). Ein Eintrag braucht genau diese Felder: Name mit 1 bis 14 Zeichen (Bots bis 20), Zeit als Zahl zwischen der Mindestzeit der Strecke und 600 s, eines der 8 Autos, Bot ja oder nein, die Bot-Stärke und das Datum vom Server. Alles andere lehnt die Datenbank ab. Kommt eine neue Strecke dazu, braucht es neue Regeln, die liefere ich dann mit.
+Was die Regeln erlauben: Die alte Liste `v1` kann jeder lesen, schreiben kann dort niemand mehr. In die neue Liste `v2` schreibt nur, wer angemeldet ist, und nur neue Einträge mit der eigenen Konto-Nummer (`u`): Menschen nur unter dem Namen, der ihrem Konto gehört, Bots mit Kennzeichen (`b` = true). Ändern und löschen kann niemand (ausser dir in der Konsole). Die Zeit muss zwischen 20 s und 600 s liegen, auf jeder Strecke gleich, darum braucht eine neue oder umgebaute Strecke keine neuen Regeln. Unter `namen` gehört jeder Name genau einem Konto, wer zuerst kommt, und nur dieses Konto kann ihn ändern oder freigeben. Unter `konten` steht der Spielname jedes Kontos, lesen und schreiben kann ihn nur das Konto selbst. Eine E-Mail-Adresse steht nirgends in der Datenbank.
 
 ## Online spielen
 
@@ -433,6 +517,8 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `grafik.delle` | ab 3 m/s, höchstens 0,13 m | Dellen nach Stössen |
 | `bestenliste` | `proName` 1, `zeigen` 10, `speichern` 50, `minRunde` 8 s | Zeiten pro Name und Liste, sichtbare und gespeicherte Plätze, kürzeste gültige Runde |
 | `bestenliste.neuZeilen` | 5 | so viele «Neu in der Liste»-Zeilen zeigt das Ergebnis nach dem Rennen (eigene zuerst), mehr werden zu «… und 17 weitere» |
+| `bestenliste.firebase` | Kennungen der Web-App «baustellen-rennen» | öffentliche Kennungen für «Mit Google anmelden», leer heisst: kein Knopf |
+| `bestenliste.pfad`, `pfadAlt` | `bestenliste/v2`, `bestenliste/v1` | Ordner der gemeinsamen Liste mit Anmeldung und der alten Liste, die nur noch gelesen wird (leer = nicht mehr zeigen) |
 | `bestenliste.server` | Firebase-Datenbank «baustellen-rennen» (Belgien) | Adresse der gemeinsamen Datenbank, leer heisst: jedes Gerät hat nur seine eigene Liste |
 | `bestenliste.zeitlimit`, `frisch`, `nochmals` | 6 s, 60 s, 15 s | Wartezeit auf die Datenbank, so lange gilt eine geladene Liste, neuer Versuch nach einem Fehler |
 | `bestenliste.mindestTempo`, `verboten` | 2, 10 Wörter | Mindestzeit = Streckenlänge ÷ (2 × Höchsttempo), unerwünschte Wörter in Namen |
@@ -459,6 +545,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Pylonen: Bots setzen sie noch in 40 % der Fälle wie früher (`CONFIG.bots.pylonen` 0,4). Mit dem höheren Preis von 3 BP kommt das zusammen auf rund 0,2 Pylonen pro Rennen statt 14 bis 16. Menschen bauen wie bisher.
 - Ohne weitere Regel hätten die Bots die gesparten Punkte fast ganz in Schlammlöcher gesteckt (doppelt so viele wie vorher). Darum heben sie in der Hälfte dieser Fälle ihre Punkte auf (`CONFIG.bots.schlammSparen`).
 - In der Bestenliste steht pro Liste nur der schnellste Bot. Das ist jetzt meistens ein «Ultra»-Bot («Bot · Ultra»), so ist es gewollt.
+- **Anmelden (18.11.2026):** im Popup-Fenster statt mit Weiterleitung, weil die Weiterleitung auf `popc-u.github.io` mit der Firebase-Adresse als Anmeldeseite in vielen Browsern nicht mehr klappt. Ein Name gehört dem Konto, das ihn zuerst wählt. Die alte Liste bleibt lesbar und sichtbar (ohne Häkchen), bis ihre Strecke umgebaut ist, dann beginnt dort eine neue Liste. Bot-Zeiten kommen nur noch von angemeldeten Geräten, die das Rennen leiten. Für alle Strecken gilt in der Datenbank dieselbe Mindestzeit von 20 s, das Spiel selbst prüft weiter die genaue Mindestzeit jeder Strecke.
 
 ## Bekannte Grenzen
 
@@ -474,6 +561,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Bots bauen selten Umleitungen und Abkürzungen, weil die Punkte knapp sind.
 - three.js 0.160.0 schreibt eine harmlose Warnung in die Browser-Konsole.
 - **Umleitung kurz nach der Abzweigung:** Wird eine Umleitung gebaut, wenn ein Bot gerade an ihrer Abzweigung vorbei ist, lenkt er bei «Leicht», «Mittel» und «Schwer» trotzdem noch in den Nebenweg und fährt in die Wand. Das kostet einige Sekunden und kommt selten vor. Bei «Ultra» ist es behoben, bei den anderen Stufen nicht, damit sie genau gleich fahren wie vorher.
+- **Mit Google anmelden:** Die Anmeldung ist gegen die Firebase-Emulatoren getestet (Regeln, Namenswahl, Hochladen, Abmelden, alle Fehlermeldungen), das echte Google-Fenster konnte ich in meiner Testumgebung nicht öffnen. Der echte Test ist die Prüfliste unter «Mit Google anmelden». Wer angemeldet ist und sich auskennt, kann weiterhin eine erfundene Zeit über 20 s schicken, aber nur unter seinem eigenen Konto: Solche Einträge findest du über die Konto-Nummer und kannst das Konto sperren.
 - **Gemeinsame Bestenliste:** Solange keine Datenbank eingetragen ist, hat jedes Gerät nur seine eigene Liste (wie bisher). Die Anbindung an Firebase ist nur gegen einen nachgebauten Ersatz-Server mit denselben Regeln getestet, weil die Test-Umgebung das Internet nicht erreicht. Der echte Test sind zwei Geräte (siehe «Gemeinsame Bestenliste einrichten», Schritt 6). Schummeln lässt sich ohne eigenen Server nicht ganz verhindern: Wer sich auskennt, kann eine erfundene Zeit über der Mindestzeit schicken. Solche Einträge löschst du in der Firebase-Konsole. Gleicher Name heisst gleiche Person, auch auf verschiedenen Geräten: Zwei Leute mit demselben Namen teilen sich einen Platz. Die Liste kann jeder lesen, der die Adresse kennt, darum besser Spitznamen statt voller Namen. Wer die Website-Daten im Browser löscht, löscht die Liste des Geräts und noch nicht hochgeladene Zeiten, die gemeinsame Liste bleibt.
 
 ## Für Bastler
