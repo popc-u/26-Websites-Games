@@ -8,6 +8,8 @@ Das ganze Spiel steckt in einer einzigen Datei: `index.html`.
 
 `index.html` doppelklicken (Chrome, Edge, Firefox oder Safari). Es braucht eine Internetverbindung, weil three.js 0.160.0 von einem CDN geladen wird (für Online-Spiele zusätzlich PeerJS 1.5.4). Sonst ist nichts zu installieren.
 
+**Wenn «Das hat nicht geklappt» erscheint:** Dann gibt der Browser der Seite keine 3D-Grafik (WebGL). Meist hat die Grafikkarte vorher einmal ausgesetzt, und der Browser sperrt die 3D-Grafik dann bis zum Neustart. Den Browser ganz schliessen (alle Fenster) und neu öffnen hilft fast immer. Sonst in den Einstellungen des Browsers unter «System» die Grafikbeschleunigung einschalten (Chrome und Edge: «Grafikbeschleunigung verwenden, wenn verfügbar»). Ob die 3D-Grafik wieder geht, zeigt get.webgl.org. Die Meldung im Spiel nennt diese Schritte. Seit dem 18.11.2026 versucht das Spiel zuerst einfachere Grafik-Einstellungen (ohne Kantenglättung, andere Grafikkarte). Setzt die Grafikkarte mitten im Spiel aus, stellt es selbst eine Grafik-Stufe tiefer und lädt neu. War die 3D-Grafik gesperrt, startet es beim nächsten Mal ebenfalls eine Stufe tiefer. Geht beim Einrichten der Grafik sonst etwas schief, versucht es das Spiel mit der Stufe «Niedrig» und zeigt den technischen Grund an.
+
 - **Gegen Bots:** 1 Spieler und bis zu 11 Bots, Stufe leicht, mittel, schwer oder ultra (praktisch unschlagbar).
 - **Lokal am selben Gerät:** 2 Spieler an einer Tastatur, mit Gamepads bis 4, dazu bis zu 11 Bots. Der Bildschirm wird geteilt.
 - **Online:** bis zu 22 Menschen und dazu bis zu 11 Bots, ohne eigenen Server (siehe unten).

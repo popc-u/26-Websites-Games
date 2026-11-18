@@ -3051,7 +3051,15 @@ const Grafik = {
   kartObjekte: [], bauObjekte: {}, ansichten: [], sonne: null, zeit: 0,
 
   init(canvas) {
-    const R = (this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' }));
+    // 3D-Grafik anlegen. Klappt es mit den besten Einstellungen nicht (z. B. Laptop mit zwei Grafikkarten, eine davon gesperrt), einfachere versuchen.
+    let R = null, fehler = null;
+    for (const opt of [{ antialias: true, powerPreference: 'high-performance' }, { antialias: false }, { antialias: false, powerPreference: 'low-power' }]) {
+      try { R = new THREE.WebGLRenderer(Object.assign({ canvas }, opt)); break; } catch (e) { fehler = e; }
+    }
+    if (!R) throw fehler || new Error('WebGL');
+    this.renderer = R;
+    // Setzt die Grafikkarte aus (Absturz, Treiber), ist die 3D-Grafik weg: eine Stufe tiefer und neu laden (App.grafikAusgefallen)
+    canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); if (typeof App !== 'undefined' && App.grafikAusgefallen) App.grafikAusgefallen(); }, false);
     R.setClearColor(0x8fc7ea);
     R.info.autoReset = false;                  // die Zähler (Dreiecke, Zeichenaufrufe) gelten für das ganze Bild samt Nachbearbeitung
     this.szene = new THREE.Scene();
@@ -9927,9 +9935,9 @@ const Menue = {
   },
 
   laden(text) { this.zeige('laden', '<div class="tafel"><h1 class="logo">Baustellen-<small>Rennen</small></h1><div class="band"></div><p>' + (text || 'Lade …') + '</p></div>'); },
-  fehler(text) {
-    this.zeige('fehler', '<div class="tafel"><h1 class="logo">Baustellen-<small>Rennen</small></h1><div class="band"></div><div class="karte" style="border-left-color:var(--rot)"><h3 style="margin-top:0">Das hat nicht geklappt</h3><p>' + text + '</p></div>' +
-      '<div class="knoepfe"><button class="knopf" data-a="neu">Nochmals versuchen</button></div></div>', { neu: () => location.reload() });
+  fehler(text, extra, knopf) {
+    this.zeige('fehler', '<div class="tafel"><h1 class="logo">Baustellen-<small>Rennen</small></h1><div class="band"></div><div class="karte" style="border-left-color:var(--rot)"><h3 style="margin-top:0">Das hat nicht geklappt</h3><p>' + text + '</p>' + (extra || '') + '</div>' +
+      '<div class="knoepfe"><button class="knopf" data-a="neu">' + (knopf || 'Nochmals versuchen') + '</button></div></div>', { neu: () => location.reload() });
   },
 
   haupt() {
@@ -10234,12 +10242,50 @@ const App = {
     Speicher.daten.grafikGemessen = true;
   },
 
+  tiefereStufe(q) { const l = Object.keys(GRAFIK_NAMEN), i = l.indexOf(q); return i > 0 ? l[i - 1] : l[0]; },
+
+  // Die 3D-Grafik startet nicht. Gibt der Browser der Seite gar keine 3D-Grafik (WebGL aus oder nach einem Aussetzer der Grafikkarte
+  // gesperrt), erklärt die Meldung, was hilft. Sonst ist beim Einrichten etwas schiefgegangen: nochmals mit der Stufe «Niedrig».
+  grafikFehler(e) {
+    const D = Speicher.daten, c = document.createElement('canvas');
+    let w2 = false, w1 = false;
+    try { w2 = !!c.getContext('webgl2'); if (!w2) w1 = !!c.getContext('webgl'); } catch (x) { /* keine */ }
+    const grund = String((e && e.message) || e || '').slice(0, 140).replace(/[<>&]/g, '');
+    if (!w2 && !w1) {
+      D.grafikGesperrt = true; Speicher.sichern();
+      Menue.fehler('Dein Browser gibt dieser Seite gerade keine 3D-Grafik (WebGL). Meist hat die Grafikkarte vorher einmal ausgesetzt, und der Browser sperrt die 3D-Grafik dann bis zum nächsten Neustart. So geht es wieder:',
+        '<ol style="margin:0 0 10px 18px;padding:0;line-height:1.5"><li>Den Browser ganz schliessen (alle Fenster), neu öffnen und das Spiel neu laden.</li>' +
+        '<li>Hilft das nicht: In den Einstellungen des Browsers unter «System» die Grafikbeschleunigung einschalten (Chrome und Edge: «Grafikbeschleunigung verwenden, wenn verfügbar») und den Browser neu starten.</li>' +
+        '<li>Zum Prüfen <b>get.webgl.org</b> öffnen: Dreht sich dort ein Würfel, geht die 3D-Grafik wieder.</li></ol>' +
+        '<p class="hinweis" style="margin:0">Danach startet das Spiel vorsichtshalber eine Grafik-Stufe tiefer. Technisch: ' + (grund || 'kein WebGL') + '</p>');
+    } else {
+      const vorher = Grafik.qualitaet;
+      D.grafik = 'niedrig'; D.grafikGemessen = true; Speicher.sichern();
+      Menue.fehler('Beim Starten der 3D-Grafik ist ein Fehler aufgetreten' + (vorher && vorher !== 'niedrig' ? ' (Grafik-Stufe «' + GRAFIK_NAMEN[vorher] + '»)' : '') + '. Das Spiel versucht es jetzt mit der Stufe «Niedrig».',
+        '<p class="hinweis" style="margin:0">Technisch: ' + (grund || 'unbekannt') + (w2 ? '' : ' (nur WebGL 1)') + '</p>', 'Mit «Niedrig» starten');
+    }
+  },
+
+  // Die Grafikkarte hat mitten im Spiel ausgesetzt (die 3D-Grafik ist weg): eine Stufe tiefer und neu laden, damit es nicht wieder passiert
+  grafikAusgefallen() {
+    if (this._ausgefallen) return;
+    this._ausgefallen = true;
+    const D = Speicher.daten, tiefer = this.tiefereStufe(Grafik.qualitaet || D.grafik);
+    D.grafik = tiefer; D.grafikGemessen = true; Speicher.sichern();
+    try { if (Ton.master) Ton.master.gain.value = 0; } catch (x) { /* egal */ }          // Motoren verstummen, bis neu geladen ist
+    Menue.fehler('Die Grafikkarte hat ausgesetzt, die 3D-Grafik ist weg. Das Spiel stellt die Grafik-Stufe auf «' + GRAFIK_NAMEN[tiefer] + '» und lädt neu. In den Einstellungen kannst du sie später wieder ändern.', '', 'Neu laden');
+  },
+
   bereit() {
     const D = Speicher.daten, fest = this.parameter.get('grafik');      // ?grafik=hoch legt die Stufe für diesen Besuch fest (für Tests)
     const messen = !(fest && GRAFIK_NAMEN[fest]) && !D.grafikGemessen;   // erster Start: Stufe selbst wählen
     if (!GRAFIK_NAMEN[D.grafik]) D.grafik = 'mittel';
+    // Beim letzten Besuch gab es keine 3D-Grafik (oft nach einem Aussetzer der Grafikkarte): vorsichtshalber eine Stufe tiefer
+    let gesenkt = false;
+    if (D.grafikGesperrt && !fest) { delete D.grafikGesperrt; if (D.grafik !== 'niedrig' && D.grafikGemessen) { D.grafik = this.tiefereStufe(D.grafik); gesenkt = true; } Speicher.sichern(); }
     try { Grafik.qualitaet = fest && GRAFIK_NAMEN[fest] ? fest : messen ? 'hoch' : D.grafik; Grafik.init($('bild')); }
-    catch (e) { Menue.fehler('Dein Browser kann hier keine 3D-Grafik (WebGL) anzeigen. Versuche es mit einem aktuellen Chrome, Firefox, Edge oder Safari.'); return; }
+    catch (e) { this.grafikFehler(e); return; }
+    if (gesenkt) setTimeout(() => this.toast('Beim letzten Mal ist die 3D-Grafik ausgefallen. Darum läuft das Spiel jetzt mit «' + GRAFIK_NAMEN[D.grafik] + '». In den Einstellungen kannst du die Stufe wieder ändern.', 6000), 1500);
     this.tonSetzen(); Ton.musikGewollt = true;
     Konto.start();                                    // «Mit Google anmelden» (Teil 14): Anmeldung von früher wiederherstellen
     Spiel.starteDemo(Speicher.daten.strecke);
