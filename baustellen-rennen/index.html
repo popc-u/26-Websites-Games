@@ -848,7 +848,6 @@ const STRECKEN = {
   // ── Kiesgrube: enge Kehren, Sprung, Abzweigung, Brücke über den Baggersee ──
   kiesgrube: {
     name: 'Kiesgrube',
-    liste: 'kiesgrube-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «kiesgrube» bleibt in der Datenbank)
     text: 'Zwei Kehren, eine Schanze und der Weg um den Baggersee.',
     breite: 15,
     rand: 3.5,
@@ -917,7 +916,6 @@ const STRECKEN = {
   // ── Bergpass: drei Serpentinen hinauf, Brücke über die Schlucht, steile Abfahrt ──
   bergpass: {
     name: 'Bergpass',
-    liste: 'bergpass-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «bergpass» bleibt in der Datenbank)
     text: 'Drei Serpentinen hinauf, über die Schluchtbrücke und steil wieder ins Tal.',
     breite: 15,
     rand: 3.5,
@@ -978,7 +976,6 @@ const STRECKEN = {
   // ── Paris am Abend: durch den Triumphbogen, am Fluss entlang, über zwei Brücken, unter dem Eisenturm hindurch, hinauf zum Hügel mit der Mühle ──
   paris: {
     name: 'Paris',
-    liste: 'paris-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «paris» bleibt in der Datenbank)
     text: 'Abendrennen durch den Triumphbogen, über den Fluss und unter dem Eisenturm hindurch.',
     breite: 15,
     rand: 3.5,
@@ -1064,7 +1061,6 @@ const STRECKEN = {
   // ── Himalaya: vom Bergdorf durch den Schnee zum Kloster, Hängebrücke über die Gletscherschlucht, über den gefrorenen See, steile Abfahrt ──
   himalaya: {
     name: 'Himalaya',
-    liste: 'himalaya-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «himalaya» bleibt in der Datenbank)
     text: 'Vom Bergdorf durch den Schnee zum Kloster, über die Hängebrücke und den gefrorenen See.',
     breite: 15,
     rand: 3.5,
@@ -1142,7 +1138,6 @@ const STRECKEN = {
   // ── Ägypten: Mittagssonne am Nil, durch das Tempeltor und die Säulenhalle, hinauf zu den Pyramiden, über die Dünen ──
   aegypten: {
     name: 'Ägypten',
-    liste: 'aegypten-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «aegypten» bleibt in der Datenbank)
     text: 'Mittagsrennen am Nil: durch Tempeltor und Säulenhalle, an Sphinx und Pyramiden vorbei, über die Dünen.',
     breite: 15,
     rand: 3.5,
@@ -1219,7 +1214,6 @@ const STRECKEN = {
   // ── New York: Nachtrennen durch Häuserschluchten und über den Leuchtreklame-Platz, über die Hängebrücke, an der Uferpromenade entlang, über die Stahlbrücke und durch den Park ──
   newyork: {
     name: 'New York',
-    liste: 'newyork-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «newyork» bleibt in der Datenbank)
     text: 'Nachtrennen auf nassen Strassen: Leuchtreklamen, Hängebrücke, Skyline am Fluss, Stahlbrücke und Park.',
     breite: 15,
     rand: 3.5,
@@ -10434,16 +10428,22 @@ const App = {
   // gesperrt), erklärt die Meldung, was hilft. Sonst ist beim Einrichten etwas schiefgegangen: nochmals mit der Stufe «Niedrig».
   grafikFehler(e) {
     const D = Speicher.daten, c = document.createElement('canvas');
-    let w2 = false, w1 = false;
+    let w2 = false, w1 = false, status = '';
+    c.addEventListener('webglcontextcreationerror', (x) => { status = status || String(x.statusMessage || ''); });      // der Grund, den der Browser selber nennt
     try { w2 = !!c.getContext('webgl2'); if (!w2) w1 = !!c.getContext('webgl'); } catch (x) { /* keine */ }
     const grund = String((e && e.message) || e || '').slice(0, 140).replace(/[<>&]/g, '');
     if (!w2 && !w1) {
       D.grafikGesperrt = true; Speicher.sichern();
-      Menue.fehler('Dein Browser gibt dieser Seite gerade keine 3D-Grafik (WebGL). Meist hat die Grafikkarte vorher einmal ausgesetzt, und der Browser sperrt die 3D-Grafik dann bis zum nächsten Neustart. So geht es wieder:',
-        '<ol style="margin:0 0 10px 18px;padding:0;line-height:1.5"><li>Den Browser ganz schliessen (alle Fenster), neu öffnen und das Spiel neu laden.</li>' +
-        '<li>Hilft das nicht: In den Einstellungen des Browsers unter «System» die Grafikbeschleunigung einschalten (Chrome und Edge: «Grafikbeschleunigung verwenden, wenn verfügbar») und den Browser neu starten.</li>' +
+      // «GL_VENDOR = Disabled» oder «VENDOR = 0xffff»: Der Browser hat die Grafikkarte für alle Seiten abgeschaltet (Einstellung aus oder nach Abstürzen), nicht nur für dieses Spiel
+      const aus = /GL_VENDOR = Disabled|VENDOR = 0xffff/i.test(status), neu = /Edg\//.test(navigator.userAgent) ? 'edge://restart' : 'chrome://restart';
+      Menue.fehler((aus ? 'Dein Browser hat die 3D-Grafik (WebGL) gerade für alle Seiten abgeschaltet, nicht nur für dieses Spiel.' : 'Dein Browser gibt dieser Seite gerade keine 3D-Grafik (WebGL).') +
+        ' Meist hat die Grafikkarte vorher einmal ausgesetzt, und der Browser sperrt die 3D-Grafik dann bis zum nächsten Neustart. So geht es wieder:',
+        '<ol style="margin:0 0 10px 18px;padding:0;line-height:1.5"><li>Den Browser wirklich neu starten: In Chrome oder Edge oben in die Adresszeile <b>' + neu + '</b> tippen und Enter drücken. ' +
+        'Nur die Fenster zu schliessen reicht oft nicht, weil der Browser unter Windows unsichtbar weiterläuft.</li>' +
+        '<li>Hilft das nicht: In den Einstellungen des Browsers unter «System» die Grafikbeschleunigung einschalten (Chrome und Edge: «Grafikbeschleunigung verwenden, wenn verfügbar») und nochmals neu starten.</li>' +
+        '<li>Geht es immer noch nicht: den Computer neu starten.</li>' +
         '<li>Zum Prüfen <b>get.webgl.org</b> öffnen: Dreht sich dort ein Würfel, geht die 3D-Grafik wieder.</li></ol>' +
-        '<p class="hinweis" style="margin:0">Danach startet das Spiel vorsichtshalber eine Grafik-Stufe tiefer. Technisch: ' + (grund || 'kein WebGL') + '</p>');
+        '<p class="hinweis" style="margin:0">Danach startet das Spiel vorsichtshalber eine Grafik-Stufe tiefer. Technisch: ' + (grund || 'kein WebGL') + (aus ? ' (Grafikbeschleunigung im Browser aus)' : '') + '</p>');
     } else {
       const vorher = Grafik.qualitaet;
       D.grafik = 'niedrig'; D.grafikGemessen = true; Speicher.sichern();
@@ -10536,6 +10536,10 @@ const App = {
 // Mit Google-Anmeldung (Teil 14, Konto) tragen Einträge die Konto-Nummer u. Ein Konto steht einmal da, auch nach einem Namenswechsel,
 // und bekommt ein Häkchen. Alte Einträge ohne Konto (gemeinsame Liste v1, dieses Gerät vor dem Anmelden) bleiben sichtbar, ohne Häkchen.
 const BL_VERSION = 1;
+// Die Bestenliste bleibt immer erhalten (Johann, 18.11.2026): Neue Fassungen, neue Auto-Werte und umgebaute Strecken schreiben in
+// dieselbe Liste wie bisher, die Kennung einer Liste ist immer die Kennung der Strecke. Nur in Fassung 1.2 hiessen die Listen kurz
+// «<strecke>-2»: Diese Einträge holt das Spiel für immer dazu (im Browser einmal zusammengelegt, in der gemeinsamen Liste mitgelesen).
+const BL_FRUEHER = ['-2'];
 const BL_STUFE = { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer', ultra: 'Ultra' };
 const BL_ARTIKEL = { limo: 'der' };                 // «mit der Limousine», sonst «mit dem …»
 const BL_HAKEN = '<svg class="bl-haken" viewBox="0 0 16 16" role="img" aria-label="angemeldet"><title>Angemeldeter Spieler</title><circle cx="8" cy="8" r="8"/><path d="M4.4 8.3 6.9 10.8 11.8 5.6"/></svg>';
@@ -10573,6 +10577,11 @@ const Bestenliste = {
     let d = null;
     try { const t = localStorage.getItem(CONFIG.bestenliste.schluessel); if (t) d = JSON.parse(t); } catch (e) { d = null; }
     this.daten = this.pruefe(d);
+    if (this.daten.zusammengelegt) {                     // frühere Listen eben dazugekommen: aufräumen und gleich speichern
+      for (const id of Object.keys(this.daten.strecken)) for (const f of FAHRZEUGE) this.ordne(id, f.id);
+      this.sichern();
+    }
+    delete this.daten.zusammengelegt;
     return this.daten;
   },
   // Alte oder kaputte Daten führen nie zu einem Fehler: nur gültige Einträge bleiben, sonst beginnt die Liste leer
@@ -10590,19 +10599,34 @@ const Bestenliste = {
       if (s.bots && typeof s.bots === 'object') for (const a of Object.keys(s.bots)) { const e = s.bots[a]; if (gut(e)) bots[e.a] = eigen(e, { n: e.n.trim().slice(0, 20), z: e.z, a: e.a, s: String(e.s || ''), d: +e.d || 0, m: String(e.m || '') }); }
       neu.strecken[id] = { menschen, bots };
     }
+    this.zusammenlegen(neu);
     return neu;
+  },
+  // Listen mit früheren Kennungen («kiesgrube-2») in die Liste der Strecke legen: Menschen kommen dazu (gleiche Einträge nur einmal),
+  // pro Auto bleibt der schnellere Bot. Danach räumt laden() jede Liste auf (ordne), wie nach einer neuen Zeit.
+  zusammenlegen(d) {
+    let neu = false;
+    for (const k of Object.keys(d.strecken)) {
+      const end = BL_FRUEHER.find((x) => k.endsWith(x) && k.length > x.length);
+      if (!end) continue;
+      const id = k.slice(0, -end.length), von = d.strecken[k], nach = d.strecken[id] || (d.strecken[id] = { menschen: [], bots: {} });
+      const gleich = (x, y) => x.n === y.n && x.z === y.z && x.a === y.a && x.d === y.d;
+      for (const e of von.menschen) if (!nach.menschen.some((x) => gleich(x, e))) nach.menschen.push(e);
+      for (const a of Object.keys(von.bots)) { const e = von.bots[a], alt = nach.bots[a]; if (!alt || e.z < alt.z) nach.bots[a] = e; }
+      delete d.strecken[k];
+      neu = true;
+    }
+    d.zusammengelegt = neu;
   },
   sichern() {
     try { localStorage.setItem(CONFIG.bestenliste.schluessel, JSON.stringify(this.daten)); this.ohneSpeicher = false; }
     catch (e) { this.ohneSpeicher = true; }               // privates Fenster o. Ä.: Die Liste gilt dann bis zum Neuladen
   },
-  // Kennung der Liste einer Strecke (STRECKEN[id].liste). Ändern sich die Zeiten grundsätzlich (neue Auto-Werte, neue Streckenführung),
-  // bekommt die Strecke eine neue Kennung: Die alte Liste bleibt im Speicher und in der Datenbank, gezeigt wird nur die neue.
-  lid(id) { const s = STRECKEN[id]; return (s && s.liste) || id; },
+  // Kennung der Liste einer Strecke: immer die Strecke selbst (siehe BL_FRUEHER). Frühere Kennungen: frueher(id).
+  frueher(id) { return BL_FRUEHER.map((x) => id + x); },
   strecke(id) {
     if (!this.daten) this.laden();
-    const k = this.lid(id);
-    return this.daten.strecken[k] || (this.daten.strecken[k] = { menschen: [], bots: {} });
+    return this.daten.strecken[id] || (this.daten.strecken[id] = { menschen: [], bots: {} });
   },
   schluessel(n) { return String(n == null ? '' : n).trim().toLowerCase(); },     // gleicher Name: Gross/klein und Leerzeichen am Rand egal
   autoName(a) { const f = FAHRZEUGE.find((x) => x.id === a); return f ? f.name : String(a); },
@@ -10632,7 +10656,7 @@ const Bestenliste = {
   eintraege(id, quelle) {
     const S = this.strecke(id), l = S.menschen.slice(), N = this.netz[id];
     for (const a of Object.keys(S.bots)) l.push(Object.assign({ bot: true }, S.bots[a]));
-    if (quelle !== 'geraet' && N) for (const e of (N.neu || []).concat(N.alt || [])) l.push(e);
+    if (quelle !== 'geraet' && N) for (const e of (N.neu || []).concat(N.frueher || [], N.alt || [])) l.push(e);
     return l;
   },
   platz(id, auto, e) { const i = this.liste(id, auto).indexOf(e); return i + 1; },     // 0 = nicht (mehr) in der Liste
@@ -10828,14 +10852,16 @@ const Bestenliste = {
   // sofort mit «Aktualisieren». Vorher wartende Zeiten hochladen. Ergebnis: true, wenn eine Antwort (oder ein Fehler) neu da ist.
   ladeNetz(id, sofort) {
     if (!this.mitNetz() || !STRECKEN[id]) return Promise.resolve(false);
-    const C = CONFIG.bestenliste, N = this.netz[id] || (this.netz[id] = { ok: false, zeit: 0, versuch: 0, neu: null, alt: null });
+    const C = CONFIG.bestenliste, N = this.netz[id] || (this.netz[id] = { ok: false, zeit: 0, versuch: 0, neu: null, frueher: null, alt: null });
     if (N.laedt) return N.laedt;
     if (!sofort && N.versuch && Date.now() - N.versuch < (N.ok ? C.frisch : C.nochmals) * 1000) return Promise.resolve(false);
     N.versuch = Date.now();
     const gut = (r) => r && r.ok && (r.j === null || typeof r.j === 'object');
-    // Die alte Liste ändert sich nicht mehr: einmal pro Besuch laden
-    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(this.lid(id))), C.pfadAlt && !N.alt && this.lid(id) === id ? this.anfrage(this.adresse(id, true)) : null])).then(([r, rAlt]) => {
+    // Die alte Liste (v1) und die Listen mit früheren Kennungen ändern sich nicht mehr: einmal pro Besuch laden
+    const frueher = N.frueher ? [] : this.frueher(id);
+    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(id)), C.pfadAlt && !N.alt ? this.anfrage(this.adresse(id, true)) : null].concat(frueher.map((k) => this.anfrage(this.adresse(k)))))).then(([r, rAlt, ...rFr]) => {
       if (gut(rAlt)) N.alt = this.ausNetz(id, rAlt.j, false);
+      if (frueher.length && rFr.every(gut)) N.frueher = [].concat(...rFr.map((x) => this.ausNetz(id, x.j, true)));
       if (gut(r)) { N.ok = true; N.zeit = Date.now(); N.neu = this.ausNetz(id, r.j, true); }
       else N.ok = false;                                        // alte Liste bleiben lassen, Stand-Zeile sagt «keine Verbindung»
       N.laedt = null;
@@ -10875,13 +10901,14 @@ const Bestenliste = {
     let l = [];
     try { const j = JSON.parse(localStorage.getItem(CONFIG.bestenliste.schluessel + '-senden') || '[]'); if (Array.isArray(j)) l = j; } catch (e) { l = []; }
     this.schlangeMem = l.filter((x) => x && typeof x === 'object' && typeof x.id === 'string' && typeof x.n === 'string' && typeof x.z === 'number' && isFinite(x.z) && typeof x.a === 'string');
+    for (const x of this.schlangeMem) { const end = BL_FRUEHER.find((f) => x.id.endsWith(f) && STRECKEN[x.id.slice(0, -f.length)]); if (end) x.id = x.id.slice(0, -end.length); }     // aus Fassung 1.2
     return this.schlangeMem;
   },
   schlangeSichern() { try { localStorage.setItem(CONFIG.bestenliste.schluessel + '-senden', JSON.stringify(this.schlange())); } catch (e) { /* ohne Speicher */ } },
   // Nur mit Konto (u). Unerwünschte Namen kommen nicht in die gemeinsame Liste.
   vormerken(id, e, bot, u) {
     if (!this.mitNetz() || !u || this.verboten(e.n)) return;
-    this.schlange().push({ id: this.lid(id), n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });      // id: Kennung der Liste
+    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });      // id: Kennung der Liste = Strecke
     this.schlangeSichern();
   },
   // Nach dem ersten Anmelden eines Kontos auf diesem Gerät: die Zeiten, die hier vorher gefahren wurden, einmal mit dem Kontonamen
@@ -10895,7 +10922,7 @@ const Bestenliste = {
     if (fertig.includes(N.uid)) return;
     const D = Speicher.daten, ich = new Set(['spieler', 'spieler 1'].concat((D.vorKonto || []).map((n) => this.schluessel(n))));
     const daten = this.daten || this.laden(), hier = (e) => e.o === 1 || (e.o === undefined && e.m !== 'online');
-    for (const id of Object.keys(STRECKEN)) {          // nur die heutigen Listen (alte Listen werden nicht mehr nachgeliefert)
+    for (const id of Object.keys(STRECKEN)) {
       const S = this.strecke(id);
       for (const e of S.menschen) if (!e.u && hier(e) && ich.has(this.schluessel(e.n))) { e.n = N.name; e.u = N.uid; this.vormerken(id, e, false, N.uid); }
       for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (hier(e)) this.vormerken(id, e, true, N.uid); }
@@ -11003,10 +11030,10 @@ const Bestenliste = {
   // Einstellungen: eine Strecke oder alle löschen, mit Rückfrage
   loeschenDialog() {
     const id = Speicher.daten.strecke, name = STRECKEN[id] ? STRECKEN[id].name : id;
-    const weg = (nur) => { const l = this.schlange(); for (let i = l.length - 1; i >= 0; i--) if (!nur || l[i].id === this.lid(nur)) l.splice(i, 1); this.schlangeSichern(); };
+    const weg = (nur) => { const l = this.schlange(); for (let i = l.length - 1; i >= 0; i--) if (!nur || l[i].id === nur) l.splice(i, 1); this.schlangeSichern(); };
     Dialog.zeige('<h2>Bestenliste löschen?</h2><p>Gelöschte Zeiten lassen sich nicht zurückholen.' +
       (this.mitNetz() ? ' Gelöscht wird nur die Liste dieses Geräts, die gemeinsame Liste aller Spieler bleibt.' : '') + '</p>', [
-      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[this.lid(id)]; weg(id); this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
+      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[id]; weg(id); this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
       { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; weg(''); this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
       { text: 'Abbrechen', klasse: 'zweit', abbruch: true },
     ]);
