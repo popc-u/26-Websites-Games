@@ -543,6 +543,92 @@ Das Spiel rechnet 60 Schritte pro Sekunde, zeichnet aber so oft, wie das Gerät 
 
 Bildfolge in Zeitlupe (48 Bilder, 50 ms pro Bild), links vorher, rechts nachher: Kiesgrube, 6 s nach dem Start, Sicht eines Online-Gasts mitten im Feld, gleiche Saat und gleiche ungleichmässige Bildzeiten (12 bis 22 ms). Vorher zucken die fremden Autos vor der Kamera bei jedem Paket vor und zurück, nachher fahren sie gleichmässig. Die Datei liegt im Projektordner unter `rundenzeit-lobby/e3-ruckeln-vorher-nachher.gif`, erzeugt mit `tools/ruckelbild.js`.
 
+## Mehr Bilder pro Sekunde, keine Hänger
+
+Stand 18.11.2026, Version 1.1 (Etappe 1 des Auftrags «Auto-Fähigkeiten, Bots, Leistung, Strecken»). Die Fahrphysik rechnet genau wie vorher: 36 von 36 Vergleichsrennen mit gleicher Saat enden gleich (`tools/gleichcheck.js`), das Ruckel-Mass der eigenen Autos ist unverändert (16,3 Ausreisser pro Auto-Minute vorher und nachher).
+
+### Bildrate anzeigen und Leistungstest
+
+- **Einstellungen → «Bildrate anzeigen»:** Oben rechts stehen die Bilder pro Sekunde, die tiefsten 1 %, die Hänger (Bilder über 50 ms) und wie lange das Spiel pro Bild selbst rechnet.
+- **Einstellungen → «Leistungstest»:** Pro Grafik-Stufe 20 Sekunden feste Fahrt in New York mit 12 Autos (die ersten 3 Sekunden zählen nicht). Am Schluss eine Tabelle zum Kopieren. Geht auch mit `index.html?leistungstest=1`. Der letzte Test bleibt gespeichert («Letzter Leistungstest»).
+- Die Kopie vom Stand vor dieser Etappe mit nur dem Leistungstest liegt im Projektordner unter `leistungstest/index-vorher.html`. So lässt sich auf dem eigenen Gerät vorher und nachher vergleichen.
+
+### Was das Spiel jetzt anders macht
+
+- **Autos gebündelt:** Räder, Sitze, Lenkrad und Fahrerkopf eines Autos sind je Material ein einziges Netz, das sich mit den Rädern und der Lenkung bewegt (Skinning). Pro Auto rund 14 statt 32 Zeichenaufrufe, das Bild ist gleich (Vergleichsbilder: 0,00 % abweichende Bildpunkte).
+- **Schattenbild ohne Programmwechsel:** Teile mit Instanzen oder Skinning haben ihr eigenes Tiefen-Material, three.js muss pro Bild nicht mehr dutzendfach das Shader-Programm neu suchen.
+- **Shader und Bilder vor dem Countdown:** Alle Shader-Programme, auch für Bauwerke, Hologramme und Lampen, die erst im Rennen auftauchen, werden vor dem ersten Bild übersetzt, alle Bilder (Lack, Schmutz, Schilder) vorher hochgeladen.
+- **Schmutz:** Höchstens ein Auto pro Bild lädt seinen Schmutz neu hoch.
+- **Siegerpodest:** Es entsteht in Schritten (Spiegelbild der Umgebung, dann je ein Podestplatz pro Bild), die Shader übersetzt der Browser im Hintergrund, dann wird es eingeblendet. Vorher geschah alles im Bild, in dem das Ergebnis aufging.
+- **Ladeanzeige:** Vor dem Rennen zeigt ein Balken den Fortschritt. Die Welt der Strecke entsteht in 9 Schritten, dazwischen zeichnet der Browser die Anzeige. Der Countdown beginnt erst, wenn die Grafik bereit ist.
+- **Shader-Programme bleiben erhalten:** Die alten Autos werden erst freigegeben, wenn die neuen vorbereitet sind. Sonst löschte three.js die Programme der Autos und übersetzte sie für das nächste Rennen neu.
+- **Menü-Hintergrund:** Er zeigt die zuletzt gewählte Strecke. Startet man dort, ist die Welt schon gebaut.
+- **Bildrate-Grenze (Einstellungen):** «Automatisch», 30, 60 oder «Aus». Automatisch: Auf Bildschirmen mit mehr als 75 Hz zeichnet das Spiel nur jedes zweite Bild, wenn es die volle Rate nicht schafft. Gleichmässig 72 Bilder wirken ruhiger als zwischen 90 und 144 springend.
+- **Auflösung anpassen (Einstellungen, an):** Bremst die Grafikkarte (Bilder zu langsam, das Spiel selbst rechnet aber wenig), zeichnet das Spiel mit etwas weniger Bildpunkten, bis 70 % der Stufe (auf «Niedrig» bis 85 %). Reicht es wieder, wird es langsam wieder schärfer.
+- **Vorschlag nach dem Rennen:** Lief ein Rennen dauerhaft unter 45 Bildern pro Sekunde (Handy und Tablet unter 28), schlägt das Ergebnis die nächsttiefere Grafik-Stufe vor, mit einem Knopf zum Wechseln.
+
+### Messungen vorher und nachher
+
+Alle Messungen in der Testumgebung mit Software-Grafik (SwiftShader). Zeichenaufrufe, Rechenzeit des Spiels und neue Shader sind damit gut vergleichbar, Bilder pro Sekunde nicht (die Software-Grafik ist viel langsamer als jede Grafikkarte).
+
+| Messung | Szene | vorher | nachher | Ziel |
+|---|---|---|---|---|
+| Zeichenaufrufe pro Bild | New York, «Mittel», 8 Autos | 379 | 238 (−37 %) | −25 % ✓ |
+| Zeichenaufrufe pro Bild | New York, «Mittel», 33 Autos | 384 | 247 (−36 %) | −25 % ✓ |
+| Zeichenaufrufe pro Bild | Paris, «Niedrig», 8 Autos | 127 | 104 (−18 %) | −25 % ✗ |
+| Rechenzeit JavaScript pro Bild, Mittel (95 %) | Paris, «Niedrig», 8 Autos | 2,46 ms (6,1) | 1,89 ms (3,7) | −30 %: −23 % (−39 %) ✗ |
+| Rechenzeit JavaScript pro Bild, Mittel (95 %) | New York, «Mittel», 33 Autos | 6,51 ms (13,7) | 4,09 ms (7,5) | −40 %: −37 % (−45 %) ✗ |
+| Grafik-Befehle pro Bild | New York, «Mittel», 33 Autos | 2520 | 2053 (−19 %) | |
+| neue Shader-Programme nach dem Countdown | ganzes Rennen Kiesgrube, «Hoch», 8 Autos | 7 | 0 | 0 ✓ |
+| neue Bilder (Texturen) nach dem Countdown | ebenso | 8 | 0 | |
+| Speicherbereinigung über 10 ms | beide Szenen, je 200 Bilder | 0 (längste 8,9 ms) | 0 (längste 1,4 ms) | höchstens 1 pro Minute ✓ |
+| Laden bis zum Countdown, Strecke läuft schon im Menü | 6 Strecken, «Hoch», 8 Autos | 28,0 s | 19,9 s (−29 %) | −30 % ✗ knapp |
+| Laden bis zum Countdown, andere Strecke im Menü | 5 Strecken | 23,4 s | 21,4 s (−8 %) | −30 % ✗ |
+
+Rechenzeit JavaScript: Fenster 480 × 270, ohne die Zeit in den Grafik-Befehlen (`tools/profil.js`, je 200 Bilder). Laden: Fenster 960 × 540 (`tools/ladezeit.js`, mit `GLEICH=1` läuft dieselbe Strecke schon im Menü). Hänger-Suche: `tools/haenger.js` fährt ein ganzes Rennen bis zum Podest und zählt pro Bild neue Shader-Programme, Texturen und Geometrien. Jedes neue Programm ist auf einem echten Gerät ein möglicher Hänger von 20 bis 300 ms. Auslöser vorher: Start, erster Rempler, erster Turbo, erstes Bauwerk (Hologramm, Kanten, Lampe). Programme pro Rennen: `tools/programme.js`.
+
+**Online, gestörtes Netz** (`tools/ruckeln.js`, Kiesgrube, 60 s, 8 Autos; Ausreisser in der Bahn der fremden Autos beim Gast pro Auto-Minute):
+
+| Netz | vorher | nachher | Verzögerung nachher |
+|---|---|---|---|
+| ungestört (40 bis 65 ms) | 133 | 156 | 137 ms (vorher fest 100 ms) |
+| gestört (80 bis 160 ms, 3 % Verlust) | 4106 | 163 (−96 %) | 237 ms |
+| Verhältnis gestört zu ungestört | 31-mal | 1,04-mal (Ziel höchstens 2-mal ✓) | |
+| Rempeln zweier Menschen (eigenes Auto des Gasts, Saat 2): Sprünge, grösster | 27, 0,93 m | 4, 0,07 m | |
+
+Was online geändert ist: Die Verzögerung der fremden Autos passt sich pro Auto an (so lang, dass 98 % der Pakete rechtzeitig da sind, plus anderthalb Paketabstände für ein verlorenes Paket, zwischen 60 und 400 ms) und ändert sich höchstens um 3 % Tempo, ohne Ruck. Pakete, die sich überholt haben, werden einsortiert statt weggeworfen. Rempelt ein fremdes Auto das eigene, schiebt es dieses pro Rechenschritt höchstens 8 cm weg, den Rest erledigt der Stoss. Die Meldung «Rempler» (Ton, Funken, Delle) kommt mit fremden Autos höchstens alle 0,3 s pro Paar.
+
+**Vergleichsbilder** (`tools/ortbild.js`, gleiche Blickwinkel, Kiesgrube und New York, jede Grafik-Stufe, volle Auflösung): Im festen Blick weichen 0,5 bis 1,5 % der Bildpunkte ab (New York) und 0,5 bis 19 % in der Kiesgrube. Das kommt von dem, was sich bewegt: Zuschauer, Bäume im Wind, Autos am Start. Sichtbar ist kein Unterschied. Die Bilder liegen im Projektordner unter `leistung/` (`e1-vorher-…`, `e1-nachher-…`, `e1-diff-…`), dazu die Ladeanzeige, die Einstellungen und der Leistungstest. Die Messdaten stehen in `leistung/messungen-etappe1.tgz`.
+
+### CONFIG-Werte dieser Etappe
+
+| Wert | Bedeutung |
+|---|---|
+| `leistung.strecke`, `autos`, `dauer`, `aufwaermen` | Leistungstest: New York, 12 Autos, 20 s pro Stufe, die ersten 3 s zählen nicht |
+| `leistung.haenger` | 50: ein Bild über 50 ms zählt als Hänger |
+| `leistung.skalaMin`, `skalaSchritt`, `skalaRuhe` | Auflösung anpassen: bis 0,7 (auf «Niedrig» 0,85), Schritte von 0,1, danach 1,5 s Ruhe |
+| `leistung.zuLangsam`, `reicht` | 1,25 und 1,08: ab wann die Auflösung sinkt und wieder steigt (Bildabstand mal Ziel) |
+| `leistung.vorschlag`, `vorschlagHandy` | 45 und 28 Bilder pro Sekunde: darunter schlägt das Ergebnis eine tiefere Stufe vor |
+| `netz.puffer`, `pufferMin`, `pufferMax` | Verzögerung der fremden Autos: Start 0,10 s, nie unter 0,06 s, nie über 0,40 s |
+| `netz.pufferAnteil`, `pufferAbstand`, `pufferRand` | 0,98 der Pakete, 1,5 Abstände, 0,012 s Rand |
+| `netz.pufferHoch`, `pufferRunter` | 0,03 und 0,01: so schnell darf die Verzögerung wachsen und schrumpfen (Sekunden pro Sekunde) |
+| `fahren.fernKorr` | 0,08 m: so weit schiebt ein fremdes Auto das eigene pro Rechenschritt höchstens weg |
+
+### Entscheidungen
+
+- Gemessen wird in der Software-Grafik der Testumgebung. Dort sind Zeichenaufrufe, Rechenzeit, neue Shader und Speicherbereinigung verlässlich, Bilder pro Sekunde nicht. Für das echte Gerät gibt es den Leistungstest in den Einstellungen.
+- Der Menü-Hintergrund zeigt die zuletzt gewählte Strecke statt einer zufälligen: Dann ist sie beim Start schon gebaut.
+- Online startet das Rennen ohne Ladeanzeige wie bisher, weil alle Geräte gemeinsam auf die Uhr des Hosts warten.
+- Die adaptive Auflösung ist eingeschaltet und lässt sich in den Einstellungen ausschalten. Die Vergleichsbilder sind mit voller Auflösung gemacht.
+
+### Grenzen
+
+- Ladezeit: −30 % ist knapp nicht erreicht (−29 %, wenn die Strecke schon im Menü läuft; −8 % sonst). In der Software-Grafik dauert das erste Bild 3 bis 5 Sekunden und überwiegt alles. Auf einem echten Gerät fällt das Bauen der Welt (0,3 bis 0,6 s) stärker ins Gewicht, und das läuft jetzt in Schritten mit Balken.
+- Rechenzeit: −23 % statt −30 % auf «Niedrig» mit 8 Autos und −37 % statt −40 % mit 33 Autos (Mittelwert). Die langsamen Bilder (95 %) sind um 39 % und 45 % schneller.
+- Zeichenaufrufe auf «Niedrig»: −18 % statt −25 %. Dort ist der Anteil der Autos kleiner.
+- Hänger auf echten Geräten lassen sich hier nicht messen. Ersatz: Im ganzen Rennen entstehen keine neuen Shader-Programme und keine neuen Bilder mehr.
+- Gebündelte Autos laden pro Bild eine kleine Tabelle mit 4 Knochen-Lagen hoch (wenige hundert Bytes pro Auto).
+
 ## Wichtigste CONFIG-Werte
 
 Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.

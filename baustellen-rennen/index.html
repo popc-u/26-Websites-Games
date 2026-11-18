@@ -130,6 +130,10 @@ kbd { display: inline-block; min-width: 26px; text-align: center; background: va
 .h-bauinfo { left: 50%; bottom: calc(var(--m) * 100px); transform: translateX(-50%); font: 600 calc(var(--m) * 13px) var(--text); letter-spacing: 0; white-space: nowrap; background: rgba(0,0,0,.45); border-radius: 99px; padding: 2px 12px; }
 .h-falsch { left: 50%; top: 52%; transform: translateX(-50%); font-size: calc(var(--m) * 34px); color: var(--rot); }
 #pauseknopf { position: fixed; left: 50%; top: 6px; transform: translateX(-50%); z-index: 30; pointer-events: auto; opacity: .55; }
+#ladeanzeige { position: fixed; inset: 0; z-index: 75; display: flex; align-items: center; justify-content: center; background: rgba(10,12,16,.92); pointer-events: auto; }
+.ladekasten { width: min(360px, 80vw); text-align: center; color: #fff; font-weight: 600; }
+.ladebalken { height: 12px; margin-top: 10px; background: #2a3038; border: 2px solid #000; border-radius: 7px; overflow: hidden; }
+.ladebalken > div { height: 100%; width: 0; background: var(--gelb, #ffc61a); transition: width .12s linear; }
 #debug { position: fixed; left: 6px; bottom: 16px; z-index: 80; font: 11px/1.3 ui-monospace, Menlo, Consolas, monospace; background: rgba(0,0,0,.6); color: #9f9; padding: 4px 8px; border-radius: 4px; white-space: pre; pointer-events: none; }
 #sim { position: fixed; inset: 0; overflow: auto; background: #17181a; padding: 24px; z-index: 90; pointer-events: auto; -webkit-user-select: text; user-select: text; }
 #sim table { max-width: 900px; }
@@ -269,7 +273,7 @@ input[type=range]{accent-color:var(--gold)}
    Längen in Metern, Zeiten in Sekunden, Tempo in m/s (30 m/s = 108 km/h).
    ══════════════════════════════════════════════════════════════════════════ */
 const CONFIG = {
-  version: '1.0',
+  version: '1.1',
 
   // ── Fahrphysik ──────────────────────────────────────────────────────────
   fahren: {
@@ -293,6 +297,7 @@ const CONFIG = {
     wandSchleifen: 0.5,    // Tempoverlust pro Sekunde beim Entlangschleifen (Anteil)
     kartRadius: 1.05,      // Kollisionsradius eines Fahrzeugs
     stoss: 0.55,           // Stärke des Schubsens zwischen Fahrzeugen
+    fernKorr: 0.08,        // online: so weit (m pro Rechenschritt) schiebt ein fremdes Auto das eigene höchstens weg; den Rest erledigt der Stoss (kein Springen)
     schubAbbau: 5,         // wie schnell ein Schubs abklingt (1/s)
   },
 
@@ -423,6 +428,24 @@ const CONFIG = {
     rallye:      { driftLaden: 0.7, rampe: 1.5, vmax: 0.973, lenk: 1.078 },                                  // Stärke: Drift lädt schneller, Rampen · Schwäche: Höchsttempo
   },
 
+  // ── Leistungstest (Einstellungen) und Bildrate-Anzeige ───────────────────
+  leistung: {
+    strecke: 'newyork',    // der Test fährt auf dieser Strecke (die aufwendigste)
+    autos: 12,             // so viele Autos (alle von Bots gefahren, die Kamera folgt dem ersten)
+    dauer: 20,             // so viele Sekunden wird pro Grafikstufe gemessen
+    aufwaermen: 3,         // so viele Sekunden vorher zählen nicht (Shader übersetzen, Texturen hochladen)
+    haenger: 50,           // ein Bild, das länger dauert (ms), zählt als Hänger
+    // Auflösung passt sich an: Schafft die Grafikkarte die Bildrate nicht, zeichnet das Spiel mit etwas weniger Bildpunkten
+    skalaMin: 0.7,         // höchstens so weit hinunter (Anteil der normalen Auflösung der Stufe), auf «Niedrig» 0.85
+    skalaSchritt: 0.1,     // so viel pro Änderung hinunter (hinauf die Hälfte)
+    skalaRuhe: 1.5,        // so viele Sekunden nach einer Änderung keine weitere
+    zuLangsam: 1.25,       // Bildabstand über dem Ziel mal diesem Wert: zu langsam (bei 60 Hz unter 48 Bildern pro Sekunde)
+    reicht: 1.08,          // Bildabstand unter dem Ziel mal diesem Wert, einige Sekunden lang: wieder schärfer
+    // Nach dem Rennen eine tiefere Grafikstufe vorschlagen, wenn das Rennen dauerhaft langsamer lief (Median der Bildrate)
+    vorschlag: 45,         // Bilder pro Sekunde am Computer
+    vorschlagHandy: 28,    // Bilder pro Sekunde auf Handy und Tablet
+  },
+
   // ── Rennen ──────────────────────────────────────────────────────────────
   rennen: {
     runden: 3,             // Standard-Rundenzahl
@@ -544,7 +567,14 @@ const CONFIG = {
     fernTeiler: 2,         // die übrigen Autos nur jedes 2. Mal (10 pro Sekunde)
     refTeiler: 5,          // Platz, BP und Runde aller Autos nur jedes 5. Mal (4 pro Sekunde), die eigenen jedes Mal
     handyHostMax: 12,      // leitet ein Handy oder Tablet das Rennen, zeigt die Lobby ab mehr Autos einen Hinweis (der Host rechnet alle Autos)
-    puffer: 0.10,          // fremde Fahrzeuge werden so viele Sekunden verzögert dargestellt (weiche Interpolation)
+    puffer: 0.10,          // fremde Fahrzeuge werden so viele Sekunden verzögert dargestellt (weiche Interpolation); Startwert, danach passt sich das an:
+    pufferMin: 0.06,       // … nie weniger (gute Verbindung im selben Netz)
+    pufferMax: 0.40,       // … nie mehr (sehr schlechte Verbindung: dann lieber kurz weiterrechnen)
+    pufferAnteil: 0.98,    // … so viele der Pakete müssen ankommen, bevor sie gezeichnet werden (Alter bei der Ankunft)
+    pufferAbstand: 1.5,    // … dazu so viele Paketabstände (ein verlorenes Paket überbrücken)
+    pufferRand: 0.012,     // … und dieser Rand in Sekunden
+    pufferHoch: 0.03,      // … so viele Sekunden pro Sekunde darf die Verzögerung wachsen (fremde Autos laufen dann 3 % langsamer, ohne Ruck)
+    pufferRunter: 0.01,    // … und so viel schrumpfen (1 % schneller)
     codeLaenge: 5,         // Länge des Raum-Codes
     vermittlerTimeout: 12, // so viele Sekunden darf die Anmeldung beim Vermittlungs-Server dauern
     verbindenTimeout: 12,  // so viele Sekunden darf ein Versuch dauern, die direkte Verbindung zum Host aufzubauen
@@ -1975,15 +2005,26 @@ class Rennen {
         const ueber = 2 * F.kartRadius - dist;
         const leicht = b.w.masse / (a.w.masse + b.w.masse);       // der Leichtere weicht stärker (gleich schwer: je zur Hälfte)
         const anteilA = a.typ === 'fern' ? 0 : b.typ === 'fern' ? 1 : leicht;
-        a.x -= nx * ueber * anteilA; a.z -= nz * ueber * anteilA;
-        b.x += nx * ueber * (1 - anteilA); b.z += nz * ueber * (1 - anteilA);
+        // Ein fremdes Auto (online, leicht verzögert gezeigt) schiebt das eigene nur ein Stück pro Schritt weg: Rückt seine Lage nach,
+        // würde das eigene Auto sonst in einem Schritt um bis zu 2 m versetzt (es springt). Den Rest erledigt der Stoss unten.
+        const weg = a.typ === 'fern' || b.typ === 'fern' ? Math.min(ueber, F.fernKorr) : ueber;
+        a.x -= nx * weg * anteilA; a.z -= nz * weg * anteilA;
+        b.x += nx * weg * (1 - anteilA); b.z += nz * weg * (1 - anteilA);
         const rel = (Math.cos(a.richtung) * a.v + a.schubX - Math.cos(b.richtung) * b.v - b.schubX) * nx
                   + (Math.sin(a.richtung) * a.v + a.schubZ - Math.sin(b.richtung) * b.v - b.schubZ) * nz;
         if (rel > 0) {
           const imp = Math.min(rel * F.stoss, 5);
           if (a.typ !== 'fern') { a.schubX -= nx * imp * leicht; a.schubZ -= nz * imp * leicht; }
           if (b.typ !== 'fern') { b.schubX += nx * imp * (1 - leicht); b.schubZ += nz * imp * (1 - leicht); }
-          if (rel > 2.5) this.melde('rempler', a.idx, b.idx, rel);
+          // Rempler melden (Ton, Funken, Delle). Mit einem fremden Auto (online) bleiben die Autos ein paar Schritte in Berührung, weil die
+          // Korrektur begrenzt ist: dann höchstens alle 0,3 s eine Meldung für dieses Paar, sonst klappert es.
+          if (rel > 2.5) {
+            if (a.typ !== 'fern' && b.typ !== 'fern') this.melde('rempler', a.idx, b.idx, rel);
+            else {
+              const M = this._rempelZeit || (this._rempelZeit = {}), key = a.idx * 64 + b.idx;
+              if (!(this.zeit - M[key] < 0.3)) { M[key] = this.zeit; this.melde('rempler', a.idx, b.idx, rel); }
+            }
+          }
         }
       }
     }
@@ -3014,6 +3055,7 @@ const Grafik = {
     R.setClearColor(0x8fc7ea);
     R.info.autoReset = false;                  // die Zähler (Dreiecke, Zeichenaufrufe) gelten für das ganze Bild samt Nachbearbeitung
     this.szene = new THREE.Scene();
+    this.szene.matrixAutoUpdate = false;              // die Szene selbst bewegt sich nie: So kann three.js ausgeblendete Autos beim Nachrechnen der Lagen überspringen
     this.mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide });
     this.matGlatt = new THREE.MeshLambertMaterial({ vertexColors: true });
     this.matHolo = new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.22, depthWrite: false, side: THREE.DoubleSide });
@@ -3037,7 +3079,9 @@ const Grafik = {
     const R = this.renderer;
     const dpr = window.devicePixelRatio || 1;
     const ultra = q === 'ultra', hoch = q === 'hoch' || ultra;
-    R.setPixelRatio(q === 'niedrig' ? Math.min(dpr, 1) * 0.75 : q === 'mittel' ? Math.min(dpr, 1.25) : Math.min(dpr, 2));
+    this.basisPR = q === 'niedrig' ? Math.min(dpr, 1) * 0.75 : q === 'mittel' ? Math.min(dpr, 1.25) : Math.min(dpr, 2);
+    this.skala = 1;                                          // anpassbare Auflösung (Takt.pruefe) beginnt auf jeder Stufe bei voller Schärfe
+    R.setPixelRatio(this.basisPR);
     // Nachbearbeitung: ab «Mittel» Leuchten, Farbabstimmung und 4-fache Kantenglättung, auf «Ultra» zusätzlich Umgebungsverdeckung
     Nach.setze(q !== 'niedrig', 4, ultra, ultra ? 6 : hoch ? 5 : 4);
     this.matLicht().color.setScalar(Nach.an ? 1.35 : 1);      // Lampen und Leuchtflächen etwas über Weiss: Dann strahlen sie im Leuchten
@@ -3079,9 +3123,18 @@ const Grafik = {
     if (!this.bereit) return;
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
   },
+  // anpassbare Auflösung: s = Anteil der normalen Auflösung dieser Stufe (1 = volle Schärfe)
+  setzeSkala(s) {
+    if (!this.renderer || Math.abs(s - (this.skala || 1)) < 0.001) return;
+    this.skala = s;
+    this.renderer.setPixelRatio((this.basisPR || 1) * s);
+  },
 
   // ── Welt aus den Streckendaten erzeugen ─────────────────────────────────
-  baueWelt(S) {
+  // Welt der Strecke auf einmal bauen (Menü-Hintergrund, Messwerkzeuge). Vor einem Rennen baut Spiel.ladeUndStarte sie in Schritten.
+  baueWelt(S) { for (const _ of this.weltSchritte(S)) { /* weiter */ } },
+  // Die Welt in Schritten: Nach jedem Schritt (yield) kann der Browser die Ladeanzeige zeichnen. Liefert den Anteil, der fertig ist.
+  *weltSchritte(S) {
     if (this.welt) { this.szene.remove(this.welt); this.welt.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); }
     for (const id in this.bauObjekte) this.entferneBauwerk(+id);
     this.strecke = S;
@@ -3090,6 +3143,7 @@ const Grafik = {
     const def = S.def, H = S.haupt, F = Geo.farbe;
     const zuf = zufallsGenerator(12345);
     this.baueHimmel(S.id);
+    yield 0.05;
 
     // Alle befahrbaren Pfade mit ihren Rändern (für «liegt dieser Punkt in einem Korridor?»)
     const pfade = [{ P: H, rand: (i, d) => (d >= 0 ? S.randL[i] : S.randR[i]), weg: null }];
@@ -3142,11 +3196,13 @@ const Grafik = {
     }
     const B = def.boden || {};
     this.baueBoden(W, raster, nx, nz, zelle, B);
+    yield 0.3;
 
     // 2. und 3. Fahrbahn, Randsteine, Markierungen, Leitplanken, Nebenwege (siehe Teil 8e)
     const pt = (P, i, d, dy) => [P.x[i] + P.nx[i] * d, P.y[i] + dy, -(P.z[i] + P.nz[i] * d)];
     this.baueBahn(S, W, pfade, imKorridor, hoehe);
     Boostfelder.baue(this, S, W);
+    yield 0.4;
 
     // 4. Wasser
     Leben.seenLeeren();
@@ -3160,6 +3216,7 @@ const Grafik = {
     }
 
     // 5. Deko
+    yield 0.45;
     const deko = new Geo(), bk = new Baukasten(this, S, hoehe, imKorridor);
     for (const d of def.deko || []) {
       let x = d.x, z = d.z, dreh = d.dreh || 0;
@@ -3168,6 +3225,7 @@ const Grafik = {
       if (Deko[d.art]) Deko[d.art](deko, x, y, -z, dreh, d, S); else if (Bauten[d.art]) Bauten[d.art](bk, x, y, -z, dreh, d);
     }
     // zufällig verteilt: Bäume, Kieshaufen, Felsen, Pylonen, Bauzäune
+    yield 0.55;
     const dichte = this.qualitaet === 'niedrig' ? 0.45 : 1;
     Orte.dampf = [];                                                               // Dampfquellen (New York), werden von der Szene gefüllt
     if (def.szene && Szenen[def.szene]) Szenen[def.szene](bk, deko, zuf, dichte);
@@ -3196,6 +3254,7 @@ const Grafik = {
       }
     }
     // Berge am Horizont
+    yield 0.7;
     const mx = (g.x0 + g.x1) / 2, mz = (g.z0 + g.z1) / 2, rad = Math.max(g.x1 - g.x0, g.z1 - g.z0) / 2 + 330;
     if (def.horizont && Horizont[def.horizont]) Horizont[def.horizont](bk, deko, mx, mz, rad, zuf);
     else for (let q = 0; q < 26; q++) {
@@ -3204,6 +3263,7 @@ const Grafik = {
     }
     W.add(deko.netz(this.mat, true));
     bk.fertig(W);
+    yield 0.8;
     Leben.baue(this, S, W, bk);                                                         // Gras, Blumen, Vögel (Teil 7d)
 
     // 6. Slot-Schilder am Streckenrand
@@ -3455,11 +3515,16 @@ const Schauraum = {
     if (!window.THREE || !canvas) return;
     let R;
     try { R = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true }); } catch (e) { return; }
-    this.r = R; this.canvas = canvas;
+    this.r = R; this.canvas = canvas; this.bereit = false; this.schritte = [];
+    canvas.style.opacity = '0'; canvas.style.transition = 'opacity 0.3s';
     R.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2)); R.setClearColor(0x000000, 0);
     const S = (this.szene = new THREE.Scene()), st = STIMMUNG.schauraum;
-    const tex = new THREE.CanvasTexture(himmelBild(st)); tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
-    const pm = new THREE.PMREMGenerator(R); S.environment = pm.fromEquirectangular(tex).texture; pm.dispose(); tex.dispose();
+    // Aufbau in Schritten, ein Schritt pro Bild (Spiegelbild der Umgebung, jedes Auto des Podests einzeln), dann die Shader im
+    // Hintergrund übersetzen und erst danach einblenden: So stockt das Bild beim Öffnen des Ergebnisses nicht.
+    this.schritte.push(() => {
+      const tex = new THREE.CanvasTexture(himmelBild(st)); tex.mapping = THREE.EquirectangularReflectionMapping; tex.colorSpace = THREE.SRGBColorSpace;
+      const pm = new THREE.PMREMGenerator(R); S.environment = pm.fromEquirectangular(tex).texture; pm.dispose(); tex.dispose();
+    });
     S.add(new THREE.HemisphereLight(st.himmelLicht, st.bodenLicht, st.licht));
     const sonne = new THREE.DirectionalLight(0xffffff, st.sonneKraft); sonne.position.set(4, 7, 3); S.add(sonne);
     const kante = new THREE.DirectionalLight(0x9fc4ff, 1.1); kante.position.set(-5, 3, -4); S.add(kante);
@@ -3471,6 +3536,8 @@ const Schauraum = {
     const bild = (jetzt) => {
       if (!this.r) return;
       this.lauf = requestAnimationFrame(bild);
+      if (this.schritte.length) { this.schritte.shift()(); if (!this.schritte.length) this.vorbereiten(); return; }
+      if (!this.bereit) return;
       const b = canvas.clientWidth, h = canvas.clientHeight;
       if (!b || !h) return;
       if (canvas.width !== Math.round(b * R.getPixelRatio()) || canvas.height !== Math.round(h * R.getPixelRatio())) { R.setSize(b, h, false); this.kam.aspect = b / h; this.kam.updateProjectionMatrix(); }
@@ -3486,6 +3553,13 @@ const Schauraum = {
       R.render(S, this.kam);
     };
     this.lauf = requestAnimationFrame(bild);
+  },
+  // Shader übersetzen, ohne zu warten (wo der Browser das kann), dann einblenden
+  vorbereiten() {
+    const R = this.r, fertig = () => { if (this.r !== R) return; this.bereit = true; this.canvas.style.opacity = '1'; };
+    this.bereit = false;
+    try { if (R.compileAsync) { R.compileAsync(this.szene, this.kam).then(fertig, fertig); return; } } catch (e) { /* dann sofort */ }
+    fertig();
   },
   zeige(typ, farbe) {
     if (!this.r) return;
@@ -3509,7 +3583,8 @@ const Schauraum = {
     };
     const seite = new THREE.MeshStandardMaterial({ color: 0x1b2026, metalness: 0.4, roughness: 0.45 }), oben = new THREE.MeshStandardMaterial({ color: 0x2a3038, metalness: 0.6, roughness: 0.3 });
     this.podestFrei = [seite, oben];
-    [[0, 1.1], [-5, 0.72], [5, 0.42]].forEach(([px, h], i) => {
+    [[0, 1.1], [-5, 0.72], [5, 0.42]].forEach(([px, h], i) => this.schritte.push(() => {      // ein Podestplatz pro Bild
+      if (this.podestGr !== G) return;
       const front = new THREE.MeshStandardMaterial({ map: ziffer(i + 1), metalness: 0.3, roughness: 0.5 }); this.podestFrei.push(front, front.map);
       const block = new THREE.Mesh(new THREE.BoxGeometry(4.7, h, 3.6), [seite, seite, oben, seite, front, seite]);
       block.position.set(px, h / 2, 0); G.add(block); this.podestFrei.push(block.geometry);
@@ -3517,7 +3592,7 @@ const Schauraum = {
       if (!e) return;
       const f = FARBEN[e.farbe % FARBEN.length], a = baueFahrzeug(e.typ, f.hex, f.lack);
       a.gruppe.position.set(px, h, 0.1); a.gruppe.rotation.y = -Math.PI / 2 + 0.55 - i * 0.08; G.add(a.gruppe); this.podestFrei.push(a);
-    });
+    }));
     const boden = new THREE.Mesh(new THREE.CircleGeometry(60, 48), new THREE.MeshStandardMaterial({ color: 0x15191e, metalness: 0.35, roughness: 0.5 }));
     boden.rotation.x = -Math.PI / 2; G.add(boden); this.podestFrei.push(boden.geometry, boden.material);
     this.szene.fog = new THREE.Fog(0x161a1f, 14, 40);                 // der Boden verliert sich im Dunkeln
@@ -3527,7 +3602,7 @@ const Schauraum = {
     if (this.podestGr) { for (const o of this.podestFrei) { if (o.frei) o.frei(); else o.dispose(); } this.podestGr = null; this.podestFrei = null; }
     cancelAnimationFrame(this.lauf);
     try { this.r.dispose(); this.r.forceContextLoss(); } catch (e) { /* egal */ }
-    this.r = null; this.auto = null; this.canvas = null;
+    this.r = null; this.auto = null; this.canvas = null; this.schritte = []; this.bereit = false;
   },
 };
 
@@ -3680,7 +3755,10 @@ Object.assign(Grafik, {
   truemmer: [],
 
   neuesRennen(R) {
-    for (const o of this.kartObjekte) { this.szene.remove(o.gruppe); this.szene.remove(o.schatten); this.szene.remove(o.schild); if (o.frei) o.frei(); }
+    // Die alten Autos erst nach dem Vorbereiten der neuen freigeben: three.js löscht ein Shader-Programm, sobald es kein Material mehr
+    // braucht. Die neuen Autos brauchen meist dieselben Programme; so bleiben sie erhalten und müssen nicht neu übersetzt werden.
+    const alt = this.kartObjekte;
+    for (const o of alt) { this.szene.remove(o.gruppe); this.szene.remove(o.schatten); this.szene.remove(o.schild); }
     Spuren.leeren();
     for (const id in this.bauObjekte) this.entferneBauwerk(+id);
     for (const t of this.truemmer) this.szene.remove(t.netz);
@@ -3692,7 +3770,7 @@ Object.assign(Grafik, {
         const f = FARBEN[k.farbe % FARBEN.length], gr = baueFahrzeug(k.fahrzeug, f.hex, f.lack, true);
         gr.gruppe.traverse((m) => { if (m.material === gr.rueckMat) m.material = o.rueckMat; else if (m.material === gr.blinkMat) m.material = o.blinkMat; });
         gr.gruppe.visible = false; o.gruppe.add(gr.gruppe);
-        o.grob = gr; o.fern = false; o.feinTeile = [...o.aufbau.children, ...o.raeder.map((r) => r.g)];
+        o.grob = gr; o.fern = false; o.feinTeile = [...o.aufbau.children, ...o.raeder.map((r) => r.g), ...o.gebuendelt];
         const frei = o.frei; o.frei = () => { frei(); gr.frei(); };
       }
       o.schatten = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.7), this.schattenMat());
@@ -3714,7 +3792,8 @@ Object.assign(Grafik, {
         N.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
         N.frustumCulled = false; N.count = 0; this.szene.add(N); this.fernNetze[k.fahrzeug] = N;
       }
-      this.fernSchatten = new THREE.InstancedMesh(new THREE.PlaneGeometry(4.6, 2.7), this.schattenMat(), R.karts.length);
+      // eigenes Material für die Instanzen: dasselbe Material mit und ohne Instanzen zwingt three.js, das Shader-Programm jedes Mal neu zu suchen
+      this.fernSchatten = new THREE.InstancedMesh(new THREE.PlaneGeometry(4.6, 2.7), this._schattenInst || (this._schattenInst = this.schattenMat().clone()), R.karts.length);
       this.fernSchatten.frustumCulled = false; this.fernSchatten.count = 0; this.szene.add(this.fernSchatten);
     }
     if (!this.zielMarke) {
@@ -3722,6 +3801,65 @@ Object.assign(Grafik, {
       this.szene.add(this.zielMarke);
     }
     this.zielMarke.visible = false;
+    this.schattenVarianten(this.szene);
+    this.vorbereiten();
+    for (const o of alt) if (o.frei) o.frei();
+  },
+
+  // Alle Shader-Programme vor dem ersten Bild übersetzen, auch für Teile, die erst im Rennen dazukommen (Bauwerk mit Hologramm,
+  // Kanten und Lampe). Sonst übersetzt three.js sie beim ersten Auftauchen mitten im Rennen: auf Handys ein Hänger von 50 bis 300 ms.
+  // Ab «Mittel» zeichnet das Spiel in ein Zwischenbild; davon hängen Farbraum und Tonwerte der Programme ab, darum dasselbe Ziel.
+  vorbereiten() {
+    const Re = this.renderer;
+    if (!Re || !Re.compile) return;
+    if (!this._vorrat) {
+      const g = new Geo(); g.box(0, 0, 0, 1, 1, 1, Geo.farbe(0xffffff));
+      const fest = g.netz(this.mat, true), holo = new THREE.Mesh(fest.geometry, this.matHolo);
+      holo.add(new THREE.LineSegments(new THREE.EdgesGeometry(fest.geometry, 25), this.matHoloLinie));
+      this._vorrat = new THREE.Group(); this._vorrat.visible = false;
+      this._vorrat.add(fest, holo, new THREE.Mesh(new THREE.IcosahedronGeometry(0.28, 0), new THREE.MeshBasicMaterial({ color: 0xffa21a })));
+      this._vorZiel = new THREE.WebGLRenderTarget(1, 1); this._vorKam = new THREE.PerspectiveCamera();
+    }
+    const alt = Re.getRenderTarget(), t = performance.now();
+    this.szene.add(this._vorrat);
+    try {
+      Re.setRenderTarget(Nach.an ? this._vorZiel : null);
+      const stoffe = Re.compile(this.szene, this._vorKam), bilder = new Set();
+      this.shaderStoffe = stoffe;
+      // Bilder (Lack, Schmutz, Schilder) gleich hochladen, nicht erst, wenn ein Auto zum ersten Mal ins Bild fährt
+      if (Re.initTexture) for (const m of stoffe) for (const k of ['map', 'emissiveMap', 'normalMap', 'roughnessMap', 'metalnessMap', 'alphaMap', 'aoMap', 'bumpMap']) if (m[k] && m[k].isTexture && !m[k].isRenderTargetTexture) bilder.add(m[k]);
+      for (const b of bilder) Re.initTexture(b);
+    } catch (e) { /* dann eben beim ersten Bild */ }
+    Re.setRenderTarget(alt);
+    this.szene.remove(this._vorrat);
+    this.vorbereitetMs = performance.now() - t;
+  },
+  // Wartet, bis der Browser die Shader aus vorbereiten() fertig übersetzt hat (ohne das Bild anzuhalten, wo er das im Hintergrund kann)
+  shaderFertig(maxMs = 15000) {
+    const P = this.renderer && this.renderer.properties, stoffe = [...(this.shaderStoffe || [])], t0 = performance.now();
+    return new Promise((fertig) => {
+      const pruefe = () => {
+        let offen = 0;
+        try { for (const m of stoffe) { const pr = P.get(m).currentProgram; if (pr && pr.isReady && !pr.isReady()) offen++; } } catch (e) { offen = 0; }
+        if (!offen || performance.now() - t0 > maxMs) fertig(); else setTimeout(pruefe, 16);
+      };
+      pruefe();
+    });
+  },
+
+  // Schattenbild: three.js zeichnet alle Teile mit einem gemeinsamen Tiefen-Material. Wechseln sich Netze ohne und mit Instanzen,
+  // mit Instanzfarbe oder mit Skinning ab, sucht es dafür jedes Mal das Shader-Programm neu (mehrmals pro Bild). Jede Sorte bekommt
+  // darum ihr eigenes Tiefen-Material. Teile mit ausgeschnittenem Schatten (alphaTest) behalten das von three.js.
+  schattenVarianten(wurzel) {
+    const T = this._tiefe || (this._tiefe = {});
+    const tiefe = (art) => T[art] || (T[art] = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking }));
+    wurzel.traverse((o) => {
+      if (!o.isMesh || !o.castShadow || o.customDepthMaterial) return;
+      const m = o.material;
+      if (!m || Array.isArray(m) || m.alphaTest > 0 || m.alphaMap || m.displacementMap) return;
+      if (o.isSkinnedMesh) o.customDepthMaterial = tiefe('skin');
+      else if (o.isInstancedMesh) o.customDepthMaterial = tiefe(o.instanceColor ? 'instFarbe' : 'inst');
+    });
   },
 
   // Ansichten (geteilter Bildschirm): Liste von Kart-Nummern, −1 = freie Kamera
@@ -3800,7 +3938,7 @@ Object.assign(Grafik, {
       o.schatten.rotation.z = blick;
       o.schild.position.set(x, y + 3.1, -z);
       const inst = !!fern && fern[k.idx];
-      if (inst !== !!o.inst) { o.gruppe.visible = !inst; o.schatten.visible = !inst; }
+      if (inst !== !!o.inst) { o.gruppe.visible = !inst; o.gruppe.matrixWorldAutoUpdate = !inst; o.schatten.visible = !inst; }   // als Instanz: Lagen der Einzelteile nicht nachrechnen
       o.inst = inst;
       if (inst) this.fernEintrag(o, k);
       // Teilchen
@@ -3828,6 +3966,8 @@ Object.assign(Grafik, {
       t.netz.rotation.x += t.dreh * dt; t.netz.rotation.z += t.dreh * 0.7 * dt;
       if (t.leben <= 0) { this.szene.remove(t.netz); this.truemmer.splice(q, 1); }
     }
+    // Schmutz und Kratzer: das Bild der Haut höchstens für ein Auto pro Bild neu zur Grafikkarte schicken, und nur, wenn man das feine Modell sieht
+    for (const o of this.kartObjekte) if (o && o.hautNeu && !o.inst && !o.fern) { o.hautNeu = false; o.bild.tex.needsUpdate = true; break; }
     this.aktualisiereBauwerke(R);
     Orte.proBild(this, R, dt);
     Teilchen.update(dt); Dunst.update(dt); Spuren.update();
@@ -4384,6 +4524,7 @@ Object.assign(Grafik, {
     else if (name === 'glasDunkel') m = std({ color: 0x06080b, roughness: 0.04, metalness: 0.3, transparent: true, opacity: 0.84, depthWrite: false, envMapIntensity: 1.6 });
     else if (name === 'linse') m = std({ color: 0x141a20, roughness: 0.03, metalness: 0.3, transparent: true, opacity: 0.3, depthWrite: false, envMapIntensity: 2.2 });
     else if (name === 'felge') m = std({ vertexColors: true, roughness: 0.3, metalness: 0.85 });
+    else if (name === 'rad') m = this.mat.clone();             // grobe Räder: wie die Welt, aber eigenes Material (gebündelt mit Skinning, siehe Buendel)
     else if (name === 'reifen') {
       // Reifenprofil als Relief: drei Längsrillen und schräge Querrillen auf der Lauffläche, glatte Flanke mit Wulst
       const n = 64, h = new Float32Array(n * n);
@@ -4572,8 +4713,59 @@ function textBild(text, b, h, grund, farbe, rund) {
 
 // ── Rad: Reifen mit Profil und Flanke, Felge mit Speichen, Bremsscheibe, Bremssattel, Radmuttern ──
 // art: { felge, speichen, stollen, bremse, doppel }
-function baueRad(r, b, art, grob) {
+// ── Teile bündeln: ein Zeichenaufruf pro Material statt einer pro Teil ────────────────────────────────
+// Räder (Reifen, Felge, Bremssattel) und Innenraum (Sitze, Fahrer, Kopf, Lenkrad) bestehen pro Auto aus 14 bis 20 Netzen.
+// Jedes Teil hängt an einem «Knochen», der Gruppe, die es bewegt (Aufbau, Kopf, Lenkrad, Radgestell, drehendes Rad); seine
+// Punkte stehen im Raum dieses Knochens. Alle Teile mit demselben Material werden ein einziges Netz mit Skinning: Die Grafikkarte
+// setzt jeden Punkt mit der Lage seines Knochens an die richtige Stelle. Alle Bewegungen bleiben gleich, das Auto braucht aber
+// für Räder und Innenraum nur noch 3 Zeichenaufrufe (Reifen, Felgen mit Sätteln, Innenraum).
+class Buendel {
+  constructor() { this.gruppen = new Map(); this.knochen = []; }
+  dazu(material, geo, knochen, schatten) {
+    let k = this.knochen.indexOf(knochen);
+    if (k < 0) { k = this.knochen.length; this.knochen.push(knochen); }
+    const key = material.uuid + (schatten ? '+' : '-');
+    let g = this.gruppen.get(key);
+    if (!g) { g = { material, schatten, teile: [] }; this.gruppen.set(key, g); }
+    g.teile.push({ geo, k });
+  }
+  // Legt die Netze an und hängt sie an wurzel (die Gruppe des ganzen Autos). kugel umschliesst das Auto in jeder Lage (für das Weglassen
+  // ausserhalb des Bildes). Alle Netze teilen ein Skelett: three.js rechnet die Knochen nur einmal pro Bild.
+  netze(wurzel, kugel) {
+    if (!this.gruppen.size) return [];
+    const skelett = new THREE.Skeleton(this.knochen, this.knochen.map(() => new THREE.Matrix4())), I = new THREE.Matrix4(), liste = [];
+    for (const g of this.gruppen.values()) {
+      let n = 0, ni = 0;
+      for (const t of g.teile) { n += t.geo.attributes.position.count; ni += t.geo.index.count; }
+      const P = new Float32Array(n * 3), N = new Float32Array(n * 3), C = new Float32Array(n * 3), U = new Float32Array(n * 2);
+      const SI = new Uint16Array(n * 4), SW = new Float32Array(n * 4), IX = n > 65535 ? new Uint32Array(ni) : new Uint16Array(ni);
+      let o = 0, oi = 0;
+      for (const t of g.teile) {
+        const A = t.geo.attributes, c = A.position.count, ix = t.geo.index.array;
+        P.set(A.position.array, o * 3); N.set(A.normal.array, o * 3); C.set(A.color.array, o * 3); U.set(A.uv.array, o * 2);
+        for (let i = 0; i < c; i++) { SI[(o + i) * 4] = t.k; SW[(o + i) * 4] = 1; }
+        for (let i = 0; i < ix.length; i++) IX[oi + i] = ix[i] + o;
+        o += c; oi += ix.length; t.geo.dispose();
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+      geo.setAttribute('color', new THREE.BufferAttribute(C, 3)); geo.setAttribute('uv', new THREE.BufferAttribute(U, 2));
+      geo.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(SI, 4)); geo.setAttribute('skinWeight', new THREE.BufferAttribute(SW, 4));
+      geo.setIndex(new THREE.BufferAttribute(IX, 1));
+      const m = new THREE.SkinnedMesh(geo, g.material);
+      m.bind(skelett, I);                                     // Punkte stehen schon im Raum ihres Knochens
+      m.castShadow = g.schatten; m.receiveShadow = true;
+      m.boundingSphere = kugel.clone();
+      wurzel.add(m); liste.push(m);
+    }
+    return liste;
+  }
+}
+
+// buendel: sammelt die Teile, statt für jedes ein eigenes Netz anzulegen (siehe Buendel); ohne buendel wie früher einzelne Netze
+function baueRad(r, b, art, grob, buendel) {
   const F = Geo.farbe, g = new THREE.Group(), dreh = new THREE.Group(), h = b / 2;
+  const haenge = (form, stoff, knochen, schatten) => { if (buendel) buendel.dazu(stoff, form.geometrie(), knochen, schatten); else knochen.add(form.netz(stoff, schatten)); };
   g.add(dreh);
   const fe = F(art.felge), gummi = F(0x161719);
   if (grob === 'fern') {                                   // Autos in der Ferne (Instanzen): 8 Segmente, Reifen und Felge in 4 Ringen
@@ -4585,7 +4777,7 @@ function baueRad(r, b, art, grob) {
   if (grob) {
     const t = new Form();
     t.dreh([[r * 0.55, -h, gummi], [r * 0.93, -h, gummi], [r, -h * 0.7, gummi], [r, h * 0.7, gummi], [r * 0.93, h, gummi], [r * 0.64, h * 0.9, gummi], null, [r * 0.64, h * 0.9, fe], [r * 0.6, h * 0.7, fe], [r * 0.12, h * 0.75, fe], [0.001, h * 0.8, fe]], 12, gummi);
-    dreh.add(t.netz(Grafik.mat, true));
+    haenge(t, buendel ? Grafik.stoff('rad') : Grafik.mat, dreh, true);
     return { g, dreh };
   }
   const t = new Form(), f = new Form(), S = 22;
@@ -4594,8 +4786,7 @@ function baueRad(r, b, art, grob) {
     const a = (i / 18) * TAU + (i % 2) * 0.1, z = (i % 2 ? 1 : -1) * h * 0.56;
     t.quader(Math.cos(a) * (r + 0.006), Math.sin(a) * (r + 0.006), z, 0.035, r * 0.2, h * 0.78, gummi, 0, a);
   }
-  const reifen = t.netz(Grafik.stoff('reifen'), true);
-  dreh.add(reifen);
+  haenge(t, Grafik.stoff('reifen'), dreh, true);
   // Felge: Bett, Horn, Speichen, Nabe, Muttern; dahinter die Bremsscheibe
   const dk = F(art.felge, 0.45), z0 = h * 0.74;
   f.dreh([[r * 0.6, -h * 0.84, dk], [r * 0.56, -h * 0.6, dk], [r * 0.56, h * 0.6, dk], [r * 0.6, h * 0.84, fe], [r * 0.635, h * 0.9, fe], [r * 0.6, h * 0.94, fe], [r * 0.54, h * 0.86, fe]], S, fe);
@@ -4608,10 +4799,10 @@ function baueRad(r, b, art, grob) {
   for (let i = 0; i < 5; i++) { const a = (i / 5) * TAU + 0.3; f.rohr(Math.cos(a) * r * 0.1, Math.sin(a) * r * 0.1, z0, Math.cos(a) * r * 0.1, Math.sin(a) * r * 0.1, z0 + 0.022, 0.012, 0.012, F(0x30343a), 5, true); }
   f.rohr(0, 0, h * 0.3, 0, 0, h * 0.36, r * 0.5, r * 0.5, F(0x8f9498), 16, true);             // Bremsscheibe
   f.rohr(0, 0, -h * 0.5, 0, 0, -h * 0.48, r * 0.57, r * 0.57, F(0x0c0d0e), 10, true);         // Rückwand
-  dreh.add(f.netz(Grafik.stoff('felge'), false));
+  haenge(f, Grafik.stoff('felge'), dreh, false);
   const s = new Form(), w = 2.25;                                                              // Bremssattel (dreht nicht mit)
   s.quader(Math.cos(w) * r * 0.43, Math.sin(w) * r * 0.43, h * 0.36, r * 0.17, r * 0.4, h * 0.42, F(art.bremse || 0xc8202a), 0, w);
-  g.add(s.netz(Grafik.stoff('felge'), false));
+  haenge(s, Grafik.stoff('felge'), g, false);
   return { g, dreh };
 }
 
@@ -4798,6 +4989,7 @@ const AUTOS = {
 function baueFahrzeug(typ, farbeHex, lack, grob) {
   const def = AUTOS[typ] || AUTOS.rallye, F = Geo.farbe, einfach = Grafik.qualitaet === 'niedrig';
   grob = grob || einfach;
+  const buendel = grob === 'fern' ? null : new Buendel();     // die Fassung für Instanzen in der Ferne wird später ohnehin zu einem Netz
   const gr = new THREE.Group(), auf = new THREE.Group();
   gr.rotation.order = 'YZX'; auf.rotation.order = 'YZX'; gr.add(auf);
   const lackArt = lack && lack !== 'glanz' ? lack : def.militaer ? 'matt' : 'glanz';
@@ -4877,17 +5069,17 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
       const kp = new Form();                                                                                                                       // Kopf als eigene Gruppe: Er dreht sich in die Kurve
       kp.kugel(0, 0.065, 0, 0.118, 0.125, 0.115, F(0xf2f0ea), 12, 8); kp.kugel(0.085, 0.075, 0, 0.065, 0.045, 0.098, F(0x0c0e11), 8, 5, 2.6);       // Helm mit Visier
       kp.kugel(0, 0.16, 0, 0.1, 0.03, 0.03, F(farbeHex), 8, 4);                                                                                     // Streifen in Wagenfarbe
-      kopf = new THREE.Group(); kopf.position.set(sx - 0.05, sy + 0.5, zf); kopf.add(kp.netz(Grafik.stoff('innen'), false)); auf.add(kopf);
+      kopf = new THREE.Group(); kopf.position.set(sx - 0.05, sy + 0.5, zf); buendel.dazu(Grafik.stoff('innen'), kp.geometrie(), kopf, false); auf.add(kopf);
       const lx = sx + 0.4, ly = sy + 0.3;
       for (const s of [1, -1]) inn.rohr(sx - 0.04, sy + 0.38, zf + s * 0.16, lx - 0.03, ly + 0.02, zf + s * 0.12, 0.038, 0.03, overall, 6);       // Arme
       const lr = new Form();
       lr.ring(0.125, 0.015, F(0x101113), 16, 5);
       for (const w of [0, 2.1, 4.2]) lr.rohr(0, 0, 0, 0, Math.cos(w) * 0.12, Math.sin(w) * 0.12, 0.012, 0.01, F(0x1b1d20), 4);
       lr.kugel(0, 0, 0, 0.02, 0.035, 0.035, F(0x1b1d20), 6, 4);
-      lenkrad = lr.netz(Grafik.stoff('innen'), false);
+      lenkrad = new THREE.Object3D(); buendel.dazu(Grafik.stoff('innen'), lr.geometrie(), lenkrad, false);
       const halter = new THREE.Group(); halter.position.set(lx, ly, zf); halter.rotation.z = -0.36; halter.add(lenkrad); auf.add(halter);
       inn.rohr(lx, ly, zf, lx + 0.2, ly - 0.08, zf, 0.016, 0.016, F(0x1b1d20), 5);
-      auf.add(inn.netz(Grafik.stoff('innen'), false));
+      buendel.dazu(Grafik.stoff('innen'), inn.geometrie(), auf, false);
     }
     // Nummernschilder vorn und hinten (Fantasie-Nummer), Startnummer
     if (def.schild) {
@@ -4917,7 +5109,7 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
   // Räder
   const raeder = [];
   for (const q of def.rad) for (const s of [1, -1]) {
-    const R = baueRad(q[2], q[3], def.felge, grob);
+    const R = baueRad(q[2], q[3], def.felge, grob, buendel);
     R.g.position.set(q[0], q[2], s * q[1]); R.x = q[0]; R.z = s * q[1]; R.r = q[2]; R.vorn = !!q[4]; R.seite = s; R.y = 0; R.ziel = 0;
     R.g.rotation.y = s < 0 ? Math.PI : 0;
     gr.add(R.g); raeder.push(R);
@@ -4931,10 +5123,11 @@ function baueFahrzeug(typ, farbeHex, lack, grob) {
   }
   const schutz = new THREE.Mesh(new THREE.IcosahedronGeometry(2.1, 1), new THREE.MeshBasicMaterial({ color: 0x9fe8ff, transparent: true, opacity: 0.28, wireframe: true }));
   schutz.position.y = 0.8; schutz.visible = false; gr.add(schutz);
+  const gebuendelt = buendel ? buendel.netze(gr, new THREE.Sphere(new THREE.Vector3((x0 + x1) / 2, 0.9, 0), (x1 - x0) / 2 + 1.3)) : [];
   return {
-    gruppe: gr, aufbau: auf, raeder, flammen, flamme: flammen[0], schutz, lenkrad, koerper, kopf, lampen, rueckMat, blinkMat, warnlicht, bild, def, hinten, haut: H.basis, delleZeit: -9,
+    gruppe: gr, aufbau: auf, raeder, flammen, flamme: flammen[0], schutz, lenkrad, koerper, kopf, lampen, rueckMat, blinkMat, warnlicht, bild, def, hinten, haut: H.basis, delleZeit: -9, gebuendelt,
     auspuff: def.auspuff || [[0, 0.4, 0.05]], radWinkel: 0, vAlt: 0, blickAlt: null, ax: 0, ay: 0, roll: 0, rollV: 0, nick: 0, nickV: 0, hub: 0, hubV: 0, schmutz: 0, kratzer: 0, spur: [[0, 0, 0, 0], [0, 0, 0, 0]], dreckZeit: 0, warnBis: 0,
-    frei() { gr.traverse((o) => { if (o.geometry) o.geometry.dispose(); }); for (const e of eigene) e.dispose(); },
+    frei() { gr.traverse((o) => { if (o.geometry) o.geometry.dispose(); if (o.skeleton) o.skeleton.dispose(); }); for (const e of eigene) e.dispose(); },
   };
 }
 
@@ -5056,7 +5249,7 @@ Object.assign(Grafik, {
         g.beginPath(); g.ellipse(x, b.Y(j), r * (1.2 + Math.random()), r * 0.6, 0, 0, TAU); g.fill();
       }
     }
-    b.tex.needsUpdate = true;
+    o.hautNeu = true;                                                 // hochgeladen wird in Grafik.aktualisiere (höchstens eines pro Bild)
   },
 });
 /* ══════════════════════════════════════════════════════════════════════════
@@ -8672,7 +8865,7 @@ const Online = {
         this.sendeLobby(); break;
       case 'bereit': g.bereit = !!d[1]; this.sendeLobby(); break;
       case 'p': g.ping = d[2] | 0; try { g.k.send(['q', d[1], performance.now()]); } catch (e) { /* egal */ } break;
-      case 'z': if (imRennen && R.karts[g.kart].typ === 'fern') { g.imRennen = true; this.merkeZustand(g.kart, d.slice(1)); } break;
+      case 'z': if (imRennen && R.karts[g.kart].typ === 'fern') { g.imRennen = true; this.merkeZustand(g.kart, d.slice(1), R); } break;
       case 'bau': if (imRennen) R.bauen(R.karts[g.kart], String(d[1]), d[2] | 0); break;                    // der Host prüft die Anfrage wie bei jedem anderen
       case 'treffer': if (imRennen) R.registriereTreffer(g.kart, d[1] | 0, d[2] | 0); break;
       case 'benutzt': if (imRennen) { const bw = R.bauwerke.find((b) => b.id === d[1]); if (bw && bw.besitzer === g.kart) { bw.benutzt = true; bw.tEnde = Math.min(bw.tEnde, R.zeit + 1.2); } } break;
@@ -8932,7 +9125,7 @@ const Online = {
     const ich = this.host ? 'host' : this.meineId;
     const fahrer = daten.fahrer.map((f) => ({ name: f.name, fahrzeug: f.fahrzeug, farbe: f.farbe, stufe: f.stufe, platz: f.platz, geraet: 'tasten',
       typ: f.peer === ich ? 'mensch' : this.host && f.typ === 'bot' ? 'bot' : 'fern', istBot: f.typ === 'bot' }));     // istBot: für die Bestenliste
-    this.t0 = daten.t0; this.imRennen = true; this.schrittNr = 0; this.puffer = fahrer.map(() => []); this.bekannt = {}; this.endeGesendet = false;
+    this.t0 = daten.t0; this.imRennen = true; this.schrittNr = 0; this.puffer = fahrer.map(() => []); this.bekannt = {}; this.endeGesendet = false; this.verz = null;
     this.meinKart = daten.fahrer.findIndex((f) => f.peer === ich);
     this.letzterEmpfang = performance.now();
     for (const id in this.gaeste) { this.gaeste[id].zuletzt = performance.now(); this.gaeste[id].imRennen = false; }
@@ -8951,23 +9144,47 @@ const Online = {
     const soll = (this.jetzt() - this.t0) / 1000 - CONFIG.rennen.countdown;
     return clamp(soll - R.zeit, 0, 0.3);
   },
-  merkeZustand(kart, z) {
+  merkeZustand(kart, z, R) {
     if (!Array.isArray(z) || z.length < 10 || z.some((x) => typeof x !== 'number' || !isFinite(x))) return;
     const P = this.puffer[kart];
-    if (P.length && z[0] <= P[P.length - 1][0]) return;            // veraltet (Pakete können sich überholen)
-    P.push(z); if (P.length > 14) P.shift();
+    if (R) this.pufferBereit(R);
+    if (P.length && z[0] <= P[P.length - 1][0]) {
+      // Pakete können sich überholen: ein älteres Paket einsortieren, solange es noch nach der gezeichneten Zeit liegt (sonst nützt es nichts)
+      const tr = R ? R.zeit - this.verz[kart] : Infinity;
+      if (z[0] <= tr || P.some((q) => q[0] === z[0])) return;
+      let i = P.length; while (i > 0 && P[i - 1][0] > z[0]) i--;
+      P.splice(i, 0, z); if (P.length > 14) P.shift();
+    } else { P.push(z); if (P.length > 14) P.shift(); }
+    // Verzögerung für dieses Auto anpassen: so klein wie möglich, so gross wie nötig. Nötig ist, dass beim Zeichnen das nächste Paket
+    // schon da ist: Alter der Pakete bei der Ankunft (90 % kommen schneller an) plus ihr Abstand plus ein kleiner Rand.
+    if (!R) return;
+    const A = this.alter[kart];
+    A.push(R.zeit - z[0]); if (A.length > 30) A.shift();
+    if (A.length < 8 || P.length < 3 || A.length % 4) return;
+    const s = A.slice().sort((x, y) => x - y), abst = (P[P.length - 1][0] - P[P.length - 3][0]) / 2, N = CONFIG.netz;
+    const ziel = clamp(s[Math.min(s.length - 1, Math.floor(s.length * N.pufferAnteil))] + abst * N.pufferAbstand + N.pufferRand, N.pufferMin, N.pufferMax);
+    if (Math.abs(ziel - this.verzZiel[kart]) > N.pufferRand) this.verzZiel[kart] = ziel;     // kleine Schwankungen nicht nachführen
+  },
+  pufferBereit(R) {
+    if (this.verz && this.verz.length === R.karts.length) return;
+    this.verz = R.karts.map(() => CONFIG.netz.puffer); this.verzZiel = this.verz.slice(); this.alter = R.karts.map(() => []);
   },
   // Fremde Fahrzeuge zwischen zwei empfangenen Zuständen weich bewegen (100 ms in der Vergangenheit). Der Ort folgt einer Hermite-Kurve:
   // Sie geht durch jeden Zustand und hat dort dessen Tempo und Fahrtrichtung, darum knickt die Bahn an den Paketen nicht (20 pro Sekunde,
   // ferne Autos 10). Höhe und Blickrichtung laufen ebenso weich durch die Nachbarzustände. Gezeichnet wird zwischen dem alten und dem
   // neuen Stand (px … und x …), Rennen.step lässt fremde Autos aus.
   vorSchritt(R) {
-    const tr = R.zeit + SCHRITT - CONFIG.netz.puffer;
+    this.pufferBereit(R);
+    const N = CONFIG.netz;
     for (const k of R.karts) {
       if (k.typ !== 'fern') continue;
       k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.blick; k.pv = k.v; k.prichtung = k.richtung;
       const P = this.puffer[k.idx];
       if (!P || !P.length) continue;
+      // Verzögerung dieses Autos weich nachführen (sonst liefe es sichtbar schneller oder langsamer)
+      const v = this.verz[k.idx], z = this.verzZiel[k.idx];
+      this.verz[k.idx] = z > v ? Math.min(z, v + N.pufferHoch * SCHRITT) : Math.max(z, v - N.pufferRunter * SCHRITT);
+      const tr = R.zeit + SCHRITT - this.verz[k.idx];
       while (P.length > 3 && P[2][0] <= tr) P.shift();                          // ein Zustand vor dem jetzigen Abschnitt bleibt (für die Tangenten)
       let ia = 0;
       while (ia + 1 < P.length && P[ia + 1][0] <= tr) ia++;
@@ -9045,7 +9262,7 @@ const Online = {
     if (!Array.isArray(liste) || typeof t !== 'number') return;
     for (const q of liste) {
       const k = Array.isArray(q) && R.karts[q[0]];
-      if (k && k.typ === 'fern') this.merkeZustand(q[0], [r3(t + q[1] / 1000)].concat(q.slice(2)));
+      if (k && k.typ === 'fern') this.merkeZustand(q[0], [r3(t + q[1] / 1000)].concat(q.slice(2)), R);
     }
     const setze = (k, q) => { k.rang = q[0]; k.bp = q[1]; k.runde = q[2]; if (q[3] != null && k.zielZeit == null) k.zielZeit = q[3]; };
     if (Array.isArray(alle)) for (let i = 0; i < R.n; i++) if (Array.isArray(alle[i])) setze(R.karts[i], alle[i]);
@@ -9055,7 +9272,7 @@ const Online = {
   },
   debugText() {
     return 'Netz: Raum ' + this.code + ' · ' + (this.host ? 'Host mit ' + Object.keys(this.gaeste).length + ' Gästen' : 'Gast · Ping ' + Math.round(this.rtt) + ' ms · Uhr ' + Math.round(this.versatz) + ' ms') +
-      ' · Puffer ' + this.puffer.map((p) => p.length).join('/');
+      ' · Puffer ' + this.puffer.map((p) => p.length).join('/') + (this.verz ? ' · Verzögerung ' + this.verz.map((v) => Math.round(v * 1000)).join('/') + ' ms' : '');
   },
 };
 document.addEventListener('visibilitychange', () => Online.sichtbar());
@@ -9410,6 +9627,27 @@ const Spiel = {
     fahrer.forEach((f, i) => { f.fahrzeug = autos[i]; });
   },
 
+  // Rennen mit Ladeanzeige starten (Menü): Die Welt der Strecke entsteht in Schritten, dazwischen zeichnet der Browser den Balken.
+  // Danach übersetzt der Browser die Shader im Hintergrund; der Countdown beginnt erst, wenn alles bereit ist (kein Stocken am Start).
+  async ladeUndStarte(konfig) {
+    if (this.laedt) return;
+    const S = holeStrecke(konfig.strecke), naechstes = () => new Promise((r) => requestAnimationFrame(() => r()));
+    this.laedt = true;
+    try {
+      Ladeanzeige.zeige(0);
+      await naechstes();
+      if (Grafik.strecke !== S && Grafik.weltSchritte) for (const anteil of Grafik.weltSchritte(S)) { Ladeanzeige.zeige(anteil); await naechstes(); }
+      Ladeanzeige.zeige(0.85);
+      await naechstes();
+      this.starte(konfig);
+      Ladeanzeige.zeige(0.95, 'Grafik wird vorbereitet …');
+      if (Grafik.shaderFertig) await Grafik.shaderFertig();
+    } finally {
+      this.laedt = false; Ladeanzeige.weg();
+      App.letzte = performance.now(); Leistung.versteckt = true;       // die Ladezeit zählt nicht als langsames Bild
+    }
+  },
+
   // konfig: { modus, zufall, strecke, runden, fahrer: [{ name, typ: 'mensch'|'bot'|'fern', stufe, fahrzeug, farbe, geraet }], seed, schiri, plaetzeFest }
   starte(konfig) {
     const S = holeStrecke(konfig.strecke);
@@ -9433,6 +9671,7 @@ const Spiel = {
     });
     this.eingaben = new Array(n).fill(null);
     Bestenliste.beginne(R, konfig);                // wer fährt, Rekord der Strecke für die Anzeige
+    Takt.rennStart();                              // Bildrate dieses Rennens messen (Vorschlag nach dem Rennen)
     Grafik.neuesRennen(R); Grafik.setzeAnsichten(this.spieler.length ? this.spieler.map((s) => s.kart) : [-1]);
     Hud.baue(R, this.spieler);
     this.losAn = !!konfig.zufall && this.spieler.length > 0;
@@ -9550,6 +9789,22 @@ const Spiel = {
     Menue.ergebnis(this.R, this.konfig);
     Bestenliste.nachRennen();                      // beim ersten Eintrag einmal nach dem Namen fragen
   },
+};
+
+// Ladeanzeige vor dem Rennen: ein Balken über allem, der beim Bauen der Welt und beim Vorbereiten der Grafik wächst
+const Ladeanzeige = {
+  el: null,
+  zeige(anteil, text) {
+    if (!this.el) {
+      this.el = document.createElement('div'); this.el.id = 'ladeanzeige';
+      this.el.innerHTML = '<div class="ladekasten"><p></p><div class="ladebalken"><div></div></div></div>';
+      document.body.appendChild(this.el);
+    }
+    this.el.classList.remove('versteckt');
+    this.el.querySelector('p').textContent = text || 'Strecke wird gebaut …';
+    this.el.querySelector('.ladebalken > div').style.width = Math.round(clamp(anteil, 0, 1) * 100) + '%';
+  },
+  weg() { if (this.el) this.el.classList.add('versteckt'); },
 };
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 12: Menüs, Ergebnis, Simulations-Seite und Programmstart
@@ -9709,7 +9964,7 @@ const Menue = {
       start: () => {
         this.nameLesen(); Speicher.sichern();
         const ich = { name: D.name, typ: 'mensch', fahrzeug: FAHRZEUGE[D.fahrzeug].id, farbe: D.farbe, geraet: 'tasten' };
-        Spiel.starte({ modus: 'bots', zufall: D.zufallsAuto, strecke: D.strecke, runden: D.runden, fahrer: [ich].concat(this.botFahrer(D.bots, D.stufe, [D.farbe])) });
+        Spiel.ladeUndStarte({ modus: 'bots', zufall: D.zufallsAuto, strecke: D.strecke, runden: D.runden, fahrer: [ich].concat(this.botFahrer(D.bots, D.stufe, [D.farbe])) });
       },
       zurueck: () => { this.nameLesen(); Speicher.sichern(); this.haupt(); },
     });
@@ -9749,7 +10004,7 @@ const Menue = {
         }
         const fahrer = sp.map((p) => ({ name: p.name, typ: 'mensch', fahrzeug: FAHRZEUGE[p.fahrzeug].id, farbe: p.farbe, geraet: p.geraet }));
         const bots = Math.min(D.bots, CONFIG.rennen.maxBots, CONFIG.rennen.maxFahrer - fahrer.length);
-        Spiel.starte({ modus: 'lokal', zufall: D.zufallsAuto, strecke: D.strecke, runden: D.runden, fahrer: fahrer.concat(this.botFahrer(bots, D.stufe, sp.map((p) => p.farbe))) });
+        Spiel.ladeUndStarte({ modus: 'lokal', zufall: D.zufallsAuto, strecke: D.strecke, runden: D.runden, fahrer: fahrer.concat(this.botFahrer(bots, D.stufe, sp.map((p) => p.farbe))) });
       },
       zurueck: () => { this.lokalLesen(); Speicher.sichern(); this.haupt(); },
     });
@@ -9782,8 +10037,14 @@ const Menue = {
       this.wahlZeile('Ton', 'stumm', [{ wert: false, text: 'An' }, { wert: true, text: 'Stumm' }], D.stumm, (v) => { D.stumm = v; App.tonSetzen(); }) +
       this.wahlZeile('Grafik', 'grafik', Object.keys(GRAFIK_NAMEN).map((q) => ({ wert: q, text: GRAFIK_NAMEN[q] })), D.grafik, (v) => { D.grafik = v; D.grafikGemessen = true; Grafik.setzeQualitaet(v); Spiel.starteDemo(D.strecke); }) +
       '<p class="hinweis">Beim ersten Start wählt das Spiel die Stufe nach einer kurzen Messung selbst. Ruckelt es, nimm eine tiefere Stufe. «Ultra» braucht eine starke Grafikkarte. Die Einstellungen bleiben in diesem Browser gespeichert.</p>' +
-      '<div class="knoepfe"><button class="knopf" data-a="zurueck">Fertig</button><button class="knopf zweit" data-a="loeschen">Bestenliste löschen</button></div></div>', {
+      this.wahlZeile('Bildrate-Grenze', 'bildgrenze', [{ wert: 'auto', text: 'Automatisch' }, { wert: 30, text: '30' }, { wert: 60, text: '60' }, { wert: 0, text: 'Ohne Grenze' }], D.bildGrenze == null ? 'auto' : D.bildGrenze, (v) => { D.bildGrenze = v; Takt.teiler = 1; }) +
+      this.wahlZeile('Auflösung anpassen', 'aufloesung', [{ wert: true, text: 'An' }, { wert: false, text: 'Aus' }], D.aufloesung !== false, (v) => { D.aufloesung = v; if (!v) Grafik.setzeSkala(1); }) +
+      '<p class="hinweis">«Automatisch» zeichnet auf schnellen Bildschirmen (über 75 Hz) gleichmässig jedes zweite Bild, wenn das Gerät die volle Rate nicht schafft. «Auflösung anpassen» zeichnet im Rennen kurz mit etwas weniger Bildpunkten, bevor es ruckelt.</p>' +
+      this.wahlZeile('Bildrate anzeigen', 'bildrate', [{ wert: false, text: 'Aus' }, { wert: true, text: 'An' }], !!D.bildrate, (v) => { D.bildrate = v; Leistung.anzeigen(v); }) +
+      '<p class="hinweis">Der Leistungstest fährt auf jeder Grafikstufe ' + CONFIG.leistung.dauer + ' Sekunden lang dasselbe Rennen und zeigt danach, wie flüssig es lief (dauert etwa ' + Math.max(1, Math.round(Object.keys(GRAFIK_NAMEN).length * (CONFIG.leistung.dauer + CONFIG.leistung.aufwaermen + 2) / 60)) + ' Minuten).</p>' +
+      '<div class="knoepfe"><button class="knopf" data-a="zurueck">Fertig</button><button class="knopf zweit" data-a="leistung">Leistungstest</button>' + (D.leistungstest ? '<button class="knopf zweit" data-a="letzter">Letzter Leistungstest</button>' : '') + '<button class="knopf zweit" data-a="loeschen">Bestenliste löschen</button></div></div>', {
         zurueck: () => { this.nameLesen(); Speicher.sichern(); this.haupt(); }, loeschen: () => Bestenliste.loeschenDialog(),
+        leistung: () => { this.nameLesen(); Speicher.sichern(); Leistung.starteTest(); }, letzter: () => Leistung.zeigeErgebnis(D.leistungstest),
       });
     $('f-laut').oninput = (ev) => { D.lautstaerke = ev.target.value / 100; App.tonSetzen(); };
     $('f-musik').oninput = (ev) => { D.musik = ev.target.value / 100; App.tonSetzen(); };
@@ -9793,7 +10054,7 @@ const Menue = {
     this.wahlen = {};
     this.zeige('pause', '<div class="tafel"><h2>' + (online ? 'Menü' : 'Pause') + '</h2><div class="knoepfe"><button class="knopf los" data-a="weiter">Weiterfahren</button>' +
       (online ? '' : '<button class="knopf" data-a="neu">Neu starten</button>') + '<button class="knopf zweit" data-a="steuerung">Steuerung</button><button class="knopf zweit" data-a="menue">Zum Hauptmenü</button></div></div>', {
-      weiter: () => App.pauseUmschalten(), zurueck: () => App.pauseUmschalten(), neu: () => Spiel.starte(Spiel.konfig),
+      weiter: () => App.pauseUmschalten(), zurueck: () => App.pauseUmschalten(), neu: () => Spiel.ladeUndStarte(Spiel.konfig),
       steuerung: () => this.steuerung(() => this.pause(online)), menue: () => App.zumMenue(),
     }, 'mitte');
   },
@@ -9819,15 +10080,18 @@ const Menue = {
     if (jagd) preise += '<span class="abzeichen">Grösste Aufholjagd: ' + esc(jagd.name) + ' (von Platz ' + jagd.schlechtesterRang + ' auf ' + jagd.rang + ')</span>';
     if (sauber) preise += '<span class="abzeichen">Saubere Fahrt: ' + esc(sauber.name) + '</span>';
     const titel = lokal.length === 1 ? 'Platz ' + R.karts[lokal[0]].rang + ' von ' + R.n : 'Ergebnis';
+    const vs = lokal.length ? Takt.vorschlag() : null;          // lief das Rennen dauerhaft langsam? Dann eine tiefere Grafikstufe vorschlagen
+    const vorschlag = vs ? '<p class="hinweis" id="vorschlag">Das Rennen lief mit etwa ' + vs.fps + ' Bildern pro Sekunde. Mit Grafik «' + GRAFIK_NAMEN[vs.stufe] + '» läuft es flüssiger. <button class="knopf zweit" data-a="tiefer">«' + GRAFIK_NAMEN[vs.stufe] + '» wählen</button></p>' : '';
     const online = konfig && konfig.modus === 'online';
     this.zeige('ergebnis', '<div class="tafel breit"><h2>' + titel + '</h2><p class="hinweis">' + esc(R.S.def.name) + ' · ' + R.runden + (R.runden === 1 ? ' Runde' : ' Runden') + '</p>' +
       '<div class="schau podest"><canvas id="schau" aria-label="Siegerpodest"></canvas></div>' +
       '<div class="karte" style="overflow:auto"><table class="ergebnis' + (R.n > 12 ? ' viele' : '') + '"><tr><th class="zahl">Platz</th><th>Fahrer</th><th class="zahl">Zeit</th><th class="zahl">Beste Runde</th><th class="zahl neben">BP verdient / ausgegeben</th><th class="zahl neben">Überholt</th><th class="zahl neben">Bauwerke</th><th class="zahl neben">Treffer</th></tr>' + zeilen + '</table></div>' +
-      '<div>' + preise + '</div>' + Bestenliste.ergebnisHtml() + '<div class="zeile" style="margin-top:14px">' + (online && !konfig.host ? '' : '<button class="knopf los" data-a="revanche">Revanche</button>') +
+      '<div>' + preise + '</div>' + vorschlag + Bestenliste.ergebnisHtml() + '<div class="zeile" style="margin-top:14px">' + (online && !konfig.host ? '' : '<button class="knopf los" data-a="revanche">Revanche</button>') +
       '<button class="knopf" data-a="lobby">Lobby</button><button class="knopf zweit" data-a="menue">Menü</button></div></div>', {
-      revanche: () => { if (online) Online.revanche(); else Spiel.starte(konfig); },
+      revanche: () => { if (online) Online.revanche(); else Spiel.ladeUndStarte(konfig); },
       lobby: () => { if (online) { Online.zurLobby(); return; } Spiel.starteDemo(konfig.strecke); if (konfig.modus === 'lokal') this.lokal(); else this.bots(); },
       menue: () => App.zumMenue(),
+      tiefer: () => { if (!vs) return; const D = Speicher.daten; D.grafik = vs.stufe; D.grafikGemessen = true; Grafik.setzeQualitaet(vs.stufe); Speicher.sichern(); const v = $('vorschlag'); if (v) v.remove(); App.toast('Grafik «' + GRAFIK_NAMEN[vs.stufe] + '» gewählt. Ändern kannst du sie in den Einstellungen.', 3500); },
     }, 'mitte');
     Schauraum.podest(reihe.slice(0, 3).map((k) => ({ typ: k.fahrzeug, farbe: k.farbe })));
   },
@@ -9925,7 +10189,7 @@ const App = {
 
   zumMenue() {
     if (typeof Online !== 'undefined') Online.verlassen();
-    Spiel.starteDemo(); Menue.haupt();
+    Spiel.starteDemo(Speicher.daten.strecke); Menue.haupt();       // Hintergrund: die zuletzt gewählte Strecke, dann ist sie beim Start schon gebaut
   },
 
   tonSetzen() {
@@ -9989,15 +10253,23 @@ const App = {
     }
     const raum = this.parameter.get('raum');
     if (raum && typeof Online !== 'undefined') Online.beitretenDialog(raum); else Menue.haupt();
+    Leistung.anzeigen(!!D.bildrate);
+    if (this.parameter.get('leistungstest') === '1') setTimeout(() => Leistung.starteTest(), 1500);   // ?leistungstest=1 startet den Test gleich
     requestAnimationFrame((t) => { this.letzte = t; this.bild(t); });
   },
 
   bild(t) {
     requestAnimationFrame((x) => this.bild(x));
-    const dt = Math.min(0.1, Math.max(0, (t - this.letzte) / 1000));
+    if (!Takt.zeichnen(t)) return;                       // Bildrate-Grenze: dieses Bild auslassen
+    if (Spiel.laedt) return;                             // ein Rennen wird geladen: Welt halb gebaut, nichts zeichnen
+    const roh = t - this.letzte, dt = Math.min(0.1, Math.max(0, roh / 1000));
     this.letzte = t;
+    const t0 = performance.now();
     Spiel.bild(dt);
     Grafik.zeichne(Spiel.R);
+    const rechen = performance.now() - t0;
+    Leistung.bild(roh, rechen);                          // Bildrate anzeigen und Leistungstest
+    Takt.nachBild(roh, rechen);                          // Grenze auf schnellen Bildschirmen, Auflösung anpassen
     this.fpsBilder++; this.fpsZeit += dt;
     if (this.fpsZeit >= 0.5) { this.fps = this.fpsBilder / this.fpsZeit; this.fpsBilder = 0; this.fpsZeit = 0; if (this.debug) this.debugText(); }
   },
@@ -10747,6 +11019,232 @@ const Konto = {
     if (Menue.offen === 'bestenliste') Bestenliste.zeigeStand();
   },
 };
+// ════════════════════════════════════════════════════════════════════════════
+//  Leistung: «Bildrate anzeigen» und «Leistungstest» (Einstellungen)
+//  Misst echte Bildzeiten auf diesem Gerät. App.bild meldet jedes Bild: die Zeit seit dem letzten Bild
+//  und die Rechenzeit (Spiel.bild + Grafik.zeichne). Der Leistungstest fährt auf jeder Grafikstufe
+//  dasselbe Rennen (CONFIG.leistung) und zeigt danach ein Ergebnis zum Abschreiben oder Kopieren.
+// ════════════════════════════════════════════════════════════════════════════
+const Leistung = {
+  dts: new Float32Array(600), rechen: new Float32Array(600), pos: 0, anzahl: 0,   // die letzten 600 Bilder (rund 10 s)
+  anzeigeEl: null, anzeigeTakt: 0, test: null, versteckt: false,
+
+  // App.bild ruft das nach jedem Bild auf: dtMs = Zeit seit dem letzten Bild, rechenMs = Rechenzeit dieses Bildes
+  bild(dtMs, rechenMs) {
+    if (this.versteckt || !(dtMs > 0)) { this.versteckt = false; return; }   // erstes Bild, oder das Fenster war versteckt (dann ruht die Bildfolge)
+    this.dts[this.pos] = dtMs; this.rechen[this.pos] = rechenMs;
+    this.pos = (this.pos + 1) % this.dts.length; this.anzahl = Math.min(this.anzahl + 1, this.dts.length);
+    if (this.test) this.testBild(dtMs, rechenMs);
+    if (this.anzeigeEl) { this.anzeigeTakt += dtMs; if (this.anzeigeTakt >= 500) { this.anzeigeTakt = 0; this.zeigeWerte(); } }
+  },
+
+  // Kennzahlen aus einer Liste von Bildzeiten: Bilder pro Sekunde, die tiefsten 1 % (99 % der Bilder sind schneller), Hänger über 50 ms
+  kennzahlen(dts, rechen) {
+    const n = dts.length;
+    if (!n) return { fps: 0, tief: 0, haenger: 0, rechen: 0, n: 0 };
+    let summe = 0, haenger = 0, r = 0;
+    for (let i = 0; i < n; i++) { summe += dts[i]; if (dts[i] > CONFIG.leistung.haenger) haenger++; r += rechen[i]; }
+    const s = Array.from(dts).sort((a, b) => a - b), p99 = s[Math.min(n - 1, Math.floor(n * 0.99))];
+    return { fps: 1000 * n / summe, tief: 1000 / p99, haenger, rechen: r / n, n, sekunden: summe / 1000 };
+  },
+
+  // ── Bildrate anzeigen ─────────────────────────────────────────────────────
+  anzeigen(an) {
+    if (an && !this.anzeigeEl) {
+      const d = document.createElement('div'); d.id = 'bildrate'; document.body.appendChild(d); this.anzeigeEl = d; this.zeigeWerte();
+    } else if (!an && this.anzeigeEl) { this.anzeigeEl.remove(); this.anzeigeEl = null; }
+  },
+  zeigeWerte() {
+    const n = Math.min(this.anzahl, 120), d = [], r = [];        // die letzten rund 2 s
+    for (let i = 1; i <= n; i++) { const j = (this.pos - i + this.dts.length) % this.dts.length; d.push(this.dts[j]); r.push(this.rechen[j]); }
+    const k = this.kennzahlen(d, r), lang = this.kennzahlen(this.letzte(600), this.letzteRechen(600));
+    this.anzeigeEl.textContent = Math.round(k.fps) + ' Bilder/s · tiefste 1 %: ' + Math.round(lang.tief) + ' · Hänger: ' + lang.haenger + ' · Rechnen ' + k.rechen.toFixed(1).replace('.', ',') + ' ms';
+  },
+  letzte(n) { const d = []; for (let i = 1; i <= Math.min(n, this.anzahl); i++) d.push(this.dts[(this.pos - i + this.dts.length) % this.dts.length]); return d; },
+  letzteRechen(n) { const d = []; for (let i = 1; i <= Math.min(n, this.anzahl); i++) d.push(this.rechen[(this.pos - i + this.rechen.length) % this.rechen.length]); return d; },
+
+  // ── Leistungstest ─────────────────────────────────────────────────────────
+  starteTest() {
+    if (this.test || !Grafik.renderer) return;
+    this.test = { stufen: Object.keys(GRAFIK_NAMEN), i: -1, alt: Grafik.qualitaet, erg: [], phase: 'warm', t: 0, dts: [], rechen: [] };
+    Menue.schliesse();
+    this.naechsteStufe();
+  },
+  naechsteStufe() {
+    const T = this.test, L = CONFIG.leistung;
+    T.i++;
+    if (T.i >= T.stufen.length) { this.testEnde(false); return; }
+    const q = T.stufen[T.i];
+    Grafik.setzeQualitaet(q);
+    // immer dasselbe Rennen: feste Strecke, feste Autos und Startplätze, feste Saat; das erste Auto fährt ein Bot, die Kamera folgt ihm
+    const fahrer = [];
+    for (let i = 0; i < L.autos; i++) fahrer.push({ name: BOT_NAMEN[i % BOT_NAMEN.length], typ: i ? 'bot' : 'mensch', stufe: 'mittel', fahrzeug: FAHRZEUGE[i % FAHRZEUGE.length].id, farbe: i % FARBEN.length, geraet: 'tasten', platz: L.autos - 1 - i });
+    Spiel.starte({ modus: 'leistungstest', zufall: false, strecke: L.strecke, runden: 3, fahrer, seed: 777, plaetzeFest: true });
+    const R = Spiel.R, k = R.karts[Spiel.spieler[0].kart];
+    k.typ = 'bot'; k.bot = new Bot(R, k, 'mittel');
+    while (R.zeit < 0) Spiel.schritt(false);               // Countdown überspringen
+    for (const t of Hud.teile) { t.grossZeit = 0; Hud.setzeGross(t, '', false); }
+    T.phase = 'warm'; T.t = 0; T.dts = []; T.rechen = [];
+    App.toast('Leistungstest: Grafik «' + GRAFIK_NAMEN[q] + '» (' + (T.i + 1) + ' von ' + T.stufen.length + '). Abbrechen mit Esc.', 3000);
+  },
+  testBild(dtMs, rechenMs) {
+    const T = this.test, L = CONFIG.leistung;
+    if (Spiel.pause || Menue.offen || !Spiel.R || Spiel.demo) { this.testEnde(true); return; }      // Esc oder Menü: abbrechen
+    T.t += dtMs;
+    if (T.phase === 'warm') { if (T.t >= L.aufwaermen * 1000) { T.phase = 'mess'; T.t = 0; } return; }
+    T.dts.push(dtMs); T.rechen.push(rechenMs);
+    if (T.t >= L.dauer * 1000) {
+      const c = Grafik.renderer.domElement;
+      T.erg.push(Object.assign({ stufe: T.stufen[T.i], bild: c.width + '×' + c.height }, this.kennzahlen(T.dts, T.rechen)));
+      this.naechsteStufe();
+    }
+  },
+  testEnde(abgebrochen) {
+    const T = this.test; this.test = null;
+    Grafik.setzeQualitaet(T.alt);
+    App.zumMenue();
+    if (abgebrochen) { App.toast('Leistungstest abgebrochen.', 2500); return; }
+    const text = this.ergebnisText(T.erg);
+    try { Speicher.daten.leistungstest = text; Speicher.sichern(); } catch (e) { /* egal */ }
+    this.zeigeErgebnis(text);
+  },
+  geraet() {
+    let gpu = '';
+    try { const gl = Grafik.renderer.getContext(), e = gl.getExtension('WEBGL_debug_renderer_info'); gpu = e ? String(gl.getParameter(e.UNMASKED_RENDERER_WEBGL)) : ''; } catch (e) { /* egal */ }
+    return { gpu: gpu || 'unbekannt', fenster: window.innerWidth + '×' + window.innerHeight, dichte: (window.devicePixelRatio || 1) };
+  },
+  ergebnisText(erg) {
+    const g = this.geraet(), L = CONFIG.leistung, d = new Date();
+    const z = (x, n) => String(x).padEnd(n);
+    let s = 'Leistungstest Baustellen-Rennen ' + CONFIG.version + ' · ' + STRECKEN[L.strecke].name + ' · ' + L.autos + ' Autos · ' + d.getDate() + '.' + (d.getMonth() + 1) + '.' + d.getFullYear() + '\n' +
+      'Fenster ' + g.fenster + ', Pixeldichte ' + String(g.dichte).replace('.', ',') + '\nGrafikkarte: ' + g.gpu + '\n' +
+      z('Stufe', 9) + z('Bilder/s', 10) + z('tiefste 1 %', 13) + z('Hänger', 8) + z('Rechnen', 10) + 'Bildpunkte\n';
+    for (const e of erg) s += z(GRAFIK_NAMEN[e.stufe], 9) + z(Math.round(e.fps), 10) + z(Math.round(e.tief), 13) + z(e.haenger, 8) + z(e.rechen.toFixed(1).replace('.', ',') + ' ms', 10) + e.bild + '\n';
+    return s + 'Hänger: Bilder über ' + L.haenger + ' ms in ' + L.dauer + ' s.\nRechnen: so lange rechnet das Spiel pro Bild selbst. Ist das klein und die Bildrate trotzdem tief, bremst die Grafikkarte.';
+  },
+  zeigeErgebnis(text) {
+    Menue.zeige('leistung', '<div class="tafel"><h2>Leistungstest</h2>' +
+      '<p class="hinweis">So flüssig lief dasselbe Rennen auf jeder Grafikstufe. Ab etwa 50 Bildern pro Sekunde wirkt es flüssig. Schick das Ergebnis gern weiter (Kopieren oder ein Bildschirmfoto).</p>' +
+      '<textarea id="leistung-text" readonly rows="11" spellcheck="false">' + esc(text) + '</textarea>' +
+      '<div class="knoepfe"><button class="knopf" data-a="kopieren">Kopieren</button><button class="knopf zweit" data-a="zurueck">Fertig</button></div></div>', {
+      kopieren: () => {
+        const ta = $('leistung-text');
+        const ok = () => App.toast('Ergebnis kopiert.', 1500);
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, () => { ta.select(); document.execCommand('copy'); ok(); });
+        else { ta.select(); document.execCommand('copy'); ok(); }
+      },
+      zurueck: () => Menue.einstellungen(),
+    });
+  },
+};
+
+document.addEventListener('visibilitychange', () => { if (document.hidden) Leistung.versteckt = true; });
+
+// ════════════════════════════════════════════════════════════════════════════
+//  Takt: Bildrate-Grenze, anpassbare Auflösung und Vorschlag nach dem Rennen
+//  - Bildrate-Grenze (Einstellungen): «Automatisch» zeichnet jedes Bild; schafft das Spiel auf einem Bildschirm mit mehr als
+//    75 Hz die volle Rate nicht, zeichnet es gleichmässig jedes zweite Bild (120 Hz → 60, 144 Hz → 72) statt unruhig dazwischen.
+//    30 und 60 begrenzen fest, «Ohne Grenze» zeichnet immer.
+//  - Auflösung anpassen: Schafft die Grafikkarte die Bildrate im Rennen nicht (und der Hauptprozessor ist nicht schuld), zeichnet das
+//    Spiel mit etwas weniger Bildpunkten (bis CONFIG.leistung.skalaMin) und wird wieder schärfer, sobald es reicht.
+//  - Lief ein Rennen dauerhaft langsam (Median unter CONFIG.leistung.vorschlag, Handy vorschlagHandy), schlägt das Ergebnis eine
+//    tiefere Grafikstufe vor.
+// ════════════════════════════════════════════════════════════════════════════
+const Takt = {
+  faellig: 0, rafLetzt: 0, rafAbst: [], rafN: 0, schirmMs: 1000 / 60, teiler: 1,
+  pruefMs: 0, uhr: 0, ruheBis: 0, gutSeit: -1, hochWarte: 3, letzteErhoehung: -99, rennHist: null, rennN: 0,
+
+  // Abstand der Bildschirm-Aktualisierungen: der kurze typische Abstand zwischen zwei Aufrufen (10 % sind noch kürzer)
+  messeSchirm(t) {
+    if (this.rafLetzt) { const d = t - this.rafLetzt; if (d > 3 && d < 60) { this.rafAbst.push(d); if (this.rafAbst.length > 90) this.rafAbst.shift(); } }
+    this.rafLetzt = t;
+    if (++this.rafN % 30 === 0 && this.rafAbst.length >= 30) { const s = this.rafAbst.slice().sort((a, b) => a - b); this.schirmMs = s[Math.floor(s.length * 0.1)]; }
+  },
+  // Mindestabstand zwischen zwei gezeichneten Bildern (ms), 0 = keine Grenze
+  abstand() {
+    if (Leistung.test) return 0;
+    const g = Speicher.daten.bildGrenze || 'auto';
+    if (g === 'auto') return this.teiler > 1 ? this.teiler * this.schirmMs : 0;
+    return g > 0 ? 1000 / g : 0;
+  },
+  // App.bild fragt bei jedem Aufruf: dieses Bild zeichnen (true) oder auslassen?
+  zeichnen(t) {
+    this.messeSchirm(t);
+    const iv = this.abstand();
+    if (!iv) { this.faellig = t; return true; }
+    if (t < this.faellig - Math.min(2, iv * 0.15)) return false;
+    this.faellig = t - this.faellig > iv ? t + iv : this.faellig + iv;
+    return true;
+  },
+  // neues Rennen: Grenze und Bildzähler zurücksetzen (die Auflösung bleibt, wie sie zuletzt war)
+  rennStart() { this.teiler = 1; this.rennHist = new Uint16Array(201); this.rennN = 0; this.gutSeit = -1; },
+
+  // nach jedem gezeichneten Bild: dtMs = Abstand zum letzten gezeichneten Bild, rechenMs = Rechenzeit dieses Bildes
+  nachBild(dtMs, rechenMs) {
+    if (!(dtMs > 0) || dtMs > 1000) return;
+    this.uhr += dtMs / 1000;
+    const imRennen = !!Spiel.R && !Spiel.demo && !Spiel.pause && !Leistung.test && Menue.offen == null;
+    if (imRennen && Spiel.R.zeit > 0 && this.rennHist) { const b = Math.min(200, Math.round(dtMs)); if (this.rennHist[b] < 65535) this.rennHist[b]++; this.rennN++; }
+    this.pruefMs += dtMs;
+    if (this.pruefMs < 500) return;
+    this.pruefMs = 0;
+    if (!imRennen) return;
+    const L = CONFIG.leistung, D = Speicher.daten, n = Math.min(Leistung.anzahl, 60);
+    if (n < 20) return;
+    let summe = 0, rechen = 0;
+    for (let i = 1; i <= n; i++) { const j = (Leistung.pos - i + Leistung.dts.length) % Leistung.dts.length; summe += Leistung.dts[j]; rechen += Leistung.rechen[j]; }
+    const mittel = summe / n;
+    // 1) schneller Bildschirm, volle Rate nicht zu halten: gleichmässig jedes zweite (dritte …) Bild, aber nicht unter 55 pro Sekunde
+    if ((D.bildGrenze || 'auto') === 'auto' && this.schirmMs < 13.3) {
+      const max = Math.max(1, Math.floor(1000 / 55 / this.schirmMs));
+      if (this.teiler < max && mittel > this.teiler * this.schirmMs * 1.3) { this.teiler++; this.ruheBis = this.uhr + L.skalaRuhe; return; }
+    }
+    // 2) Auflösung
+    if (D.aufloesung === false) { if ((Grafik.skala || 1) !== 1) Grafik.setzeSkala(1); return; }
+    if (this.uhr < this.ruheBis) return;
+    const ziel = Math.max(this.abstand(), 1000 / 60), s = Grafik.skala || 1, min = Grafik.qualitaet === 'niedrig' ? Math.max(L.skalaMin, 0.85) : L.skalaMin;
+    if (mittel > ziel * L.zuLangsam && rechen / n < mittel * 0.9) {
+      this.gutSeit = -1;
+      if (s > min + 0.001) {
+        if (this.uhr - this.letzteErhoehung < 6) this.hochWarte = Math.min(40, this.hochWarte * 2);      // eben erst schärfer gestellt und schon wieder zu langsam: nächstes Mal länger warten
+        Grafik.setzeSkala(Math.round(Math.max(min, s - L.skalaSchritt * (mittel > ziel * 1.8 ? 1.5 : 1)) * 100) / 100);
+        this.ruheBis = this.uhr + L.skalaRuhe;
+      }
+    } else if (mittel < ziel * L.reicht) {
+      if (this.gutSeit < 0) this.gutSeit = this.uhr;
+      if (s < 1 && this.uhr - this.gutSeit > this.hochWarte) {
+        Grafik.setzeSkala(Math.min(1, Math.round((s + L.skalaSchritt / 2) * 100) / 100));
+        this.ruheBis = this.uhr + L.skalaRuhe; this.gutSeit = this.uhr; this.letzteErhoehung = this.uhr;
+      }
+    } else this.gutSeit = -1;
+  },
+
+  // Median der Bildrate im letzten Rennen (nach dem Countdown), 0 = zu wenig gemessen
+  rennFps() {
+    if (!this.rennHist || this.rennN < 300) return 0;
+    let z = 0;
+    for (let b = 0; b <= 200; b++) { z += this.rennHist[b]; if (z >= this.rennN / 2) return 1000 / Math.max(1, b); }
+    return 0;
+  },
+  // Vorschlag nach dem Rennen: { fps, stufe } oder null
+  vorschlag() {
+    const fps = this.rennFps(), L = CONFIG.leistung, stufen = Object.keys(GRAFIK_NAMEN), i = stufen.indexOf(Grafik.qualitaet), g = Speicher.daten.bildGrenze;
+    if (!fps || i <= 0) return null;
+    const handy = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    let schwelle = handy ? L.vorschlagHandy : L.vorschlag;
+    if (g > 0) schwelle = Math.min(schwelle, g * 0.85);                  // eine selbst gewählte Grenze (zum Beispiel 30) ist kein Grund
+    return fps < schwelle ? { fps: Math.round(fps), stufe: stufen[i - 1] } : null;
+  },
+};
+
+// Aussehen der Anzeige und des Ergebnisses
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '#bildrate{position:fixed;top:6px;left:50%;transform:translateX(-50%);z-index:60;pointer-events:none;font:12px/1.3 ui-monospace,Menlo,Consolas,monospace;' +
+    'color:#fff;background:rgba(0,0,0,.55);padding:3px 8px;border-radius:6px;white-space:nowrap}' +
+    '#leistung-text{width:100%;box-sizing:border-box;font:12px/1.35 ui-monospace,Menlo,Consolas,monospace;background:rgba(0,0,0,.35);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;padding:8px;resize:none;white-space:pre-wrap;overflow:auto}';
+  document.head.appendChild(st);
+})();
 App.start();
 </script>
 </body>
