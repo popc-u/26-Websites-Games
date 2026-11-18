@@ -65,7 +65,14 @@ tr.ich td { background: rgba(255,198,26,.16); }
 kbd { display: inline-block; min-width: 26px; text-align: center; background: var(--weiss); color: #111; border: 2px solid #000; border-bottom-width: 4px; border-radius: 5px; padding: 0 6px; font: 600 13px var(--text); margin: 1px; }
 .abzeichen { display: inline-block; background: var(--gelb); color: #000; border: 2px solid #000; border-radius: 99px; padding: 2px 12px; font-size: 13px; font-weight: 700; margin: 3px 4px 3px 0; }
 #toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); z-index: 70; background: var(--rot); color: #fff; border: 3px solid #000; border-radius: 8px; padding: 10px 18px; max-width: min(640px, 92vw); font-weight: 600; box-shadow: 0 5px 0 #000; pointer-events: auto; }
+/* Ergebnis mit vielen Fahrern: dichter, auf dem Handy nur Platz, Name, Zeit und beste Runde */
+.ergebnis.viele td, .ergebnis.viele th { padding: 3px 6px; font-size: 14px; }
+.ergebnis.viele .farbfeld { width: 15px; height: 15px; }
+@media (max-width: 560px) { .ergebnis.viele .neben { display: none; } .ergebnis.viele td, .ergebnis.viele th { padding: 3px 4px; font-size: 13px; } }
+.spielerliste { max-height: min(46vh, 430px); overflow-y: auto; overscroll-behavior: contain; }
 .spielerliste .zeile { background: rgba(0,0,0,.35); border-radius: 6px; padding: 5px 10px; margin: 4px 0; }
+.spielerliste.viele .zeile { padding: 2px 8px; margin: 2px 0; font-size: 14px; gap: 6px; }
+.spielerliste.viele .farbfeld { width: 16px; height: 16px; }
 .bereit { color: var(--gruen); font-weight: 700; }
 
 /* ── Anzeige im Rennen (pro Spieler ein .hud) ─────────── */
@@ -213,6 +220,23 @@ input[type=range]{accent-color:var(--gold)}
 .dialog h2{font:650 1.45rem/1.2 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-style:normal;text-transform:none;letter-spacing:-.01em;text-shadow:none;color:var(--text);margin:0 0 8px}
 .dialog p{margin:0 0 10px;color:var(--leise)}
 .dialog .feld{display:block;width:100%;box-sizing:border-box;font-size:1.1rem;padding:10px 12px;margin:4px 0 14px}
+/* Konto: «Mit Google anmelden» nach Googles Vorgaben (dunkle Fassung: Grund #131314, Rand #8E918F, Schrift #E3E3E3, farbiges G) */
+.konto{margin-top:16px;padding-top:14px;border-top:1px solid var(--linie);display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+.konto .konto-satz{flex-basis:100%;margin:0;font-size:.78rem;line-height:1.35}
+.google-knopf{pointer-events:auto;cursor:pointer;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px 0 12px;background:#131314;color:#e3e3e3;border:1px solid #8e918f;border-radius:20px;font:500 14px/20px Roboto,system-ui,-apple-system,"Segoe UI",Arial,sans-serif;letter-spacing:.25px;white-space:nowrap;transition:background .15s}
+.google-knopf:hover,.google-knopf:focus-visible{background:#1f2023;outline:none}
+.google-knopf:focus-visible{box-shadow:0 0 0 2px var(--gold)}
+.google-knopf .g-logo{width:20px;height:20px;flex:none}
+.konto.an>span{font-size:.92rem;color:var(--text)}
+.konto.an .knopf{font-size:.85rem;padding:6px 10px 5px}
+.konto-bild{width:32px;height:32px;border-radius:50%;flex:none;object-fit:cover;border:1px solid var(--linie)}
+.konto-bild.leer{display:inline-flex;align-items:center;justify-content:center;background:var(--gold);color:var(--tinte);font-weight:700}
+.dialog .name-frei{color:#7fe08a}.dialog .name-besetzt{color:#ff9d8f}
+#toast{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.bl-haken{width:15px;height:15px;vertical-align:-2px;margin-left:5px;flex:none}
+.bl-haken circle{fill:#3fb54a}.bl-haken path{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.bl-anmelden{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:4px 0 8px;padding:9px 12px;border:1px solid var(--linie);border-radius:12px;background:rgba(255,255,255,.04);font-size:.82rem;color:var(--leise)}
+.bl-anmelden span{flex:1 1 220px}
 @media(max-width:560px){.bl-kopf{grid-template-columns:1fr}.bl-kopf canvas{width:110px;height:110px}.bl-datum{display:none}.bl-tabelle td,.bl-tabelle th{padding:4px 5px}.bl-auto,.bl-was{display:none}.bl-handy{display:block;color:var(--leise);font-size:.75rem}}
 </style>
 </head>
@@ -345,6 +369,7 @@ const CONFIG = {
     rangVerfall: 15,       // s: so lange dauert es, bis ein verlorener Platz wieder als «neu gewonnen» zählt (0 = jedes Überholen zählt voll)
     erkauftZeit: 4,        // s: nach eigener Rampe oder Abkürzung gibt es so lange keine BP (gekaufte Plätze zahlen sich nicht selbst zurück; 0 = aus)
     fuehrenderVerdient: false, // true = auch der Führende sammelt BP (nicht empfohlen)
+    feldExponent: 0.5,     // ab 9 Fahrern: BP × (8 ÷ Fahrer) hoch diesen Wert (12 Fahrer × 0,82, 33 Fahrer × 0,49); 0 = wie mit 8 Fahrern. Bis 8 Fahrer ändert sich nichts
   },
 
   // ── Bauen ───────────────────────────────────────────────────────────────
@@ -401,10 +426,18 @@ const CONFIG = {
   // ── Rennen ──────────────────────────────────────────────────────────────
   rennen: {
     runden: 3,             // Standard-Rundenzahl
-    maxFahrer: 8,          // Obergrenze pro Rennen (abgestimmt auf 8)
+    maxFahrer: 33,         // Obergrenze pro Rennen: online bis zu 22 Menschen und dazu bis zu 11 Bots (Balancing abgestimmt auf 8)
+    maxBots: 11,           // so viele Bots kann man dazunehmen (gegen Bots, Split-Screen und online)
+    maxMenschen: 22,       // so viele Menschen passen online in einen Raum (Host eingerechnet)
     countdown: 3,          // Sekunden bis «Los!»
-    startAbstand: 3.6,     // Abstand der Startplätze in Fahrtrichtung (m)
-    startSeite: 2.7,       // seitlicher Versatz der Startplätze (m)
+    startVorLinie: 7,      // Abstand der vordersten Startplätze zur Ziellinie (m)
+    startAnlauf: 45,       // ein kleines Feld rückt auf der Startgeraden nach hinten, bis die vorderste Reihe höchstens so viel Anlauf hat (m)
+    startBreite: 3,        // Autos pro Startreihe (2 = versetzt hintereinander wie bis 17.11.2026)
+    startAbstand: 3.6,     // bei 2 pro Reihe: Abstand der Startplätze in Fahrtrichtung (m)
+    startSeite: 2.7,       // bei 2 pro Reihe: seitlicher Versatz der Startplätze (m)
+    startReihe: 4.6,       // bei 3 pro Reihe: Abstand der Reihen in Fahrtrichtung (m)
+    startSeite3: 3.4,      // bei 3 pro Reihe: seitlicher Abstand der Plätze (m)
+    startVersatz: 0.9,     // bei 3 pro Reihe: die Plätze einer Reihe stehen so viel versetzt hintereinander (m)
     endeNachSieger: 40,    // so lange läuft das Rennen nach dem ersten Zieleinlauf höchstens weiter
     resetNachStillstand: 2.2, // wer so lange feststeckt, wird automatisch zurückgesetzt
     resetTiefe: 6,         // wer so tief unter die Strecke fällt, wird zurückgesetzt
@@ -472,6 +505,10 @@ const CONFIG = {
     },
     // Ab dieser Entfernung (m) zur nächsten Kamera zeigt ein Auto seine einfache Fassung (weniger Dreiecke und Zeichenaufrufe); 0 = immer fein
     lod: { niedrig: 0, mittel: 30, hoch: 45, ultra: 70 },
+    // Grosse Felder: nur die so vielen Autos, die einer Kamera am nächsten sind, haben ein eigenes Modell. Alle anderen werden als Instanzen
+    // gezeichnet (einfache Fassung, ein Zeichenaufruf pro Autotyp). Bis zu dieser Feldgrösse ändert sich nichts («Niedrig»: 2 von 8 Autos instanziert).
+    feinMax: { niedrig: 6, mittel: 8, hoch: 8, ultra: 8 },
+    schilder: 10,          // höchstens so viele Namensschilder pro Bild (die nächsten), damit sie in grossen Feldern nicht die Sicht verdecken
     // Dellen nach Stössen (ab «Mittel»): erst ab diesem Aufprall in m/s, jeder Punkt der Karosserie höchstens so weit eingedrückt (m)
     delle: { ab: 3, max: 0.13 },
   },
@@ -482,13 +519,17 @@ const CONFIG = {
   bestenliste: {
     proName: 1,            // so viele Zeiten pro Name und Liste (1 = nur die beste)
     zeigen: 10,            // so viele Plätze zeigt eine Liste
+    neuZeilen: 5,          // so viele «Neu in der Liste»-Zeilen im Ergebnis (eigene zuerst), mehr werden zu «… und 17 weitere»
     speichern: 50,         // so viele Plätze pro Auto und Strecke bleiben gespeichert (die Gesamtliste ergibt sich daraus)
     minRunde: 8,           // kürzere Runden (s) sind auf keiner Strecke möglich und zählen nicht (Schutz vor Messfehlern)
     schluessel: 'baustellenrennen-bestenliste',   // Name im Speicher des Browsers (getrennt von den Einstellungen)
     // Gemeinsame Liste für alle Geräte über eine kostenlose Online-Datenbank (Firebase Realtime Database, einrichten: README
     // «Gemeinsame Bestenliste einrichten»). Leer = jedes Gerät hat nur seine eigene Liste, wie bisher.
     server: 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app',   // Adresse der Datenbank, z. B. 'https://baustellen-rennen-default-rtdb.europe-west1.firebasedatabase.app'
-    pfad: 'bestenliste/v1',// Ordner in der Datenbank (v1 = Aufbau der Einträge, passt zu den Regeln in der README)
+    // Web-App-Kennungen aus der Firebase-Konsole (öffentlich, kein Passwort) für «Mit Google anmelden». Leer = Knopf ausgeblendet.
+    firebase: { apiKey: 'AIzaSyA8KFQDt2VVmbPhvLQu1xBBxReJysS6b_s', authDomain: 'baustellen-rennen.firebaseapp.com', projectId: 'baustellen-rennen', appId: '1:981666688893:web:7febbe2003b37e696f2614' },
+    pfad: 'bestenliste/v2',// Ordner der gemeinsamen Liste: v2 = nur mit Google-Anmeldung, jeder Eintrag mit Konto-Nummer (Regeln: tools/regeln.js)
+    pfadAlt: 'bestenliste/v1',   // alte Liste aus der Zeit ohne Anmeldung: wird nur noch gelesen und ohne Häkchen gezeigt ('' = nicht mehr zeigen)
     zeitlimit: 6,          // s: so lange wird auf die Datenbank gewartet, danach gilt «keine Verbindung»
     frisch: 60,            // s: so lange gilt eine geladene Liste, danach wird sie beim Öffnen neu geladen («Aktualisieren» lädt sofort)
     nochmals: 15,          // s: nach einem Fehler frühestens so spät wieder versuchen (ausser mit «Aktualisieren»)
@@ -499,6 +540,10 @@ const CONFIG = {
   // ── Netzwerk ────────────────────────────────────────────────────────────
   netz: {
     sendeRate: 20,         // Zustände pro Sekunde
+    nahAnzahl: 10,         // so viele nächste Autos bekommt jeder Gast bei jedem Senden, die übrigen seltener (spart Daten bei bis zu 33 Autos)
+    fernTeiler: 2,         // die übrigen Autos nur jedes 2. Mal (10 pro Sekunde)
+    refTeiler: 5,          // Platz, BP und Runde aller Autos nur jedes 5. Mal (4 pro Sekunde), die eigenen jedes Mal
+    handyHostMax: 12,      // leitet ein Handy oder Tablet das Rennen, zeigt die Lobby ab mehr Autos einen Hinweis (der Host rechnet alle Autos)
     puffer: 0.10,          // fremde Fahrzeuge werden so viele Sekunden verzögert dargestellt (weiche Interpolation)
     codeLaenge: 5,         // Länge des Raum-Codes
     vermittlerTimeout: 12, // so viele Sekunden darf die Anmeldung beim Vermittlungs-Server dauern
@@ -523,6 +568,7 @@ const CONFIG = {
     turnAbruf: '',
     turnAbrufTimeout: 5,   // so viele Sekunden darf dieser Abruf dauern, danach geht es ohne Umweg-Server weiter
     ausfallTimeout: 6,     // hört man so lange nichts von jemandem, gilt die Verbindung als verloren
+    startTimeout: 30,      // beim Rennstart, bis das erste Rennbild da ist: so lange darf es still bleiben (langsame Geräte bauen dann die Strecke auf)
   },
 
   // ── Punkte im Grand Prix ────────────────────────────────────────────────
@@ -536,6 +582,8 @@ const TAU = Math.PI * 2;
 const GRAFIK_NAMEN = { niedrig: 'Niedrig', mittel: 'Mittel', hoch: 'Hoch', ultra: 'Ultra' };      // Grafik-Stufen in dieser Reihenfolge
 const clamp = (x, a, b) => (x < a ? a : x > b ? b : x);
 const lerp = (a, b, t) => a + (b - a) * t;
+// kubische Hermite-Kurve von p0 nach p1 mit den Tangenten m0 und m1 (pro ganzen Abschnitt), t von 0 bis 1
+const hermite = (p0, m0, p1, m1, t) => { const t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * p0 + (t3 - 2 * t2 + t) * m0 + (3 * t2 - 2 * t3) * p1 + (t3 - t2) * m1; };
 const hyp = Math.hypot;
 
 // kürzeste Winkeldifferenz a − b im Bereich (−π, π]
@@ -1311,10 +1359,15 @@ class Strecke {
     // Startplätze hinter der Startlinie (s = 0)
     const R = CONFIG.rennen;
     this.startplaetze = [];
-    for (let j = 0; j < 24; j++) {
-      const s = this.laenge - (7 + j * R.startAbstand);
-      this.startplaetze.push({ s, d: (j % 2 === 0 ? 1 : -1) * R.startSeite });
+    for (let j = 0; j < Math.max(24, R.maxFahrer); j++) {
+      if (R.startBreite === 3) {                                 // Dreierreihen: Mitte, rechts, links, leicht versetzt
+        const r = Math.floor(j / 3), c = j % 3;
+        this.startplaetze.push({ s: this.laenge - (R.startVorLinie + r * R.startReihe + c * R.startVersatz), d: [0, 1, -1][c] * R.startSeite3 });
+      } else this.startplaetze.push({ s: this.laenge - (R.startVorLinie + j * R.startAbstand), d: (j % 2 === 0 ? 1 : -1) * R.startSeite });
     }
+    // So weit vor der Linie ist die Strasse fast gerade (Radius über 150 m). Ein kleines Feld rückt bis dahin nach hinten (40_rennen.js).
+    this.startGerade = 0;
+    for (let i = H.n - 1; i > 0 && Math.abs(H.kr[i]) < 1 / 150; i--) this.startGerade += H.ds;
 
     // Grenzen (für Minikarte und Gelände)
     let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity;
@@ -1526,6 +1579,7 @@ class Rennen {
     this.netz = null;                            // Online: Rückrufe { bauWunsch, treffer, benutzt }
     const n = fahrer.length;
     this.n = n;
+    this.startVerschub = this.startVerschubFuer(n);
     this.karts = fahrer.map((f, i) => this.neuesKart(f, i, f.platz != null ? f.platz : i));
     this.vorne = new Int8Array(n * n);           // vorne[a*n+b] = 1: a liegt vor b
     this.ueberholZeit = new Float64Array(n * n).fill(-99);
@@ -1535,8 +1589,18 @@ class Rennen {
     for (const k of this.karts) if (k.typ === 'bot') k.bot = new Bot(this, k, k.stufe || 'mittel');
   }
 
+  // Die Rundenzeit läuft erst ab der Linie. Damit auch die vorderen Autos fast mit vollem Tempo über die Linie fahren, rückt ein kleines Feld
+  // um ganze Reihen nach hinten: so weit, wie die hinterste besetzte Reihe noch auf der Startgeraden steht und die vorderste höchstens
+  // CONFIG.rennen.startAnlauf Meter Anlauf hat. Liegt die Linie kurz nach einer Kurve, bleibt das Feld vorne.
+  startVerschubFuer(n) {
+    const S = this.S, P = S.startplaetze, R = CONFIG.rennen, B = R.startBreite === 3 ? 3 : 2, weit = (j) => this.S.laenge - P[j].s;
+    let v = 0;
+    while ((v + 1) * B + n - 1 < P.length && weit((v + 1) * B + n - 1) <= S.startGerade - 2 && weit((v + 1) * B) <= R.startAnlauf) v++;
+    return v * B;
+  }
+
   neuesKart(f, idx, platz) {
-    const H = this.S.haupt, sp = this.S.startplaetze[platz];
+    const H = this.S.haupt, sp = this.S.startplaetze[Math.min(platz + this.startVerschub, this.S.startplaetze.length - 1)];
     const o = H.ort(sp.s, sp.d, {});
     const i = Math.floor(sp.s / H.ds) % H.n;
     const w = Math.atan2(H.tz[i], H.tx[i]);
@@ -1546,15 +1610,15 @@ class Rennen {
       // Bewegung
       x: o.x, z: o.z, y: o.y, vy: 0, luft: false, luftZeit: 0,
       richtung: w, blick: w, v: 0, lenk: 0, schubX: 0, schubZ: 0,
-      px: o.x, pz: o.z, py: o.y, pblick: w,     // Zustand vor dem letzten Schritt (für weiche Darstellung)
-      drift: 0, driftZeit: 0, driftStufe: 0, driftGesperrt: false, hop: 0,
+      px: o.x, pz: o.z, py: o.y, pblick: w, pv: 0, prichtung: w,     // Zustand vor dem letzten Schritt (für weiche Darstellung)
+      drift: 0, driftZeit: 0, driftStufe: 0, driftGesperrt: false, hop: 0, driftW: 0, driftWV: 0,   // driftW: sichtbarer Schräglauf, folgt dem Drift weich (nur Optik)
       boostZeit: 0, boostStaerke: 1, boostFeld: -1, windZeit: 0, windAktiv: false,
       schutzZeit: 0, lahmZeit: 0, schlamm: 0, geistZeit: 0, wandZeit: 0,
       // Position auf der Strecke
       pfad: 0, mi: i, wi: 0, wegHinweis: this.S.wege.map(() => -1),
       s: sp.s, d: sp.d, sHaupt: sp.s, strecke: sp.s - this.L,
       aufStrasse: true, bodenY: o.y, streckenY: o.y, steigung: 0, absturz: false, rampeBereit: 0,
-      runde: 0, rundeStart: 0, rundenZeiten: [], zielZeit: null, rang: platz + 1, startRang: platz + 1, schlechtesterRang: platz + 1,
+      runde: 0, rundeStart: 0, linie: false, rundenZeiten: [], zielZeit: null, rang: platz + 1, startRang: platz + 1, schlechtesterRang: platz + 1,
       falschZeit: 0, stehZeit: 0, resetSperre: 0, sicher: { pfad: 0, s: sp.s }, resets: 0, maxStehZeit: 0,
       // Baupunkte und Bauen
       bp: CONFIG.bp.start, bpVerdient: 0, bpAusgegeben: 0, ueberholt: 0, treffer: 0, trefferErzielt: 0, gebaut: 0,
@@ -1573,8 +1637,8 @@ class Rennen {
     if (this.phase === 'countdown' && this.zeit >= 0) { this.phase = 'rennen'; this.melde('los', -1); }
     const frei = this.phase !== 'countdown';
     for (const k of this.karts) {
-      k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.blick;
-      if (k.typ === 'fern') continue;
+      if (k.typ === 'fern') continue;               // fremde Autos: Online.vorSchritt setzt den alten und den neuen Stand
+      k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.blick; k.pv = k.v; k.prichtung = k.richtung;
       let e = (eingaben && eingaben[k.idx]) || LEERE_EINGABE;
       if (k.bot && (k.typ === 'bot' || k.zielZeit != null)) e = k.bot.steuere(this, k, dt);
       k.eingabe = e;
@@ -1683,7 +1747,9 @@ class Rennen {
     if (bel) rate *= bel.lenk;
     if (k.v < 0) rate = -rate;
     k.richtung += rate * dt;
-    const blickZiel = k.richtung + k.drift * D.winkel + (k.drift ? 0 : k.lenk * 0.08 * anteil);
+    // Sichtbarer Schräglauf: folgt dem Drift weich (kritisch gedämpft), damit das Heck beim Einlenken und Aufrichten nicht ruckt. Nur Optik.
+    k.driftWV += ((k.drift * D.winkel - k.driftW) * 196 - k.driftWV * 28) * dt; k.driftW += k.driftWV * dt;
+    const blickZiel = k.richtung + k.driftW + (k.drift ? 0 : k.lenk * 0.08 * anteil);
     k.blick += winkelDiff(blickZiel, k.blick) * Math.min(1, 11 * dt);
 
     // Windschatten: dicht hinter einem anderen Fahrzeug
@@ -1955,6 +2021,7 @@ class Rennen {
     const i = Math.min(P.n - 1, Math.floor(s / P.ds));
     k.x = o.x; k.z = o.z; k.y = o.y; k.vy = 0; k.luft = false; k.v = 0;
     k.richtung = k.blick = Math.atan2(P.tz[i], P.tx[i]);
+    k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.prichtung = k.blick; k.pv = 0; k.driftW = k.driftWV = 0;   // nicht vom alten Ort her gleiten
     k.pfad = k.sicher.pfad;
     if (k.pfad > 0) k.wi = i; else k.mi = i;
     k.schubX = k.schubZ = 0; k.drift = 0; k.driftZeit = 0; k.driftStufe = 0; k.boostZeit = 0; k.lenk = 0;
@@ -2085,6 +2152,14 @@ class Rennen {
     const K = this.karts, n = this.n, L = this.L, B = CONFIG.bp;
     if (this.phase === 'countdown') return;
 
+    // Die Uhr der ersten Runde startet erst, wenn ein Auto die Ziellinie zum ersten Mal überquert
+    // (vorher hatte, wer weiter vorne startete, eine kürzere erste Runde)
+    for (const k of K) if (!k.linie && k.strecke >= 0) {
+      const t = this.zeit - (k.v > 1 ? k.strecke / k.v : 0);    // genauer Zeitpunkt der Linienüberfahrt
+      k.linie = true; k.rundeStart = t;
+      this.melde('linie', k.idx, t);
+    }
+
     // Runden und Zieleinlauf
     for (const k of K) {
       if (k.zielZeit != null) continue;
@@ -2208,7 +2283,9 @@ class Rennen {
       const f = this.karts[this.reihenfolge[0]];
       nah = B.naheFaktor + (1 - B.naheFaktor) * Math.max(0, Math.min(1, (f.strecke - k.strecke) / B.vollerRueckstand));
     }
-    const neu = Math.min(B.max, k.bp + menge * faktor * nah);
+    // Grosse Felder: Im Pulk wird viel öfter überholt. Ab 9 Fahrern gibt es weniger pro Mal, damit pro Fahrer etwa gleich viel gebaut wird wie mit 8
+    const feld = this.n > 8 && B.feldExponent > 0 ? Math.pow(8 / this.n, B.feldExponent) : 1;
+    const neu = Math.min(B.max, k.bp + menge * faktor * nah * feld);
     k.bpVerdient += neu - k.bp;
     if (Math.floor(neu) > Math.floor(k.bp)) this.melde('bp', k.idx, Math.floor(neu), grund);
     k.bp = neu;
@@ -2378,6 +2455,35 @@ class Rennen {
     if (f.zielZeit != null && k.zielZeit != null) return k.zielZeit - f.zielZeit;
     return (f.strecke - k.strecke) / Math.max(12, f.v, k.v);
   }
+}
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 4b: Online-Bild – was der Host jedem Gast 20-mal pro Sekunde schickt
+   Reine Rechnung ohne Netz, darum auch in Node messbar (tools/netzmass.js).
+   ══════════════════════════════════════════════════════════════════════════ */
+const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000, rund1 = (x) => Math.round(x * 10) / 10;
+
+// Zustand eines Autos: [Zeit, x, z, y, Richtung, Blick, Tempo, Lenkung, Merker, Strecke]
+function netzZustand(R, k) {
+  const f = (k.luft ? 1 : 0) | (k.drift > 0 ? 2 : k.drift < 0 ? 4 : 0) | ((k.driftStufe & 3) << 3) | (k.boostZeit > 0 ? 32 : 0) | (k.windAktiv ? 64 : 0) | (k.schutzZeit > 0 ? 128 : 0) | (k.geistZeit > 0 ? 256 : 0) | (k.schlamm ? 1024 : 0);
+  return [r3(R.zeit), r2(k.x), r2(k.z), r2(k.y), r3(k.richtung), r3(k.blick), r2(k.v), r2(k.lenk), f, r2(k.strecke)];
+}
+
+// Bild für den Gast, der das Auto «mein» fährt. Mit bis zu 33 Autos wäre alles bei jedem Senden zu viel Daten:
+// Die nächsten CONFIG.netz.nahAnzahl Autos kommen jedes Mal, die übrigen nur jedes fernTeiler-te Mal (abwechselnd);
+// Platz, BP und Runde aller Autos nur jedes refTeiler-te Mal, die des eigenen Autos jedes Mal.
+// zustaende[i]: netzZustand oder der letzte gemeldete Zustand eines fernen Autos. nr zählt die Sendungen.
+// Ergebnis: ['s', Zeit, [[Auto, Zeit-Versatz in ms, x, z, y, Richtung, Blick, Tempo, Lenkung, Merker, Strecke], …], Ref aller oder 0, eigene Ref oder 0]
+function netzBild(R, mein, nr, zustaende) {
+  const N = CONFIG.netz, t = R.zeit, m = R.karts[mein], liste = [];
+  const andere = R.karts.filter((k) => k.idx !== mein);
+  if (m) andere.sort((a, b) => ((a.x - m.x) ** 2 + (a.z - m.z) ** 2) - ((b.x - m.x) ** 2 + (b.z - m.z) ** 2));
+  andere.forEach((k, platz) => {
+    if (platz >= N.nahAnzahl && (nr + k.idx) % N.fernTeiler !== 0) return;
+    const z = zustaende[k.idx];
+    if (z) liste.push([k.idx, Math.round((z[0] - t) * 1000), z[1], z[2], z[3], z[4], z[5], rund1(z[6]), z[7], z[8], rund1(z[9])]);
+  });
+  const ref = (k) => [k.rang, rund1(k.bp), k.runde, k.zielZeit == null ? null : r3(k.zielZeit), rund1(Math.max(0, k.bauSperre))];
+  return ['s', r3(t), liste, nr % N.refTeiler === 0 ? R.karts.map(ref) : 0, m ? ref(m) : 0];
 }
 /* ══════════════════════════════════════════════════════════════════════════
    TEIL 6: Bots
@@ -2821,10 +2927,15 @@ const SIM_SZENARIEN = {
   gleich: ['mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel'],   // 8 gleich starke Bots
   stark: ['schwer', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel', 'mittel'],    // 1 deutlich besserer gegen 7
   ultra: ['ultra', 'schwer', 'schwer', 'schwer', 'schwer', 'schwer', 'schwer', 'schwer'],      // 1 «Ultra» gegen 7 «Schwer»
+  gleich12: Array(12).fill('mittel'),                          // grosse Felder (bis 11 Bots, online bis 33 Autos)
+  stark12: ['schwer'].concat(Array(11).fill('mittel')),
+  ultra12: ['ultra'].concat(Array(11).fill('schwer')),
+  gleich33: Array(33).fill('mittel'),
 };
+const SIM_SAAT = { gleich: 0, stark: 100000, ultra: 200000, gleich12: 300000, stark12: 400000, ultra12: 500000, gleich33: 600000 };
 function simEinzel(szenario, nr, opt) {
   const ids = Object.keys(STRECKEN);
-  return simRennen({ strecke: (opt && opt.strecke) || ids[nr % ids.length], stufen: SIM_SZENARIEN[szenario], seed: nr + 1 + (szenario === 'stark' ? 100000 : szenario === 'ultra' ? 200000 : 0),
+  return simRennen({ strecke: (opt && opt.strecke) || ids[nr % ids.length], stufen: SIM_SZENARIEN[szenario], seed: nr + 1 + (SIM_SAAT[szenario] || 0),
     runden: (opt && opt.runden) || CONFIG.rennen.runden, bauen: !(opt && opt.bauen === false), detail: opt && opt.detail });
 }
 </script>
@@ -3460,15 +3571,20 @@ Deko.tribuene = function (g, x, y, z, dreh) {
     g.box(x + c * j, y + 1.85 + q * 0.9, z + q * 1.4 - s * j, 0.28, 0.28, 0.28, f(0xe8b88a));
   }
 };
-// Namensschild über fremden Fahrzeugen
-function baueSchildchen(text, farbeHex) {
+// Namensschild über fremden Fahrzeugen. «nummer»: Startnummer im Kreis vor dem Namen (wenn es mehr Autos als Lacke gibt)
+function baueSchildchen(text, farbeHex, nummer) {
   const c = document.createElement('canvas'); c.width = 256; c.height = 64;
-  const x = c.getContext('2d');
+  const x = c.getContext('2d'), farbe = '#' + farbeHex.toString(16).padStart(6, '0'), nr = nummer ? 40 : 0;
   x.font = '600 30px system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  const b = Math.min(250, x.measureText(text).width + 30);
+  const b = Math.min(250, x.measureText(text).width + 30 + nr);
   x.fillStyle = 'rgba(16,18,20,.72)'; x.beginPath(); x.roundRect ? x.roundRect(128 - b / 2, 8, b, 48, 12) : x.rect(128 - b / 2, 8, b, 48); x.fill();
-  x.fillStyle = '#' + farbeHex.toString(16).padStart(6, '0'); x.fillRect(128 - b / 2, 50, b, 6);
-  x.fillStyle = '#fff'; x.fillText(text, 128, 31);
+  x.fillStyle = farbe; x.fillRect(128 - b / 2, 50, b, 6);
+  x.fillStyle = '#fff'; x.fillText(text, 128 + nr / 2, 31, 236 - nr);
+  if (nummer) {
+    const cx = 128 - b / 2 + 25, hell = ((farbeHex >> 16) & 255) * 0.3 + ((farbeHex >> 8) & 255) * 0.59 + (farbeHex & 255) * 0.11 > 150;
+    x.beginPath(); x.arc(cx, 31, 18, 0, TAU); x.fillStyle = farbe; x.fill(); x.lineWidth = 3; x.strokeStyle = '#000'; x.stroke();
+    x.fillStyle = hell ? '#111' : '#fff'; x.font = '700 22px system-ui, sans-serif'; x.fillText(String(nummer), cx, 32, 32);
+  }
   const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false, transparent: true }));
   s.scale.set(4.4, 1.1, 1); s.renderOrder = 5;
   s.onBeforeRender = (r, sz, kam) => { s.material.opacity = clamp((kam.position.distanceTo(s.position) - 6) / 5, 0, 1); };     // ganz nah an der Kamera ausblenden
@@ -3529,6 +3645,36 @@ const Teilchen = {
   },
 };
 
+// ── Ferne Autos in grossen Feldern: die einfache Fassung jedes Autotyps als ein einziges Netz mit Farben pro Ecke ──
+// Lackteile sind weiss, die Farbe des Autos kommt pro Instanz dazu. Räder, Glas und Lichter sind mit drin (aus der Ferne reicht das).
+const FernAutos = {
+  geo: {},
+  material() { return this.mat || (this.mat = new THREE.MeshLambertMaterial({ vertexColors: true })); },
+  geometrie(typ) {
+    if (this.geo[typ]) return this.geo[typ];
+    const o = baueFahrzeug(typ, 0xffffff, 'glanz', 'fern'), pos = [], nor = [], col = [], c = new THREE.Color();     // 'fern': noch gröber als die einfache Fassung
+    o.aufbau.position.set(0, 0, 0); o.aufbau.rotation.set(0, 0, 0); o.gruppe.updateMatrixWorld(true);
+    o.gruppe.traverse((m) => {
+      if (!m.isMesh) return;
+      for (let p = m; p; p = p.parent) if (!p.visible) return;                       // ausgeblendete Teile (Flammen, Schutzschild) weglassen
+      const g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone();
+      g.applyMatrix4(m.matrixWorld);
+      if (!g.attributes.normal) g.computeVertexNormals();
+      const mat = Array.isArray(m.material) ? m.material[0] : m.material, P = g.attributes.position, N = g.attributes.normal, C = mat.vertexColors && g.attributes.color;
+      c.copy(mat.map ? new THREE.Color(0xffffff) : mat.color || new THREE.Color(0xffffff));
+      for (let i = 0; i < P.count; i++) {
+        pos.push(P.getX(i), P.getY(i), P.getZ(i)); nor.push(N.getX(i), N.getY(i), N.getZ(i));
+        col.push(c.r * (C ? C.getX(i) : 1), c.g * (C ? C.getY(i) : 1), c.b * (C ? C.getZ(i) : 1));
+      }
+      g.dispose();
+    });
+    o.frei();
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    return (this.geo[typ] = g);
+  },
+};
+
 // ── Rennen darstellen: Fahrzeuge, Bauwerke, Kameras ───────────────────────
 Object.assign(Grafik, {
   truemmer: [],
@@ -3552,10 +3698,25 @@ Object.assign(Grafik, {
       o.schatten = new THREE.Mesh(new THREE.PlaneGeometry(4.6, 2.7), this.schattenMat());
       Orte.scheinwerfer(this, o);
       o.schatten.rotation.x = -Math.PI / 2;
-      o.schild = baueSchildchen(k.name, FARBEN[k.farbe % FARBEN.length].hex);
+      o.schild = baueSchildchen(k.name, FARBEN[k.farbe % FARBEN.length].hex, R.karts.length > FARBEN.length ? k.idx + 1 : 0);
       this.szene.add(o.gruppe); this.szene.add(o.schatten); this.szene.add(o.schild);
       return o;
     });
+    // Grosse Felder: Autos ausserhalb der nächsten CONFIG.grafik.feinMax als Instanzen, ein Zeichenaufruf pro Autotyp (siehe FernAutos)
+    for (const t in this.fernNetze || {}) { this.szene.remove(this.fernNetze[t]); this.fernNetze[t].dispose(); }
+    if (this.fernSchatten) { this.szene.remove(this.fernSchatten); this.fernSchatten.dispose(); }
+    this.fernNetze = null; this.fernSchatten = null;
+    const nFein = CONFIG.grafik.feinMax[this.qualitaet];
+    if (nFein && R.karts.length > nFein) {
+      this.fernNetze = {};
+      for (const k of R.karts) if (!this.fernNetze[k.fahrzeug]) {
+        const n = R.karts.filter((kk) => kk.fahrzeug === k.fahrzeug).length, N = new THREE.InstancedMesh(FernAutos.geometrie(k.fahrzeug), FernAutos.material(), n);
+        N.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(n * 3), 3);
+        N.frustumCulled = false; N.count = 0; this.szene.add(N); this.fernNetze[k.fahrzeug] = N;
+      }
+      this.fernSchatten = new THREE.InstancedMesh(new THREE.PlaneGeometry(4.6, 2.7), this.schattenMat(), R.karts.length);
+      this.fernSchatten.frustumCulled = false; this.fernSchatten.count = 0; this.szene.add(this.fernSchatten);
+    }
     if (!this.zielMarke) {
       this.zielMarke = new THREE.Mesh(new THREE.CylinderGeometry(2.4, 2.4, 16, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0x3fb54a, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false }));
       this.szene.add(this.zielMarke);
@@ -3572,6 +3733,18 @@ Object.assign(Grafik, {
       else if (n > 2) { w = 0.5; h = 0.5; x = (i % 2) * 0.5; y = Math.floor(i / 2) * 0.5; }
       return { kart, x, y, w, h, kamera: new THREE.PerspectiveCamera(64, 1, 0.5, 1400), yaw: null, hy: 0, fov: 64, dreh: 0 };
     });
+  },
+
+  // Ein Auto als Instanz eintragen: Lage des Gestells samt Wanken und Nicken des Aufbaus, Lackfarbe, Kontaktschatten.
+  // Autos ausserhalb aller Bildausschnitte (hinter der Kamera, zu weit weg) fallen weg.
+  fernEintrag(o, k) {
+    const kugel = this._fernK || (this._fernK = new THREE.Sphere());
+    kugel.center.copy(o.gruppe.position); kugel.radius = 4;
+    if (this._fernSicht && !this._fernSicht.some((fr) => fr.intersectsSphere(kugel))) return;
+    const N = this.fernNetze[k.fahrzeug], S = this.fernSchatten, m = this._fernM || (this._fernM = new THREE.Matrix4()), f = this._fernF || (this._fernF = new THREE.Color());
+    o.gruppe.updateMatrix(); o.aufbau.updateMatrix();
+    N.setMatrixAt(N.count, m.multiplyMatrices(o.gruppe.matrix, o.aufbau.matrix)); N.setColorAt(N.count, f.setHex(FARBEN[k.farbe % FARBEN.length].hex)); N.count++;
+    o.schatten.updateMatrix(); S.setMatrixAt(S.count++, o.schatten.matrix);
   },
 
   // Weit weg von allen Kameras zeigt ein Auto seine einfache Fassung (spart pro Auto etwa 9000 Dreiecke und 15 Zeichenaufrufe).
@@ -3593,19 +3766,43 @@ Object.assign(Grafik, {
     this.zeit += dt;
     if (!R) { Teilchen.update(dt); Dunst.update(dt); return; }
     const F = CONFIG.fahren;
+    // Grosse Felder: nur die nächsten CONFIG.grafik.feinMax Autos (Abstand zur nächsten Kamera) als eigene Modelle, die übrigen als Instanzen
+    const nFein = CONFIG.grafik.feinMax[this.qualitaet];
+    let fern = null;                                        // fern[idx]: dieses Auto als Instanz zeichnen
+    if (this.fernNetze && this.ansichten.length) {
+      const d = R.karts.map((k) => { let m = 1e12; for (const a of this.ansichten) { const c = a.kamera.position; m = Math.min(m, (c.x - k.x) ** 2 + (c.z + k.z) ** 2); } return m; });
+      const ord = d.map((_, i) => i).sort((p, q) => d[p] - d[q]), fein = new Set(ord.slice(0, nFein - 2));
+      // Immer genau nFein eigene Modelle: die nFein - 2 nächsten sicher, dazu bevorzugt Autos, die schon ein eigenes Modell haben und noch
+      // unter den nFein + 2 nächsten sind (kein Hin und Her an der Grenze), der Rest nach Abstand.
+      for (const i of ord.slice(nFein - 2, nFein + 2)) if (fein.size < nFein && this.kartObjekte[i] && this.kartObjekte[i].inst === false) fein.add(i);
+      for (const i of ord) if (fein.size < nFein) fein.add(i);
+      fern = d.map((_, i) => !fein.has(i));
+      // Sichtbereich jeder Kamera (Stand des letzten Bildes; die Kugel um jedes Auto ist gross genug für den Versatz)
+      const M = this._fernPM || (this._fernPM = new THREE.Matrix4()), sicht = this._fernSicht || (this._fernSicht = []);
+      sicht.length = this.ansichten.length;
+      this.ansichten.forEach((a, i) => { M.multiplyMatrices(a.kamera.projectionMatrix, a.kamera.matrixWorldInverse); (sicht[i] || (sicht[i] = new THREE.Frustum())).setFromProjectionMatrix(M); });
+      for (const t in this.fernNetze) this.fernNetze[t].count = 0;
+      this.fernSchatten.count = 0;
+    }
     for (const k of R.karts) {
       const o = this.kartObjekte[k.idx];
       if (!o) continue;
       const x = lerp(k.px, k.x, alpha), z = lerp(k.pz, k.z, alpha), y = lerp(k.py, k.y, alpha);
       const blick = k.pblick + winkelDiff(k.blick, k.pblick) * alpha;
       k.sx = x; k.sy = y; k.sz = z; k.sblick = blick;           // dargestellte Position (für Kamera und Anzeige)
+      k.sv = lerp(k.pv != null ? k.pv : k.v, k.v, alpha);       // dargestelltes Tempo und Fahrtrichtung (Federung und Kamera)
+      k.srichtung = k.prichtung != null ? k.prichtung + winkelDiff(k.richtung, k.prichtung) * alpha : k.richtung;
       this.bewegeAuto(o, k, x, y, z, blick, dt, R);
-      if (o.grob) this.lod(o);
+      if (o.grob && !o.inst) this.lod(o);
       this.effekte(o, k, x, y, z, blick, dt, R);
       const boost = k.boostZeit > 0;
       o.schatten.position.set(x, Math.max(k.bodenY, -50) + 0.06, -z);
       o.schatten.rotation.z = blick;
       o.schild.position.set(x, y + 3.1, -z);
+      const inst = !!fern && fern[k.idx];
+      if (inst !== !!o.inst) { o.gruppe.visible = !inst; o.schatten.visible = !inst; }
+      o.inst = inst;
+      if (inst) this.fernEintrag(o, k);
       // Teilchen
       const cx = Math.cos(k.richtung), cz = Math.sin(k.richtung);
       const hx = x - cx * 1.0, hz = z - cz * 1.0;
@@ -3618,6 +3815,10 @@ Object.assign(Grafik, {
       }
       if (boost) Teilchen.neu(hx - cx * 0.9, y + 0.6, hz - cz * 0.9, -cx * 6 + (Math.random() - 0.5) * 2, Math.random() * 2, -cz * 6 + (Math.random() - 0.5) * 2, 0.3, 0.3, Math.random() < 0.5 ? 0xffd21f : 0xff6a1a, -2);
       if (k.windAktiv && Math.random() < 0.5) Teilchen.neu(x + (Math.random() - 0.5) * 2.4, y + 0.5 + Math.random() * 1.2, z + (Math.random() - 0.5) * 2.4, -cx * 14, 0, -cz * 14, 0.22, 0.12, 0xffffff, 0);
+    }
+    if (fern) {
+      for (const t in this.fernNetze) { const N = this.fernNetze[t]; N.instanceMatrix.needsUpdate = true; N.instanceColor.needsUpdate = true; }
+      this.fernSchatten.instanceMatrix.needsUpdate = true;
     }
     // Trümmer (weggeflogene Pylonen und Bretter)
     for (let q = this.truemmer.length - 1; q >= 0; q--) {
@@ -3641,11 +3842,14 @@ Object.assign(Grafik, {
     const x = k.sx != null ? k.sx : k.x, y = k.sy != null ? k.sy : k.y, z = k.sz != null ? k.sz : k.z;
     const frei = a.kart < 0;
     if (frei) a.dreh += dt * 0.12;
-    const ziel = k.richtung + k.drift * 0.12 + (frei ? 2.4 + Math.sin(a.dreh) * 0.9 : 0);
+    // Fahrtrichtung zwischen zwei Rechenschritten, Drift-Versatz weich (sonst springt das Ziel beim Einlenken und die Kamera ruckt)
+    if (a.drift == null || a.k !== k) { a.drift = k.drift * 0.12; a.k = k; }
+    a.drift += (k.drift * 0.12 - a.drift) * Math.min(1, 6 * dt);
+    const ziel = (k.srichtung != null ? k.srichtung : k.richtung) + a.drift + (frei ? 2.4 + Math.sin(a.dreh) * 0.9 : 0);
     if (a.yaw == null) { a.yaw = ziel; a.hy = y; }
     a.yaw += winkelDiff(ziel, a.yaw) * Math.min(1, (frei ? 1.5 : 5.5) * dt);
     a.hy += (y - a.hy) * Math.min(1, 9 * dt);
-    const tempo = clamp(k.v / F.vmax, 0, 1.3);
+    const tempo = clamp((k.sv != null ? k.sv : k.v) / F.vmax, 0, 1.3);
     const dist = frei ? 13 : 6.6 + tempo * 1.2, hoch = frei ? 5.5 : 3.1;
     const c = Math.cos(a.yaw), s = Math.sin(a.yaw);
     let ky = a.hy + hoch;
@@ -3790,7 +3994,30 @@ Object.assign(Grafik, {
       o.festGr.visible = fest; o.holoGr.visible = !fest;
     }
     R.S.wege.forEach((w, q) => { if (this.sperrNetze[q]) this.sperrNetze[q].visible = !(k && R.wegOffen(k, w)); });
-    for (const kk of R.karts) { const o = this.kartObjekte[kk.idx]; if (o) o.schild.visible = !k || (kk !== k && this.ansichten.length < 3); }
+    // Namensschilder: bei vielen Autos nur die nächsten CONFIG.grafik.schilder (sonst verdecken sie in der Startaufstellung die Sicht)
+    const c = a.kamera.position, ab = (kk) => (kk.sx - c.x) ** 2 + (kk.sz + c.z) ** 2;
+    const grenze = R.karts.length > CONFIG.grafik.schilder ? R.karts.map(ab).sort((p, q) => p - q)[CONFIG.grafik.schilder] : Infinity;
+    // Überdeckt ein Schild ein näheres zu mehr als einem Fünftel, bleibt es weg (in der Startaufstellung stehen sonst viele Schilder übereinander)
+    const kam = a.kamera, tanH = Math.tan((kam.fov * Math.PI) / 360), asp = kam.aspect, v = this._schildV || (this._schildV = new THREE.Vector3()), belegt = [];
+    kam.updateMatrixWorld();
+    const kandidaten = [];
+    for (const kk of R.karts) {
+      const o = this.kartObjekte[kk.idx];
+      if (!o) continue;
+      o.schild.visible = false;
+      if ((!k || (kk !== k && this.ansichten.length < 3)) && ab(kk) < grenze) kandidaten.push(kk);
+    }
+    kandidaten.sort((p, q) => ab(p) - ab(q));
+    for (const kk of kandidaten) {
+      const o = this.kartObjekte[kk.idx];
+      v.copy(o.schild.position).applyMatrix4(kam.matrixWorldInverse);
+      const tiefe = -v.z;
+      if (tiefe < 0.5) continue;                                                      // hinter der Kamera
+      const x = v.x / (tiefe * tanH * asp), y = v.y / (tiefe * tanH), w = 2.2 / (tiefe * tanH * asp), h = 0.55 / (tiefe * tanH);
+      if (belegt.some((q) => Math.abs(q.x - x) < (q.w + w) * 0.8 && Math.abs(q.y - y) < (q.h + h) * 0.8)) continue;
+      o.schild.visible = true;
+      if (tiefe > 8) belegt.push({ x, y, w, h });                                     // ganz nahe Schilder sind ausgeblendet und verdecken nichts
+    }
     // Ziel-Slot leuchtet in der Welt
     let sichtbar = false;
     if (k && R.phase === 'rennen' && k.rang > 1 && k.zielZeit == null) {
@@ -4243,7 +4470,7 @@ function haut(def, grob) {
   // Stellen entlang der Länge: gleichmässig, dazu dichter an Bug, Heck, Radkästen und Zonengrenzen
   let xs = [];
   const dazu = (x) => { if (x > x0 + 0.004 && x < x1 - 0.004) xs.push(x); };
-  const N = grob ? 12 : Math.max(8, Math.round((x1 - x0) / 0.095));
+  const N = grob === 'fern' ? 8 : grob ? 12 : Math.max(8, Math.round((x1 - x0) / 0.095));
   for (let i = 0; i <= N; i++) xs.push(lerp(x0, x1, i / N));
   if (!grob) {
     for (const t of [0.05, 0.16, 0.34, 0.6]) { dazu(x0 + rE * t); dazu(x1 - rE * t); }
@@ -4252,7 +4479,7 @@ function haut(def, grob) {
     if (def.kab) for (const x of def.kab) dazu(x);
   }
   if (def.mulde) { for (const x of [def.mulde[0], def.mulde[1]]) { dazu(x - 0.012); dazu(x + 0.012); } }
-  if (!def.frei) for (const r of def.raeder || []) { const Ra = r[1] + 0.06, T = grob ? 4 : 10; for (let q = 0; q <= T; q++) dazu(r[0] + Ra * Math.cos((q / T) * Math.PI)); }
+  if (!def.frei) for (const r of def.raeder || []) { const Ra = r[1] + 0.06, T = grob === 'fern' ? 2 : grob ? 4 : 10; for (let q = 0; q <= T; q++) dazu(r[0] + Ra * Math.cos((q / T) * Math.PI)); }
   xs.sort((a, b) => a - b);
   xs = xs.filter((x, i) => i === 0 || i === xs.length - 1 || (x - xs[i - 1] > 0.016 && xs[xs.length - 1] - x > 0.016));
   // Punkte: pro Stelle ein Ring aus 28 Punkten (links 0…14, rechts gespiegelt 15…27); Bug und Heck schliessen mit zwei kleineren Ringen
@@ -4349,6 +4576,12 @@ function baueRad(r, b, art, grob) {
   const F = Geo.farbe, g = new THREE.Group(), dreh = new THREE.Group(), h = b / 2;
   g.add(dreh);
   const fe = F(art.felge), gummi = F(0x161719);
+  if (grob === 'fern') {                                   // Autos in der Ferne (Instanzen): 8 Segmente, Reifen und Felge in 4 Ringen
+    const t = new Form();
+    t.dreh([[r * 0.55, -h, gummi], [r, -h * 0.7, gummi], [r, h * 0.7, gummi], [r * 0.9, h, gummi], null, [r * 0.62, h * 0.9, fe], [0.001, h * 0.8, fe]], 8, gummi);
+    dreh.add(t.netz(Grafik.mat, true));
+    return { g, dreh };
+  }
   if (grob) {
     const t = new Form();
     t.dreh([[r * 0.55, -h, gummi], [r * 0.93, -h, gummi], [r, -h * 0.7, gummi], [r, h * 0.7, gummi], [r * 0.93, h, gummi], [r * 0.64, h * 0.9, gummi], null, [r * 0.64, h * 0.9, fe], [r * 0.6, h * 0.7, fe], [r * 0.12, h * 0.75, fe], [0.001, h * 0.8, fe]], 12, gummi);
@@ -4736,8 +4969,16 @@ Object.assign(Grafik, {
     pa.needsUpdate = true; H.computeVertexNormals();
   },
   bewegeAuto(o, k, x, y, z, blick, dt, R) {
-    const A = o.aufbau, v = k.v, hop = k.hop > 0 ? Math.sin((1 - k.hop / 0.18) * Math.PI) * 0.22 : 0;
+    const A = o.aufbau, v = k.sv != null ? k.sv : k.v;
     if (o.blickAlt == null) { o.blickAlt = blick; o.vAlt = v; }
+    if (o.neig == null) { o.neig = k.luft ? 0 : Math.atan(k.steigung || 0); o.neigV = 0; o.luftHub = 0; o.phase = k.idx * 1.7; o.hopAlt = k.hop || 0; o.hopT = null; o.fy = y; o.fyV = 0; }
+    // Hüpfer beim Drift-Beginn: mit eigener Uhr pro Bild und weicher Form (sin²), damit er ohne Ruck abhebt und aufsetzt.
+    // Die Uhr läuft vor dem Zeichnen weiter, damit jedes Bild genau die Zeit seit dem letzten Bild zeigt (sonst ruckelt er bei ungleichen Bildzeiten).
+    if (k.hop > o.hopAlt + 1e-6 && o.hopT == null) o.hopT = -dt;
+    o.hopAlt = k.hop;
+    if (o.hopT != null) o.hopT += dt;
+    const hop = o.hopT != null ? 0.11 * Math.sin(Math.PI * Math.min(1, o.hopT / 0.28)) ** 2 : 0;
+    if (o.hopT != null && o.hopT >= 0.28) o.hopT = null;
     // Randstein: das Auto rüttelt
     const H = R.S.haupt, i = Math.floor(k.sHaupt / H.ds) % H.n, hb = H.hb[i >= 0 ? i : 0];
     o.aufRand = !k.luft && k.pfad === 0 && v > 4 && Math.abs(k.d) > hb - 0.95 && Math.abs(k.d) < hb + 0.3;
@@ -4751,18 +4992,33 @@ Object.assign(Grafik, {
       const h = Math.min(dt, 0.033);
       o.rollV += ((zielRoll - o.roll) * 110 - o.rollV * 12) * h; o.roll += o.rollV * h;
       o.nickV += ((zielNick - o.nick) * 110 - o.nickV * 12) * h; o.nick += o.nickV * h;
-      if (o.warLuft && !k.luft) o.hubV -= 1.1;                       // Landung: die Karosserie taucht ein
+      // Landung: die Karosserie federt mit einem Teil der Fallgeschwindigkeit ein (statt eines festen Stosses)
+      if (k.luft) o.vyLuft = k.vy || 0;
+      else if (o.warLuft) o.hubV += Math.max(-3, Math.min(0, o.vyLuft || 0) * 0.7);
       o.warLuft = k.luft;
-      o.hubV += (-o.hub * 170 - o.hubV * 13) * h; o.hub = clamp(o.hub + o.hubV * h, -0.1, 0.08);
+      o.hubV += (-o.hub * 170 - o.hubV * 13) * h; o.hub = clamp(o.hub + o.hubV * h, -0.2, 0.08);
+      o.luftHub += ((k.luft ? 0.03 : 0) - o.luftHub) * Math.min(1, 10 * dt);
+      // Neigung der Strasse (Steigung, Rampen): folgt weich und mit begrenzter Beschleunigung, statt an jeder Kante zu springen
+      const neigZiel = k.luft ? 0 : Math.atan(k.steigung);
+      o.neigV += clamp((neigZiel - o.neig) * 400 - o.neigV * 40, -32, 32) * h; o.neig += o.neigV * h;
       o.radWinkel += v * dt;
+      // Rütteln: weiche Schwingung statt Zufall in jedem Bild (Frequenz steigt mit dem Tempo)
+      o.phase += dt * Math.PI * 2 * (2.5 + Math.min(Math.abs(v), 30) * 0.15);
+      // Federung gegen Knicke im Höhenverlauf (Beginn einer Steigung, Rampe, Brücke): Die Räder bleiben auf der Strasse, der Aufbau folgt
+      // weich. Er übernimmt das Höhen-Tempo des Rechenschritts, nur der Knick wird über einige Bilder verteilt (höchstens 6 cm Versatz).
+      const vyZiel = (k.y - k.py) / SCHRITT;
+      if (k.luft || Math.abs(y - o.fy) > 0.3) { o.fy = y; o.fyV = vyZiel; }
+      else for (let n = Math.ceil(h / 0.008), q = 0; q < n; q++) { o.fyV += ((y - o.fy) * 150 + (vyZiel - o.fyV) * 24) * (h / n); o.fy += o.fyV * (h / n); }
+      o.fy = clamp(o.fy, y - 0.06, y + 0.06);
     }
+    const welle = (p) => (Math.sin(o.phase + p) + 0.5 * Math.sin(o.phase * 1.37 + p * 2.3 + 1.1)) / 1.5;
     o.gruppe.position.set(x, y + hop, -z);
-    o.gruppe.rotation.set(0, blick, k.luft ? 0 : Math.atan(k.steigung));
+    o.gruppe.rotation.set(0, blick, o.neig);
     const zittern = rau * Math.min(1, v / 12);
-    A.rotation.set(o.roll + (Math.random() - 0.5) * zittern * 1.4, 0, o.nick + (Math.random() - 0.5) * zittern);
-    A.position.y = o.hub + (k.luft ? 0.03 : 0) + (Math.random() - 0.5) * zittern * 0.6;
+    A.rotation.set(o.roll + welle(0) * zittern * 0.7, 0, o.nick + welle(2.1) * zittern * 0.5);
+    A.position.y = o.hub + o.luftHub + (o.fy - y) + welle(4.2) * zittern * 0.3;
     for (const r of o.raeder) {                                       // jedes Rad federt einzeln
-      r.ziel = k.luft ? -0.07 : (Math.random() - 0.5) * zittern * 2.4 - o.hub * 0.2;
+      r.ziel = k.luft ? -0.07 : welle(r.seite * 1.3 + (r.vorn ? 0.8 : 2.9)) * zittern * 1.2 - o.hub * 0.2;
       r.y += (r.ziel - r.y) * Math.min(1, 25 * dt);
       r.g.position.y = r.r + r.y;
       r.g.rotation.y = (r.seite < 0 ? Math.PI : 0) + (r.vorn ? k.lenk * 0.42 : 0);
@@ -5319,7 +5575,7 @@ Object.assign(Grafik, {
     band(mk, H, 0, n, (i, q) => (q % 6 <= 2 && asph(i) ? [-0.08, 0.02, 0.08, 0.02, wl] : null), 3);
     const hb0 = H.hb[0] - 0.9;
     for (let r = 0; r < 3; r++) for (let q = 0; q < 14; q++) fleck(mk, r * 0.6, r * 0.6 + 0.6, -hb0 + (q * 2 * hb0) / 14, -hb0 + ((q + 1) * 2 * hb0) / 14, (q + r) % 2 ? F(0x101010) : wl);
-    for (let j = 0; j < 12; j++) {
+    for (let j = 0; j < Math.min(S.startplaetze.length, CONFIG.rennen.maxFahrer); j++) {      // aufgemalte Startplätze
       const p = S.startplaetze[j];
       fleck(mk, p.s + 1.9, p.s + 2.05, p.d - 1.1, p.d + 1.1, wl); fleck(mk, p.s + 0.5, p.s + 1.9, p.d - 1.1, p.d - 0.98, wl); fleck(mk, p.s + 0.5, p.s + 1.9, p.d + 0.98, p.d + 1.1, wl);
     }
@@ -8255,7 +8511,6 @@ const Eingabe = {
 const PEER_QUELLEN = ['https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js', 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js'];
 const RAUM_VORSATZ = 'bsr26-';
 const CODE_ZEICHEN = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';      // ohne 0/O und 1/I (leicht zu verwechseln)
-const r2 = (x) => Math.round(x * 100) / 100, r3 = (x) => Math.round(x * 1000) / 1000;
 
 const Online = {
   peer: null, host: false, code: '', gaeste: {}, zumHost: null, zumHostZ: null, meineId: '', lobby: null, imRennen: false, bereit: false,
@@ -8361,7 +8616,7 @@ const Online = {
         p.on('open', () => {
           if (this.peer !== p || this.lobby) return;      // nach einer Neu-Anmeldung beim Vermittler kommt «open» nochmals: Dann bleibt alles, wie es ist
           clearTimeout(this.zeitlimit);
-          this.lobby = { code, strecke: D.strecke, runden: D.runden, bots: Math.min(D.bots, 6), stufe: D.stufe, spieler: [] };
+          this.lobby = { code, strecke: D.strecke, runden: D.runden, bots: Math.min(D.bots, 6), stufe: D.stufe, spieler: [], handy: 'ontouchstart' in window || navigator.maxTouchPoints > 0 };
           this.zeigeLobby();
           this.takte.push(setInterval(() => this.sendeLobby(), 2000));
         });
@@ -8383,7 +8638,7 @@ const Online = {
       const nein = (text) => { try { c.send(['nein', text]); } catch (e) { /* egal */ } setTimeout(() => { try { c.close(); } catch (e) { /* egal */ } }, 800); };
       const alt = this.gaeste[c.peer];           // derselbe Gast nochmals (zweiter Verbindungsversuch): nur die Leitung tauschen
       if (!alt && this.imRennen) { nein('In diesem Raum läuft gerade ein Rennen. Versuch es in ein paar Minuten nochmals.'); return; }
-      if (!alt && Object.keys(this.gaeste).length >= CONFIG.rennen.maxFahrer - 1) { nein('Der Raum ist voll (höchstens ' + CONFIG.rennen.maxFahrer + ' Fahrer).'); return; }
+      if (!alt && Object.keys(this.gaeste).length >= CONFIG.rennen.maxMenschen - 1) { nein('Der Raum ist voll (höchstens ' + CONFIG.rennen.maxMenschen + ' Spieler).'); return; }
       if (alt) { const k = alt.k; alt.k = c; alt.zuletzt = performance.now(); try { k.close(); } catch (e) { /* egal */ } }
       else this.gaeste[c.peer] = { id: c.peer, k: c, z: null, name: 'Gast', fahrzeug: 0, farbe: 1, bereit: false, ping: 0, kart: -1, zuletzt: performance.now() };
       const weg = () => { const g = this.gaeste[c.peer]; if (g && g.k === c) this.gastWeg(c.peer); };      // eine abgelöste alte Leitung darf den Gast nicht abmelden
@@ -8417,22 +8672,26 @@ const Online = {
         this.sendeLobby(); break;
       case 'bereit': g.bereit = !!d[1]; this.sendeLobby(); break;
       case 'p': g.ping = d[2] | 0; try { g.k.send(['q', d[1], performance.now()]); } catch (e) { /* egal */ } break;
-      case 'z': if (imRennen && R.karts[g.kart].typ === 'fern') this.merkeZustand(g.kart, d.slice(1)); break;
+      case 'z': if (imRennen && R.karts[g.kart].typ === 'fern') { g.imRennen = true; this.merkeZustand(g.kart, d.slice(1)); } break;
       case 'bau': if (imRennen) R.bauen(R.karts[g.kart], String(d[1]), d[2] | 0); break;                    // der Host prüft die Anfrage wie bei jedem anderen
       case 'treffer': if (imRennen) R.registriereTreffer(g.kart, d[1] | 0, d[2] | 0); break;
       case 'benutzt': if (imRennen) { const bw = R.bauwerke.find((b) => b.id === d[1]); if (bw && bw.besitzer === g.kart) { bw.benutzt = true; bw.tEnde = Math.min(bw.tEnde, R.zeit + 1.2); } } break;
     }
   },
   sendeAlle(d, schnell) {
-    for (const id in this.gaeste) {
-      const g = this.gaeste[id], c = schnell && g.z && g.z.open ? g.z : g.k;
-      try { if (c.open) c.send(d); } catch (e) { /* Verbindung gerade weg */ }
-    }
+    for (const id in this.gaeste) this.sendeAn(this.gaeste[id], d, schnell);
+  },
+  sendeAn(g, d, schnell) {
+    const c = schnell && g.z && g.z.open ? g.z : g.k;
+    try { if (c.open) { c.send(d); if (this.zaehler) this.zaehler(g.id, d); } } catch (e) { /* Verbindung gerade weg */ }
   },
   spielerListe() {
     const P = this.profil();
     const l = [{ id: 'host', name: P.name, fahrzeug: P.fahrzeug, farbe: P.farbe, bereit: true, ping: 0, host: true }];
     for (const id in this.gaeste) { const g = this.gaeste[id]; l.push({ id, name: g.name, fahrzeug: g.fahrzeug, farbe: g.farbe, bereit: g.bereit, ping: g.ping, host: false }); }
+    // Gleiche Lacke vermeiden: Hat schon jemand diese Farbe, bekommt der Spätere die am wenigsten benutzte (ab 17 Spielern hilft die Startnummer)
+    const belegt = [];
+    for (const s of l) { s.farbe = (s.farbe | 0) % FARBEN.length; if (belegt.includes(s.farbe)) s.farbe = freieFarbe(belegt); belegt.push(s.farbe); }
     return l;
   },
   sendeLobby() {
@@ -8445,9 +8704,10 @@ const Online = {
     const L = this.lobby, gaeste = Object.keys(this.gaeste).map((id) => this.gaeste[id]), P = this.profil();
     if (gaeste.some((g) => !g.bereit)) { App.toast('Es sind noch nicht alle bereit.'); return; }
     Menue.nameLesen(); Speicher.sichern();
-    const fahrer = [{ peer: 'host', typ: 'mensch', name: P.name, fahrzeug: FAHRZEUGE[P.fahrzeug].id, farbe: P.farbe }];
-    for (const g of gaeste) fahrer.push({ peer: g.id, typ: 'mensch', name: g.name, fahrzeug: FAHRZEUGE[g.fahrzeug].id, farbe: g.farbe });
-    for (const b of Menue.botFahrer(Math.min(L.bots, CONFIG.rennen.maxFahrer - fahrer.length), L.stufe, fahrer.map((f) => f.farbe))) { b.peer = ''; fahrer.push(b); }
+    const liste = this.spielerListe(), farbeVon = (id) => liste.find((s) => s.id === id).farbe;
+    const fahrer = [{ peer: 'host', typ: 'mensch', name: P.name, fahrzeug: FAHRZEUGE[P.fahrzeug].id, farbe: farbeVon('host') }];
+    for (const g of gaeste) fahrer.push({ peer: g.id, typ: 'mensch', name: g.name, fahrzeug: FAHRZEUGE[g.fahrzeug].id, farbe: farbeVon(g.id) });
+    for (const b of Menue.botFahrer(Math.min(L.bots, CONFIG.rennen.maxBots, CONFIG.rennen.maxFahrer - fahrer.length), L.stufe, fahrer.map((f) => f.farbe))) { b.peer = ''; fahrer.push(b); }
     const zufall = L.zufall == null ? Speicher.daten.zufallsAuto !== false : !!L.zufall;
     if (zufall) Spiel.loseAutos(fahrer);                 // der Host lost für alle im Raum
     const p = fahrer.map((_, i) => i);
@@ -8576,7 +8836,7 @@ const Online = {
       }
       case 'nein': this.fehler(esc(d[1])); break;
       case 'start': this.starteRennen(d[1]); break;
-      case 's': if (imRennen) this.empfangeBild(R, d); break;
+      case 's': if (imRennen) { this.hostImRennen = true; this.empfangeBild(R, d); } break;
       case 'bw':
         if (imRennen && !R.bauwerke.some((b) => b.id === d[1].id)) { const bw = R.neuesBauwerk(d[1]); R.bauwerke.push(bw); Spiel.ereignis({ typ: 'bau', k: bw.besitzer, a: bw.id, zeit: R.zeit }); }
         break;
@@ -8586,6 +8846,7 @@ const Online = {
           const e = { typ: d[1], k: d[2], a: d[3], b: d[4], zeit: R.zeit };
           if (e.typ === 'treffer') { const bw = R.bauwerke.find((x) => x.id === e.a); if (bw && e.b >= 0 && bw.teile && bw.teile[e.b]) bw.teile[e.b].weg = true; }
           else if (e.typ === 'runde') { const k = R.karts[e.k]; k.rundenZeiten.push(e.b); k.rundeStart += e.b; }
+          else if (e.typ === 'linie') { const k = R.karts[e.k]; k.linie = true; k.rundeStart = e.a; }
           Spiel.ereignis(e);
         }
         break;
@@ -8610,11 +8871,11 @@ const Online = {
     let rennen = '<p id="lobby-info"></p>';
     if (host) rennen = Menue.wahlZeile('Strecke', 'strecke', Object.keys(STRECKEN).map((id) => ({ wert: id, text: STRECKEN[id].name })), L.strecke, (v) => { L.strecke = D.strecke = v; Spiel.starteDemo(v); this.sendeLobby(); }) +
       Menue.wahlZeile('Runden', 'runden', zahlen(1, 7), L.runden, (v) => { L.runden = D.runden = v; this.sendeLobby(); }) +
-      Menue.wahlZeile('Bots', 'gegner', zahlen(0, CONFIG.rennen.maxFahrer - 1), L.bots, (v) => { L.bots = v; this.sendeLobby(); }) +
+      Menue.wahlZeile('Bots', 'gegner', zahlen(0, CONFIG.rennen.maxBots), L.bots, (v) => { L.bots = v; this.sendeLobby(); }) +
       Menue.wahlZeile('Stärke', 'stufe', STUFEN_LISTE, L.stufe, (v) => { L.stufe = v; this.sendeLobby(); });
     Menue.zeige('lobby', '<div class="tafel breit"><h2>Raum ' + this.code + '</h2>' +
       '<div class="zeile"><input class="feld" id="f-link" readonly value="' + esc(link) + '" style="width:min(430px,100%);font-size:14px"><button class="knopf klein" data-a="kopieren">Link kopieren</button></div>' +
-      '<div class="spalten"><div><h3>Fahrer</h3><div class="spielerliste" id="lobby-liste"></div><p class="hinweis">' +
+      '<div class="spalten"><div><h3>Fahrer <span id="lobby-zahl"></span></h3><div class="spielerliste" id="lobby-liste"></div><p class="hinweis" id="lobby-handy"></p><p class="hinweis">' +
       (host ? 'Schick den Link oder den Code an deine Mitspieler und komm gleich wieder hierher zurück: Ist dieses Fenster im Hintergrund, kann auf Handys und Tablets niemand beitreten. Du bist der Host: Verlässt du das Spiel, endet es für alle.' :'Der Host startet das Rennen, sobald alle bereit sind.') + '</p></div>' +
       '<div><h3>Du</h3>' + Menue.fahrerZeilen(true) + '<h3>Rennen</h3>' + rennen + '</div></div>' +
       '<div class="zeile" style="margin-top:12px">' + (host ? '<button class="knopf los" data-a="start">Rennen starten</button>' : '<button class="knopf los" data-a="bereit" id="k-bereit">Bereit</button>') +
@@ -8635,8 +8896,13 @@ const Online = {
     const L = this.lobby, liste = $('lobby-liste');
     if (Menue.offen !== 'lobby' || !L || !liste) return;
     if (this.host && L.zufall == null) L.zufall = Speicher.daten.zufallsAuto !== false;
-    const bots = Math.max(0, Math.min(L.bots, CONFIG.rennen.maxFahrer - L.spieler.length));
+    const bots = Math.max(0, Math.min(L.bots, CONFIG.rennen.maxBots, CONFIG.rennen.maxFahrer - L.spieler.length));
     const stufe = (STUFEN_LISTE.find((s) => s.wert === L.stufe) || STUFEN_LISTE[1]).text;
+    const gaeste = L.spieler.filter((s) => !s.host), autos = L.spieler.length + bots;
+    $('lobby-zahl').textContent = '(' + L.spieler.length + '/' + CONFIG.rennen.maxMenschen + (gaeste.length ? ', bereit ' + gaeste.filter((s) => s.bereit).length + '/' + gaeste.length : '') + ')';
+    liste.classList.toggle('viele', L.spieler.length > 8);
+    // Ein Handy als Host rechnet alle Autos und schickt jedem Gast die Lage: Bei grossen Feldern kann es ins Stocken kommen
+    $('lobby-handy').textContent = L.handy && autos > CONFIG.netz.handyHostMax ? (this.host ? 'Du leitest das Rennen auf einem Handy oder Tablet. Mit ' + autos + ' Autos kann es ins Stocken kommen. Besser leitet ein Laptop oder Computer das Rennen.' : 'Der Host spielt auf einem Handy oder Tablet. Mit ' + autos + ' Autos kann das Rennen ins Stocken kommen.') : '';
     liste.innerHTML = L.spieler.map((s) => '<div class="zeile"><span class="farbfeld" style="background:' + hexCss(FARBEN[s.farbe % FARBEN.length].hex) + '"></span><b>' + esc(s.name) + '</b><span class="hinweis">' + (L.zufall ? 'Zufalls-Auto' : FAHRZEUGE[s.fahrzeug % FAHRZEUGE.length].name) + '</span>' +
       '<span style="margin-left:auto" class="' + (s.bereit ? 'bereit' : 'hinweis') + '">' + (s.host ? 'Host' : s.bereit ? 'bereit' : 'wartet') + '</span>' + (s.host ? '' : '<span class="hinweis">' + (s.ping | 0) + ' ms</span>') + '</div>').join('') +
       (bots ? '<div class="zeile"><span class="hinweis">dazu ' + bots + (bots === 1 ? ' Bot' : ' Bots') + ' (' + stufe + ')</span></div>' : '');
@@ -8669,7 +8935,8 @@ const Online = {
     this.t0 = daten.t0; this.imRennen = true; this.schrittNr = 0; this.puffer = fahrer.map(() => []); this.bekannt = {}; this.endeGesendet = false;
     this.meinKart = daten.fahrer.findIndex((f) => f.peer === ich);
     this.letzterEmpfang = performance.now();
-    for (const id in this.gaeste) this.gaeste[id].zuletzt = performance.now();
+    for (const id in this.gaeste) { this.gaeste[id].zuletzt = performance.now(); this.gaeste[id].imRennen = false; }
+    this.hostImRennen = false;      // bis das erste Rennbild kommt, gilt die längere Frist (der Host baut vielleicht noch die Strecke auf)
     Spiel.starte({ modus: 'online', zufall: !!daten.zufall, host: this.host, strecke: daten.strecke, runden: daten.runden, fahrer, seed: daten.seed, schiri: this.host, plaetzeFest: true });
     Spiel.netz = this;
     Spiel.R.netz = {
@@ -8684,29 +8951,51 @@ const Online = {
     const soll = (this.jetzt() - this.t0) / 1000 - CONFIG.rennen.countdown;
     return clamp(soll - R.zeit, 0, 0.3);
   },
-  zustand(R, k) {
-    const f = (k.luft ? 1 : 0) | (k.drift > 0 ? 2 : k.drift < 0 ? 4 : 0) | ((k.driftStufe & 3) << 3) | (k.boostZeit > 0 ? 32 : 0) | (k.windAktiv ? 64 : 0) | (k.schutzZeit > 0 ? 128 : 0) | (k.geistZeit > 0 ? 256 : 0) | (k.schlamm ? 1024 : 0);
-    return [r3(R.zeit), r2(k.x), r2(k.z), r2(k.y), r3(k.richtung), r3(k.blick), r2(k.v), r2(k.lenk), f, r2(k.strecke)];
-  },
   merkeZustand(kart, z) {
     if (!Array.isArray(z) || z.length < 10 || z.some((x) => typeof x !== 'number' || !isFinite(x))) return;
     const P = this.puffer[kart];
     if (P.length && z[0] <= P[P.length - 1][0]) return;            // veraltet (Pakete können sich überholen)
     P.push(z); if (P.length > 14) P.shift();
   },
-  // Fremde Fahrzeuge zwischen zwei empfangenen Zuständen weich bewegen (100 ms in der Vergangenheit)
+  // Fremde Fahrzeuge zwischen zwei empfangenen Zuständen weich bewegen (100 ms in der Vergangenheit). Der Ort folgt einer Hermite-Kurve:
+  // Sie geht durch jeden Zustand und hat dort dessen Tempo und Fahrtrichtung, darum knickt die Bahn an den Paketen nicht (20 pro Sekunde,
+  // ferne Autos 10). Höhe und Blickrichtung laufen ebenso weich durch die Nachbarzustände. Gezeichnet wird zwischen dem alten und dem
+  // neuen Stand (px … und x …), Rennen.step lässt fremde Autos aus.
   vorSchritt(R) {
     const tr = R.zeit + SCHRITT - CONFIG.netz.puffer;
     for (const k of R.karts) {
       if (k.typ !== 'fern') continue;
+      k.px = k.x; k.pz = k.z; k.py = k.y; k.pblick = k.blick; k.pv = k.v; k.prichtung = k.richtung;
       const P = this.puffer[k.idx];
       if (!P || !P.length) continue;
-      while (P.length > 2 && P[1][0] <= tr) P.shift();
-      const a = P[0], b = P[1] || a, dt = b[0] - a[0];
+      while (P.length > 3 && P[2][0] <= tr) P.shift();                          // ein Zustand vor dem jetzigen Abschnitt bleibt (für die Tangenten)
+      let ia = 0;
+      while (ia + 1 < P.length && P[ia + 1][0] <= tr) ia++;
+      const a = P[ia], b = P[ia + 1] || a, dt = b[0] - a[0], vor = P[ia - 1], nach = P[ia + 2];
       const u = dt > 0.001 ? clamp((tr - a[0]) / dt, 0, 1 + 0.25 / dt) : 0;      // höchstens 0.25 s über das letzte Paket hinaus weiterrechnen
       const w = Math.min(u, 1);
-      k.x = a[1] + (b[1] - a[1]) * u; k.z = a[2] + (b[2] - a[2]) * u; k.y = a[3] + (b[3] - a[3]) * w;
-      k.richtung = a[4] + winkelDiff(b[4], a[4]) * w; k.blick = a[5] + winkelDiff(b[5], a[5]) * w;
+      if (b === a || dt <= 0.001) { k.x = a[1]; k.z = a[2]; k.y = a[3]; k.richtung = a[4]; k.blick = a[5]; }
+      else {
+        const ta = a[6] * dt, tb = b[6] * dt;                                   // Tangenten: Tempo × Paketabstand in Fahrtrichtung
+        const sprung = Math.hypot(b[1] - a[1], b[2] - a[2]) > Math.max(4, (Math.abs(a[6]) + Math.abs(b[6])) * dt * 1.5);   // Zurücksetzen o. Ä.
+        if (sprung) { k.x = a[1] + (b[1] - a[1]) * w; k.z = a[2] + (b[2] - a[2]) * w; }
+        else if (u <= 1) {
+          k.x = hermite(a[1], ta * Math.cos(a[4]), b[1], tb * Math.cos(b[4]), u);
+          k.z = hermite(a[2], ta * Math.sin(a[4]), b[2], tb * Math.sin(b[4]), u);
+        } else { k.x = b[1] + tb * Math.cos(b[4]) * (u - 1); k.z = b[2] + tb * Math.sin(b[4]) * (u - 1); }
+        // Höhe und Winkel: Catmull-Rom durch die Nachbarn (fehlt einer, gilt die Sehne)
+        const sehne = (q0, q1, t0, t1) => (q1 - q0) / Math.max(0.001, t1 - t0) * dt;
+        const yA = vor ? sehne(vor[3], b[3], vor[0], b[0]) : b[3] - a[3], yB = nach ? sehne(a[3], nach[3], a[0], nach[0]) : b[3] - a[3];
+        k.y = sprung ? a[3] + (b[3] - a[3]) * w : hermite(a[3], yA, b[3], yB, w);
+        const winkel = (j) => {                                                  // Winkel j über a, b und die Nachbarn ohne Sprung bei ±π
+          const wb = a[j] + winkelDiff(b[j], a[j]);
+          if (sprung) return a[j] + (wb - a[j]) * w;
+          const wv = vor ? a[j] - winkelDiff(a[j], vor[j]) : null, wn = nach ? wb + winkelDiff(nach[j], b[j]) : null;
+          const mA = wv != null ? sehne(wv, wb, vor[0], b[0]) : wb - a[j], mB = wn != null ? sehne(a[j], wn, a[0], nach[0]) : wb - a[j];
+          return hermite(a[j], mA, wb, mB, w);
+        };
+        k.richtung = winkel(4); k.blick = winkel(5);
+      }
       k.v = b[6]; k.lenk = b[7];
       const f = b[8];
       k.luft = !!(f & 1); k.drift = f & 2 ? 1 : f & 4 ? -1 : 0; k.driftStufe = (f >> 3) & 3; k.boostZeit = f & 32 ? 0.2 : 0; k.windAktiv = !!(f & 64);
@@ -8722,7 +9011,7 @@ const Online = {
     }
   },
   ereignisVomSchiri(e) {
-    if (e.typ === 'ueberholt' || e.typ === 'bp' || e.typ === 'runde' || e.typ === 'ziel' || e.typ === 'treffer') this.sendeAlle(['e', e.typ, e.k, e.a, e.b]);
+    if (e.typ === 'ueberholt' || e.typ === 'bp' || e.typ === 'runde' || e.typ === 'linie' || e.typ === 'ziel' || e.typ === 'treffer') this.sendeAlle(['e', e.typ, e.k, e.a, e.b]);
   },
   nachSchritt(R) {
     this.schrittNr++;
@@ -8732,13 +9021,13 @@ const Online = {
       for (const bw of R.bauwerke) if (!this.bekannt[bw.id]) { this.bekannt[bw.id] = true; this.sendeAlle(['bw', { id: bw.id, art: bw.art, slot: bw.slot, besitzer: bw.besitzer, t0: bw.t0, betroffen: bw.betroffen }]); }
       for (const id in this.bekannt) if (!R.bauwerke.some((b) => b.id === +id)) { delete this.bekannt[id]; this.sendeAlle(['bwWeg', +id]); }
       if (senden) {
-        const karts = R.karts.map((k) => { const P = this.puffer[k.idx]; return k.typ === 'fern' && P.length ? P[P.length - 1] : this.zustand(R, k); });
-        const ref = R.karts.map((k) => [k.rang, Math.round(k.bp * 10) / 10, k.runde, k.zielZeit, Math.round(Math.max(0, k.bauSperre) * 10) / 10]);
-        this.sendeAlle(['s', r3(R.zeit), karts, ref], true);
+        this.sendeNr = (this.sendeNr || 0) + 1;      // jeder Gast bekommt sein eigenes Bild (nahe Autos öfter, siehe netzBild)
+        const zust = R.karts.map((k) => { const P = this.puffer[k.idx]; return k.typ === 'fern' && P.length ? P[P.length - 1] : netzZustand(R, k); });
+        for (const id in this.gaeste) { const g = this.gaeste[id]; if (g.kart >= 0) this.sendeAn(g, netzBild(R, g.kart, this.sendeNr, zust), true); }
       }
       if (this.schrittNr % 60 === 0) {       // wer zu lange schweigt, gilt als ausgefallen
         const jetzt = performance.now();
-        for (const id in this.gaeste) if (jetzt - this.gaeste[id].zuletzt > CONFIG.netz.ausfallTimeout * 1000) this.gastWeg(id);
+        for (const id in this.gaeste) { const g = this.gaeste[id]; if (jetzt - g.zuletzt > (g.imRennen ? CONFIG.netz.ausfallTimeout : CONFIG.netz.startTimeout) * 1000) this.gastWeg(id); }
       }
       if (R.fertig && !this.endeGesendet) {
         this.endeGesendet = true;
@@ -8746,22 +9035,22 @@ const Online = {
       }
     } else {
       for (const bw of R.bauwerke) if (!bw.fertig && R.zeit >= bw.tFest) { bw.fertig = true; Spiel.ereignis({ typ: 'fertig', k: bw.besitzer, a: bw.id, zeit: R.zeit }); }
-      if (senden) this.zumHostSenden(['z'].concat(this.zustand(R, R.karts[this.meinKart])), true);
-      if (performance.now() - this.letzterEmpfang > CONFIG.netz.ausfallTimeout * 1000) this.hostWeg();
+      if (senden) this.zumHostSenden(['z'].concat(netzZustand(R, R.karts[this.meinKart])), true);
+      if (performance.now() - this.letzterEmpfang > (this.hostImRennen ? CONFIG.netz.ausfallTimeout : CONFIG.netz.startTimeout) * 1000) this.hostWeg();
     }
   },
   // Gast: Bild vom Host übernehmen (fremde Fahrzeuge + Schiedsrichter-Daten für alle)
   empfangeBild(R, d) {
-    const karts = d[2], ref = d[3];
-    if (!Array.isArray(karts) || !Array.isArray(ref)) return;
-    for (let i = 0; i < R.n; i++) {
-      const k = R.karts[i], q = ref[i];
-      if (k.typ === 'fern' && karts[i]) this.merkeZustand(i, karts[i]);
-      if (!q) continue;
-      k.rang = q[0]; k.bp = q[1]; k.runde = q[2];
-      if (q[3] != null && k.zielZeit == null) k.zielZeit = q[3];
-      if (i === this.meinKart) k.bauSperre = Math.max(k.bauSperre, q[4]);
+    const t = d[1], liste = d[2], alle = d[3], eigen = d[4];
+    if (!Array.isArray(liste) || typeof t !== 'number') return;
+    for (const q of liste) {
+      const k = Array.isArray(q) && R.karts[q[0]];
+      if (k && k.typ === 'fern') this.merkeZustand(q[0], [r3(t + q[1] / 1000)].concat(q.slice(2)));
     }
+    const setze = (k, q) => { k.rang = q[0]; k.bp = q[1]; k.runde = q[2]; if (q[3] != null && k.zielZeit == null) k.zielZeit = q[3]; };
+    if (Array.isArray(alle)) for (let i = 0; i < R.n; i++) if (Array.isArray(alle[i])) setze(R.karts[i], alle[i]);
+    const m = R.karts[this.meinKart];
+    if (Array.isArray(eigen) && m) { setze(m, eigen); m.bauSperre = Math.max(m.bauSperre, eigen[4]); }
     R.reihenfolge = R.karts.map((k) => k.idx).sort((a, b) => R.karts[a].rang - R.karts[b].rang);
   },
   debugText() {
@@ -8807,7 +9096,7 @@ const Speicher = {
     if (!STRECKEN[d.strecke]) d.strecke = Object.keys(STRECKEN)[0];
     if (!Array.isArray(d.lokal) || d.lokal.length < 4) d.lokal = Speicher.standardLokal;
     d.fahrzeug = clamp(d.fahrzeug | 0, 0, FAHRZEUGE.length - 1); d.farbe = clamp(d.farbe | 0, 0, FARBEN.length - 1);
-    d.runden = clamp(d.runden | 0, 1, 9); d.bots = clamp(d.bots | 0, 0, CONFIG.rennen.maxFahrer - 1);
+    d.runden = clamp(d.runden | 0, 1, 9); d.bots = clamp(d.bots | 0, 0, CONFIG.rennen.maxBots);
     if (!CONFIG.bots.stufen[d.stufe]) d.stufe = 'mittel';
   },
   sichern() { try { localStorage.setItem('baustellenrennen', JSON.stringify(this.daten)); } catch (e) { /* egal */ } },
@@ -8991,7 +9280,7 @@ const Hud = {
       setze(t.runde, 'runde', 'Runde <b>' + clamp(k.runde + 1, 1, R.runden) + '</b>/' + R.runden);   // k.runde = fertige Runden
       const lauf = R.phase === 'countdown' ? 0 : (k.zielZeit != null ? k.zielZeit : R.zeit);
       const rz = k.rundenZeiten, beste = rz.length ? Math.min.apply(null, rz) : null;
-      const runde = k.zielZeit != null ? rz[rz.length - 1] : R.phase === 'countdown' ? 0 : Math.max(0, R.zeit - k.rundeStart);
+      const runde = k.zielZeit != null ? rz[rz.length - 1] : R.phase === 'countdown' || !k.linie ? 0 : Math.max(0, R.zeit - k.rundeStart);   // läuft erst ab der Ziellinie
       setze(t.zeit, 'zeit', 'Zeit ' + zeitText(lauf).slice(0, -1) + '<br>Runde ' + zeitText(runde).slice(0, -1) + (beste != null ? '<br>Beste ' + zeitText(beste) : '') +
         (Bestenliste.rekordText ? '<br><span class="h-rekord">Rekord ' + esc(Bestenliste.rekordText) + '</span>' : ''));
       setze(t.tempo, 'tempo', String(Math.round(Math.abs(k.v) * 3.6)));
@@ -9346,7 +9635,9 @@ const Menue = {
   fahrerZeilen(immerWahl) {
     const D = Speicher.daten, neu = () => { if (this.beiProfil) this.beiProfil(); this.schau(); };
     this.schauZufall = D.zufallsAuto && !immerWahl;
-    return '<div class="zeile"><label for="f-name">Name</label><input class="feld" id="f-name" maxlength="14" autocomplete="off" value="' + esc(D.name) + '"></div>' +
+    const konto = Konto.angemeldet();                 // angemeldet: der Spielname des Kontos, ändern nur im Hauptmenü
+    return '<div class="zeile"><label for="f-name">Name</label><input class="feld" id="f-name" maxlength="14" autocomplete="off" value="' + esc(konto ? Konto.name() : D.name) + '"' +
+      (konto ? ' readonly title="Name deines Kontos (ändern im Hauptmenü)"' : '') + '></div>' +
       '<div class="schau"><canvas id="schau"></canvas><div class="schau-text" id="schau-text"></div></div>' +
       (this.schauZufall ? '' : this.wahlZeile('Auto', 'fahrzeug', FAHRZEUG_LISTE, D.fahrzeug, (v) => { D.fahrzeug = v; neu(); })) +
       this.wahlZeile('Lack', 'farbe', FARB_LISTE, D.farbe, (v) => { D.farbe = v; neu(); });
@@ -9364,13 +9655,16 @@ const Menue = {
     if (this.schauZufall) { let i = Math.floor(Math.random() * FAHRZEUGE.length); zeig(i, true); this.schauTakt = setInterval(() => { i = (i + 1) % FAHRZEUGE.length; zeig(i, true); }, 2600); }
     else zeig(D.fahrzeug, false);
   },
-  nameLesen() { const f = $('f-name'); if (f) Speicher.daten.name = (f.value.trim() || 'Spieler').slice(0, 14); },
+  nameLesen() {
+    const f = $('f-name');
+    if (Konto.angemeldet()) Speicher.daten.name = Konto.name(); else if (f) Speicher.daten.name = (f.value.trim() || 'Spieler').slice(0, 14);
+  },
 
   // Bots mit zufälligen Namen und noch freien Farben
   botFahrer(anzahl, stufe, belegt) {
     const liste = [], namen = BOT_NAMEN.slice();
     for (let i = 0; i < anzahl; i++) {
-      let farbe = 0; while (belegt.includes(farbe) && farbe < FARBEN.length - 1) farbe++;
+      const farbe = freieFarbe(belegt);
       belegt.push(farbe);
       liste.push({ name: namen.splice(Math.floor(Math.random() * namen.length), 1)[0], typ: 'bot', stufe, fahrzeug: FAHRZEUGE[Math.floor(Math.random() * FAHRZEUGE.length)].id, farbe });
     }
@@ -9395,20 +9689,21 @@ const Menue = {
     }
     html += '<div class="knoepfe"><button class="knopf los" data-a="bots">Gegen Bots</button><button class="knopf" data-a="lokal">Lokal am selben Gerät</button>' +
       '<button class="knopf" data-a="erstellen">Online: Raum erstellen</button><button class="knopf" data-a="beitreten">Online: Raum beitreten</button>' +
-      '<button class="knopf zweit" data-a="bestenliste">Bestenlisten</button><button class="knopf zweit" data-a="steuerung">Steuerung</button><button class="knopf zweit" data-a="einstellungen">Einstellungen</button></div></div>';
+      '<button class="knopf zweit" data-a="bestenliste">Bestenlisten</button><button class="knopf zweit" data-a="steuerung">Steuerung</button><button class="knopf zweit" data-a="einstellungen">Einstellungen</button></div>' +
+      Konto.menueHtml() + '</div>';
     const online = (f) => { if (typeof Online !== 'undefined') f(); else App.toast('Der Online-Modus ist in dieser Version noch nicht eingebaut.'); };
-    this.zeige('haupt', html, {
+    this.zeige('haupt', html, Object.assign(Konto.menueAktionen(), {
       bots: () => this.bots(), lokal: () => this.lokal(),
       erstellen: () => online(() => Online.erstellen()), beitreten: () => online(() => Online.beitretenDialog()),
       steuerung: () => this.steuerung(() => this.haupt()), einstellungen: () => this.einstellungen(), bestenliste: () => Bestenliste.seite(D.strecke, ''),
-    });
+    }));
   },
 
   bots() {
     this.wahlen = {};
     const D = Speicher.daten;
     this.zeige('bots', '<div class="tafel"><h2>Gegen Bots</h2>' + this.streckenZeilen() +
-      this.wahlZeile('Gegner', 'gegner', zahlen(0, CONFIG.rennen.maxFahrer - 1), D.bots, (v) => { D.bots = v; }) +
+      this.wahlZeile('Gegner', 'gegner', zahlen(0, CONFIG.rennen.maxBots), D.bots, (v) => { D.bots = v; }) +
       this.wahlZeile('Stärke', 'stufe', STUFEN_LISTE, D.stufe, (v) => { D.stufe = v; }) + this.wahlZeile('Zufalls-Auto', 'zufall', EIN_AUS, D.zufallsAuto, (v) => { this.nameLesen(); D.zufallsAuto = v; this.bots(); }) + '<h3>Dein Auto</h3>' + this.fahrerZeilen() +
       '<div class="knoepfe" style="margin-top:16px"><button class="knopf los" data-a="start">Rennen starten</button><button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>', {
       start: () => {
@@ -9423,6 +9718,7 @@ const Menue = {
   lokalLesen() {
     const D = Speicher.daten;
     for (let i = 0; i < 4; i++) { const f = $('f-name' + i); if (f) D.lokal[i].name = (f.value.trim() || 'Spieler ' + (i + 1)).slice(0, 14); }
+    if (Konto.angemeldet()) D.lokal[0].name = Konto.name();       // Spieler 1 fährt mit dem Konto
   },
   lokal() {
     this.wahlen = {};
@@ -9432,13 +9728,15 @@ const Menue = {
       this.wahlZeile('Zufalls-Auto', 'zufall', EIN_AUS, D.zufallsAuto, (v) => { this.lokalLesen(); D.zufallsAuto = v; this.lokal(); }) + '<div class="spalten">';
     for (let i = 0; i < D.lokalAnzahl; i++) {
       const p = D.lokal[i];
-      html += '<div class="karte"><div class="zeile"><label for="f-name' + i + '">Spieler ' + (i + 1) + '</label><input class="feld" id="f-name' + i + '" maxlength="14" autocomplete="off" value="' + esc(p.name) + '"></div>' +
+      const konto = i === 0 && Konto.angemeldet();
+      html += '<div class="karte"><div class="zeile"><label for="f-name' + i + '">Spieler ' + (i + 1) + '</label><input class="feld" id="f-name' + i + '" maxlength="14" autocomplete="off" value="' + esc(konto ? Konto.name() : p.name) + '"' +
+        (konto ? ' readonly title="Name deines Kontos (ändern im Hauptmenü)"' : '') + '></div>' +
         this.wahlZeile('Steuerung', 'g' + i, GERAETE_LISTE, p.geraet, (v) => { p.geraet = v; }) +
         (D.zufallsAuto ? '' : this.wahlZeile('Auto', 'fz' + i, FAHRZEUG_LISTE, p.fahrzeug, (v) => { p.fahrzeug = v; })) +
         this.wahlZeile('Lack', 'fb' + i, FARB_LISTE, p.farbe, (v) => { p.farbe = v; }) + '</div>';
     }
     html += '</div><div class="spalten"><div>' + this.streckenZeilen() + '</div><div>' +
-      this.wahlZeile('Bots dazu', 'gegner', zahlen(0, CONFIG.rennen.maxFahrer - D.lokalAnzahl), Math.min(D.bots, CONFIG.rennen.maxFahrer - D.lokalAnzahl), (v) => { D.bots = v; }) +
+      this.wahlZeile('Bots dazu', 'gegner', zahlen(0, CONFIG.rennen.maxBots), Math.min(D.bots, CONFIG.rennen.maxBots), (v) => { D.bots = v; }) +
       this.wahlZeile('Stärke', 'stufe', STUFEN_LISTE, D.stufe, (v) => { D.stufe = v; }) + '</div></div>' +
       '<div class="knoepfe" style="margin-top:14px"><button class="knopf los" data-a="start">Rennen starten</button><button class="knopf zweit" data-a="zurueck">Zurück</button></div></div>';
     this.zeige('lokal', html, {
@@ -9450,7 +9748,7 @@ const Menue = {
           if (sp[i].geraet.startsWith('pad') && !pads.includes(+sp[i].geraet.slice(3))) { App.toast('Gamepad ' + (+sp[i].geraet.slice(3) + 1) + ' wurde nicht gefunden. Schliesse es an und drücke eine Taste darauf.'); return; }
         }
         const fahrer = sp.map((p) => ({ name: p.name, typ: 'mensch', fahrzeug: FAHRZEUGE[p.fahrzeug].id, farbe: p.farbe, geraet: p.geraet }));
-        const bots = Math.min(D.bots, CONFIG.rennen.maxFahrer - fahrer.length);
+        const bots = Math.min(D.bots, CONFIG.rennen.maxBots, CONFIG.rennen.maxFahrer - fahrer.length);
         Spiel.starte({ modus: 'lokal', zufall: D.zufallsAuto, strecke: D.strecke, runden: D.runden, fahrer: fahrer.concat(this.botFahrer(bots, D.stufe, sp.map((p) => p.farbe))) });
       },
       zurueck: () => { this.lokalLesen(); Speicher.sichern(); this.haupt(); },
@@ -9509,8 +9807,8 @@ const Menue = {
     reihe.forEach((k, r) => {
       const zeit = r === 0 ? zeitText(k.endZeit) : '+' + Math.max(0, k.endZeit - sieger.endZeit).toFixed(2) + ' s';
       zeilen += '<tr class="' + (lokal.includes(k.idx) ? 'ich' : '') + '"><td class="zahl">' + (r + 1) + '.</td><td><span class="farbfeld" style="background:' + kartFarbe(k) + '"></span> ' + esc(k.name) + '</td><td class="zahl">' + (k.geschaetzt ? 'ca. ' : '') + zeit +
-        '</td><td class="zahl">' + (k.rundenZeiten.length ? zeitText(Math.min.apply(null, k.rundenZeiten)) : '–') + '</td><td class="zahl">' + Math.round(k.bpVerdient) + ' / ' + Math.round(k.bpAusgegeben) +
-        '</td><td class="zahl">' + k.ueberholt + '</td><td class="zahl">' + k.gebaut + '</td><td class="zahl">' + k.treffer + '</td></tr>';
+        '</td><td class="zahl">' + (k.rundenZeiten.length ? zeitText(Math.min.apply(null, k.rundenZeiten)) : '–') + '</td><td class="zahl neben">' + Math.round(k.bpVerdient) + ' / ' + Math.round(k.bpAusgegeben) +
+        '</td><td class="zahl neben">' + k.ueberholt + '</td><td class="zahl neben">' + k.gebaut + '</td><td class="zahl neben">' + k.treffer + '</td></tr>';
     });
     const beste = (wert, min) => { let b = null, w = min; for (const k of reihe) { const v = wert(k); if (v > w) { w = v; b = k; } } return b; };
     const bauer = beste((k) => k.trefferErzielt * 2 + k.gebaut, 0.5);
@@ -9524,7 +9822,7 @@ const Menue = {
     const online = konfig && konfig.modus === 'online';
     this.zeige('ergebnis', '<div class="tafel breit"><h2>' + titel + '</h2><p class="hinweis">' + esc(R.S.def.name) + ' · ' + R.runden + (R.runden === 1 ? ' Runde' : ' Runden') + '</p>' +
       '<div class="schau podest"><canvas id="schau" aria-label="Siegerpodest"></canvas></div>' +
-      '<div class="karte" style="overflow:auto"><table><tr><th class="zahl">Platz</th><th>Fahrer</th><th class="zahl">Zeit</th><th class="zahl">Beste Runde</th><th class="zahl">BP verdient / ausgegeben</th><th class="zahl">Überholt</th><th class="zahl">Bauwerke</th><th class="zahl">Treffer</th></tr>' + zeilen + '</table></div>' +
+      '<div class="karte" style="overflow:auto"><table class="ergebnis' + (R.n > 12 ? ' viele' : '') + '"><tr><th class="zahl">Platz</th><th>Fahrer</th><th class="zahl">Zeit</th><th class="zahl">Beste Runde</th><th class="zahl neben">BP verdient / ausgegeben</th><th class="zahl neben">Überholt</th><th class="zahl neben">Bauwerke</th><th class="zahl neben">Treffer</th></tr>' + zeilen + '</table></div>' +
       '<div>' + preise + '</div>' + Bestenliste.ergebnisHtml() + '<div class="zeile" style="margin-top:14px">' + (online && !konfig.host ? '' : '<button class="knopf los" data-a="revanche">Revanche</button>') +
       '<button class="knopf" data-a="lobby">Lobby</button><button class="knopf zweit" data-a="menue">Menü</button></div></div>', {
       revanche: () => { if (online) Online.revanche(); else Spiel.starte(konfig); },
@@ -9593,6 +9891,13 @@ function ladeSkript(quellen, fertig, fehler) {
   naechste();
 }
 
+// die am wenigsten benutzte Farbe (zuerst alle freien)
+function freieFarbe(belegt) {
+  let farbe = 0;
+  for (let f = 1; f < FARBEN.length; f++) if (belegt.filter((b) => b === f).length < belegt.filter((b) => b === farbe).length) farbe = f;
+  return farbe;
+}
+
 const App = {
   letzte: 0, fps: 0, fpsBilder: 0, fpsZeit: 0, debug: false, parameter: new URLSearchParams(location.search), toastTakt: null,
 
@@ -9651,7 +9956,18 @@ const App = {
     document.body.appendChild(pk);
     if (this.debug) { const d = document.createElement('div'); d.id = 'debug'; document.body.appendChild(d); }
     Menue.laden();
+    if (this.parameter.get('testgast') === '1') { this.ohneGrafik(); this.bereit(); return; }
     ladeSkript(THREE_QUELLEN, () => this.bereit(), () => Menue.fehler('Die 3D-Bibliothek (three.js) konnte nicht geladen werden. Für den ersten Start braucht das Spiel eine Internetverbindung. Prüfe die Verbindung und lade die Seite neu.'));
+  },
+
+  // ?testgast=1 (nur für Tests): ohne three.js und ohne 3D-Bild. So haben 21 Gäste für eine volle Lobby in einem einzigen Browser Platz.
+  ohneGrafik() {
+    const leer = () => {};
+    Object.assign(Grafik, {
+      qualitaet: 'niedrig', ansichten: [], zeit: 0, strecke: null, init: leer, zeichne: leer, ereignis: leer, neuesRennen: leer, setzeQualitaet: leer, messeStufe: () => 'niedrig',
+      baueWelt(S) { this.strecke = S; }, setzeAnsichten(l) { this.ansichten = l.map((kart) => ({ kart, x: 0, y: 0, w: 1, h: 1 })); }, aktualisiere(R, a, dt) { this.zeit += dt; },
+    });
+    Speicher.daten.grafikGemessen = true;
   },
 
   bereit() {
@@ -9661,6 +9977,7 @@ const App = {
     try { Grafik.qualitaet = fest && GRAFIK_NAMEN[fest] ? fest : messen ? 'hoch' : D.grafik; Grafik.init($('bild')); }
     catch (e) { Menue.fehler('Dein Browser kann hier keine 3D-Grafik (WebGL) anzeigen. Versuche es mit einem aktuellen Chrome, Firefox, Edge oder Safari.'); return; }
     this.tonSetzen(); Ton.musikGewollt = true;
+    Konto.start();                                    // «Mit Google anmelden» (Teil 14): Anmeldung von früher wiederherstellen
     Spiel.starteDemo(Speicher.daten.strecke);
     if (messen) {
       // kurz messen, wie schnell dieses Gerät die Vorschau-Szene zeichnet, und die Grafik-Stufe danach wählen
@@ -9712,9 +10029,12 @@ const App = {
 // Menschen: pro Name und Auto die besten Zeiten (CONFIG.bestenliste.proName). Bots: pro Auto nur der schnellste Bot aller Zeiten.
 // Die Liste eines Autos zeigt dessen Zeiten und den schnellsten Bot mit diesem Auto. Die Gesamtliste nimmt pro Name die beste
 // Zeit über alle Autos und genau einen Bot: den schnellsten, der je auf dieser Strecke gefahren ist.
+// Mit Google-Anmeldung (Teil 14, Konto) tragen Einträge die Konto-Nummer u. Ein Konto steht einmal da, auch nach einem Namenswechsel,
+// und bekommt ein Häkchen. Alte Einträge ohne Konto (gemeinsame Liste v1, dieses Gerät vor dem Anmelden) bleiben sichtbar, ohne Häkchen.
 const BL_VERSION = 1;
 const BL_STUFE = { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer', ultra: 'Ultra' };
 const BL_ARTIKEL = { limo: 'der' };                 // «mit der Limousine», sonst «mit dem …»
+const BL_HAKEN = '<svg class="bl-haken" viewBox="0 0 16 16" role="img" aria-label="angemeldet"><title>Angemeldeter Spieler</title><circle cx="8" cy="8" r="8"/><path d="M4.4 8.3 6.9 10.8 11.8 5.6"/></svg>';
 const BL_ROBOTER = '<svg class="bl-robo" viewBox="0 0 24 24" aria-hidden="true"><path d="M11 2h2v3h4a3 3 0 0 1 3 3v8a3 3 0 0 1-3 3H7a3 3 0 0 1-3-3V8a3 3 0 0 1 3-3h4zM8.5 9.5a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zm7 0a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2zM9 15h6v1.6H9zM1 10h2v5H1zm20 0h2v5h-2z"/></svg>';
 
 // Kleines Fenster im Stil des Spiels (statt Browser-Dialog): Text, Knöpfe, auf Wunsch ein Eingabefeld
@@ -9742,7 +10062,7 @@ const Dialog = {
 const Bestenliste = {
   daten: null, aktiv: false, fahrer: [], modus: '', streckenId: '', neu: [], rekordText: '', ohneSpeicher: false,
   blStrecke: '', blAuto: '', kartenId: null,
-  netz: {}, quelle: 'alle', sendet: false, schlangeMem: null, erstesFertig: false,   // gemeinsame Liste (siehe unten)
+  netz: {}, quelle: 'alle', sendet: false, schlangeMem: null,          // gemeinsame Liste (siehe unten)
 
   // ── Speicher ───────────────────────────────────────────────────────────
   laden() {
@@ -9759,7 +10079,8 @@ const Bestenliste = {
     for (const id of Object.keys(d.strecken)) {
       const s = d.strecken[id];
       if (!s || typeof s !== 'object') continue;
-      const eigen = (e, x) => ((e.o === 0 || e.o === 1) ? Object.assign(x, { o: e.o }) : x);   // o: 1 = auf diesem Gerät gefahren (fehlt bei alten Einträgen)
+      // o: 1 = auf diesem Gerät gefahren (fehlt bei alten Einträgen), u: Konto-Nummer (gefahren mit Google-Anmeldung)
+      const eigen = (e, x) => { if (e.o === 0 || e.o === 1) x.o = e.o; if (typeof e.u === 'string' && e.u) x.u = e.u; return x; };
       const menschen = Array.isArray(s.menschen) ? s.menschen.filter(gut).map((e) => eigen(e, { n: e.n.trim().slice(0, 14), z: e.z, a: e.a, d: +e.d || 0, m: String(e.m || '') })) : [];
       const bots = {};
       if (s.bots && typeof s.bots === 'object') for (const a of Object.keys(s.bots)) { const e = s.bots[a]; if (gut(e)) bots[e.a] = eigen(e, { n: e.n.trim().slice(0, 20), z: e.z, a: e.a, s: String(e.s || ''), d: +e.d || 0, m: String(e.m || '') }); }
@@ -9784,14 +10105,18 @@ const Bestenliste = {
   // Sortierte Liste einer Kategorie: auto = '' für die Gesamtliste, sonst die id eines Autos
   // quelle: 'alle' = dieses Gerät und die gemeinsame Liste (sobald geladen), 'geraet' = nur dieses Gerät
   liste(id, auto, quelle) {
-    const proName = Math.max(1, CONFIG.bestenliste.proName | 0);
-    // stabil sortiert: Bei gleicher Zeit kommt der Eintrag dieses Geräts vor dem gleichen aus der gemeinsamen Liste
-    const alle = this.eintraege(id, quelle).filter((e) => !auto || e.a === auto).sort((x, y) => x.z - y.z);
+    const proName = Math.max(1, CONFIG.bestenliste.proName | 0), ganz = this.eintraege(id, quelle);
+    // stabil sortiert: Bei gleicher Zeit kommt der Eintrag mit Häkchen zuerst, sonst der dieses Geräts vor dem aus der gemeinsamen Liste
+    const alle = ganz.filter((e) => !auto || e.a === auto).sort((x, y) => x.z - y.z || (x.u ? 0 : 1) - (y.u ? 0 : 1));
+    // Gruppen: ein Konto (u) steht einmal da, auch unter mehreren Namen. Ein Eintrag ohne Konto zählt zum Konto, das diesen Namen trägt.
+    const kontoVon = {};
+    for (const e of ganz) if (e.u && !e.bot) kontoVon[this.schluessel(e.n)] = e.u;
+    const gruppe = (e) => (e.u ? 'u:' + e.u : kontoVon[this.schluessel(e.n)] ? 'u:' + kontoVon[this.schluessel(e.n)] : 'n:' + this.schluessel(e.n));
     const zahl = {}, aus = [];
     let bot = null;
     for (const e of alle) {
       if (e.bot) { if (!bot) bot = e; continue; }
-      const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName) aus.push(e);
+      const k = gruppe(e); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName) aus.push(e);
     }
     if (bot) aus.push(bot);
     return aus.sort((x, y) => x.z - y.z);
@@ -9799,7 +10124,7 @@ const Bestenliste = {
   eintraege(id, quelle) {
     const S = this.strecke(id), l = S.menschen.slice(), N = this.netz[id];
     for (const a of Object.keys(S.bots)) l.push(Object.assign({ bot: true }, S.bots[a]));
-    if (quelle !== 'geraet' && N && N.eintraege) for (const e of N.eintraege) l.push(e);
+    if (quelle !== 'geraet' && N) for (const e of (N.neu || []).concat(N.alt || [])) l.push(e);
     return l;
   },
   platz(id, auto, e) { const i = this.liste(id, auto).indexOf(e); return i + 1; },     // 0 = nicht (mehr) in der Liste
@@ -9808,7 +10133,7 @@ const Bestenliste = {
     const S = this.strecke(id), C = CONFIG.bestenliste, proName = Math.max(1, C.proName | 0);
     const andere = S.menschen.filter((e) => e.a !== auto), diese = S.menschen.filter((e) => e.a === auto).sort((x, y) => x.z - y.z);
     const zahl = {}, bleiben = [];
-    for (const e of diese) { const k = this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName && bleiben.length < C.speichern) bleiben.push(e); }
+    for (const e of diese) { const k = e.u ? 'u:' + e.u : 'n:' + this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName && bleiben.length < C.speichern) bleiben.push(e); }
     S.menschen = andere.concat(bleiben);
   },
   merkeRekord() {
@@ -9822,9 +10147,13 @@ const Bestenliste = {
     this.laden();
     this.neu = []; this.modus = (konfig && konfig.modus) || ''; this.streckenId = R.S.id;
     this.aktiv = !App.debug && ['bots', 'lokal', 'online'].includes(this.modus);
+    // Der erste Mensch an diesem Gerät ist Spieler 1: Ist das Gerät angemeldet, fährt er mit dem Konto (Name und Häkchen)
+    let erster = true;
     this.fahrer = R.karts.map((k, i) => {
       const f = (konfig && konfig.fahrer[i]) || {}, bot = f.typ === 'bot' || !!f.istBot;   // online kommen Bots beim Gast als «fern» mit istBot
-      return { kart: i, name: String(k.name || f.name || '').trim() || (bot ? 'Bot' : 'Spieler'), auto: k.fahrzeug, stufe: f.stufe || '', bot, lokal: f.typ === 'mensch' };
+      const lokal = f.typ === 'mensch', spieler1 = lokal && erster, konto = spieler1 && Konto.angemeldet() ? Konto.nutzer.uid : '';
+      if (lokal) erster = false;
+      return { kart: i, name: konto ? Konto.name() : String(k.name || f.name || '').trim() || (bot ? 'Bot' : 'Spieler'), auto: k.fahrzeug, stufe: f.stufe || '', bot, lokal, spieler1, konto };
     });
     this.merkeRekord();
     if (this.aktiv) this.ladeNetz(this.streckenId);         // Rekord aus der gemeinsamen Liste, kommt während des Countdowns
@@ -9842,21 +10171,23 @@ const Bestenliste = {
     if (f.bot) {                                                    // Bots: pro Auto nur der schnellste aller Zeiten
       const alt = S.bots[f.auto];
       if (alt && alt.z <= z) return null;
-      const eigen = this.modus !== 'online' || Online.host;          // Bot-Zeiten lädt nur das Gerät hoch, das das Rennen leitet
+      const eigen = this.modus !== 'online' || Online.host;          // Bot-Zeiten lädt nur das Gerät hoch, das das Rennen leitet (und nur angemeldet)
       S.bots[f.auto] = { n: f.name.slice(0, 20), z, a: f.auto, s: f.stufe, d: jetzt, m: this.modus, o: eigen ? 1 : 0 };
-      if (eigen) this.vormerken(id, S.bots[f.auto], true);
+      if (eigen && Konto.angemeldet()) this.vormerken(id, S.bots[f.auto], true, Konto.nutzer.uid);
       this.sichern(); this.merkeRekord();
       return null;
     }
-    const k = this.schluessel(f.name), meine = (auto) => this.liste(id, auto).filter((x) => !x.bot && this.schluessel(x.n) === k);
+    // eigene Einträge: mit Konto die des Kontos (und alte ohne Konto unter seinem Namen), ohne Konto alle unter diesem Namen
+    const k = this.schluessel(f.name), meine = (auto) => this.liste(id, auto).filter((x) => !x.bot && (f.konto ? x.u === f.konto || (!x.u && this.schluessel(x.n) === k) : this.schluessel(x.n) === k));
     const vorG = meine(''), vorA = meine(f.auto);
     if (vorA.length >= proName && z >= vorA[vorA.length - 1].z) return null;      // nicht besser als die eigenen Zeiten mit diesem Auto
     const besserG = vorG.length < proName || z < vorG[vorG.length - 1].z;
     const e = { n: f.name.slice(0, 14), z, a: f.auto, d: jetzt, m: this.modus, o: f.lokal ? 1 : 0 };
+    if (f.konto) e.u = f.konto;
     S.menschen.push(e);
-    if (f.lokal) this.vormerken(id, e, false);                     // online lädt jeder nur seine eigenen Zeiten hoch
+    if (f.konto) this.vormerken(id, e, false, f.konto);            // hochgeladen wird nur, wer angemeldet ist (online jeder seine eigenen Zeiten)
     this.ordne(id, f.auto); this.sichern(); this.merkeRekord();
-    this.neu.push({ id, e, kart: f.kart, lokal: f.lokal });
+    this.neu.push({ id, e, kart: f.kart, lokal: f.lokal, spieler1: f.spieler1 });
     const r = { besserG, platzG: this.platz(id, '', e), platzA: this.platz(id, f.auto, e), auto: f.auto, persoenlich: vorG.length > 0 && besserG };
     r.text = this.meldung(r);
     return r;
@@ -9881,13 +10212,29 @@ const Bestenliste = {
       if (!eig.length) continue;
       const best = eig.reduce((a, b) => (b.e.z < a.e.z ? b : a)).e;
       const pG = this.platz(id, '', best), pA = this.platz(id, best.a, best);
-      zeilen.push('<span class="bl-name">' + esc(best.n) + '</span>: ' + zeitText(best.z) + ' ' + esc(this.mitAuto(best.a)) + ' · ' +
-        (pG ? 'Platz ' + pG + ' gesamt · ' : '') + 'Platz ' + pA + ' in der Liste «' + esc(this.autoName(best.a)) + '»');
+      zeilen.push({ lokal: f.lokal ? 1 : 0, z: best.z, html: '<span class="bl-name">' + esc(best.n) + '</span>: ' + zeitText(best.z) + ' ' + esc(this.mitAuto(best.a)) + ' · ' +
+        (pG ? 'Platz ' + pG + ' gesamt · ' : '') + 'Platz ' + pA + ' in der Liste «' + esc(this.autoName(best.a)) + '»' });
     }
+    // Grosse Felder: die eigenen Zeilen zuerst, dann die schnellsten, höchstens CONFIG.bestenliste.neuZeilen Zeilen
+    const maxZ = CONFIG.bestenliste.neuZeilen, weitere = zeilen.length > maxZ ? zeilen.length - (maxZ - 1) : 0;
+    zeilen.sort((a, b) => (b.lokal - a.lokal) || (a.z - b.z));
+    const neuHtml = zeilen.slice(0, weitere ? maxZ - 1 : maxZ).map((x) => x.html).join('<br>') + (weitere ? '<br>… und ' + weitere + ' weitere' : '');
     return '<div class="karte bl-ergebnis"><h3>Bestenliste ' + esc(def ? def.name : id) + ' · schnellste Runde</h3>' +
-      (zeilen.length ? '<p class="bl-neu">Neu in der Liste: ' + zeilen.join('<br>') + '</p>' : '') +
+      (zeilen.length ? '<p class="bl-neu">Neu in der Liste: ' + neuHtml + '</p>' : '') +
       this.tabelle(this.liste(id, '').slice(0, 5), (e) => neuGesetzt.has(e)) +
+      '<div id="bl-ergebnis-anmelden">' + (this.mitNetz() && this.ergebnisText() ? this.anmeldeHinweis(this.ergebnisText()) : '') + '</div>' +
       (this.ohneSpeicher ? '<p class="hinweis">Dieser Browser speichert nichts: Die Liste gilt nur bis zum Neuladen.</p>' : '') + '</div>';
+  },
+  // Hinweis im Ergebnis, wenn Spieler 1 eine neue Zeit hat, aber nicht angemeldet ist
+  ergebnisText() {
+    return this.aktiv && this.neu.some((x) => x.spieler1 && !x.e.u) ? 'Nicht angemeldet: Deine Zeit bleibt auf diesem Gerät. Melde dich an, dann kommt sie in die gemeinsame Liste.' : '';
+  },
+  // Meldet sich Spieler 1 im Ergebnis an, kommen die neuen Zeiten aus diesem Rennen mit dem Kontonamen in die gemeinsame Liste
+  nachRennenAnmelden() {
+    if (!this.aktiv || !Konto.angemeldet() || Konto.nutzer.offline) return;
+    const N = Konto.nutzer;
+    for (const x of this.neu) if (x.spieler1 && !x.e.u) { x.e.n = N.name; x.e.u = N.uid; this.vormerken(x.id, x.e, false, N.uid); this.ordne(x.id, x.e.a); }
+    this.sichern(); this.merkeRekord();
   },
   nachRennen() {
     const D = Speicher.daten, ich = this.neu.filter((x) => x.lokal);
@@ -9902,9 +10249,7 @@ const Bestenliste = {
       { text: 'Speichern', klasse: 'los', f: (wert) => {
         const n = String(wert || '').trim().slice(0, 14);
         if (!n) return;
-        D.name = n; Speicher.sichern(); this.umbenennen(eintraege, n);
-        for (const x of eintraege) this.vormerken(x.id, x.e, false);   // erst mit richtigem Namen in die gemeinsame Liste
-        this.sende();
+        D.name = n; Speicher.sichern(); this.umbenennen(eintraege, n);   // in die gemeinsame Liste kommt die Zeit erst mit Anmeldung (Nachliefern)
       } },
       { text: 'Später', klasse: 'zweit', abbruch: true },
     ]);
@@ -9919,10 +10264,26 @@ const Bestenliste = {
   },
 
   // ── Gemeinsame Liste für alle Geräte (Online-Datenbank) ──────────────────
-  // Gelesen wird pro Strecke die ganze Liste. Hochgeladen wird nur, was auf diesem Gerät gefahren wurde (online jeder seine
-  // eigenen Zeiten, Bot-Zeiten nur der Host). Ohne Verbindung warten die Zeiten in einer Schlange im Browser.
+  // Gelesen wird pro Strecke die ganze Liste (v2 mit Konten, dazu die alte v1 ohne Konten, nur noch lesen). Hochgeladen wird nur mit
+  // Google-Anmeldung, was auf diesem Gerät gefahren wurde: Zeiten von Spieler 1 mit dem Kontonamen, Bot-Zeiten nur vom Gerät, das das
+  // Rennen leitet. Ohne Verbindung warten die Zeiten in einer Schlange im Browser.
   mitNetz() { return !!(CONFIG.bestenliste.server || '').trim() && typeof fetch === 'function'; },
-  adresse(id) { const C = CONFIG.bestenliste; return C.server.trim().replace(/\/+$/, '') + '/' + C.pfad + '/' + encodeURIComponent(id) + '.json'; },
+  // Adresse einer Stelle in der Datenbank (pfad ohne «.json»), mit Ausweis des Kontos zum Schreiben
+  url(pfad, token) {
+    const t = this.testDb(), q = [];
+    if (t && t.ns) q.push('ns=' + encodeURIComponent(t.ns));
+    if (token) q.push('auth=' + encodeURIComponent(token));
+    return (t ? t.db : CONFIG.bestenliste.server.trim().replace(/\/+$/, '')) + '/' + pfad + '.json' + (q.length ? '?' + q.join('&') : '');
+  },
+  // Nur für Tests: ?db=http://127.0.0.1:9001&ns=demo-… nimmt den Firebase-Emulator auf diesem Rechner (andere Adressen gelten nicht)
+  testDb() {
+    if (this.testDbMem === undefined) {
+      const db = App.parameter.get('db') || '';
+      this.testDbMem = /^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(db) ? { db, ns: App.parameter.get('ns') || '' } : null;
+    }
+    return this.testDbMem;
+  },
+  adresse(id, alt, token) { const C = CONFIG.bestenliste; return this.url((alt ? C.pfadAlt : C.pfad) + '/' + encodeURIComponent(id), token); },
   // Anfrage mit Zeitlimit; nie ein Fehler nach aussen: { ok, status, j } (status 0 = keine Verbindung)
   async anfrage(url, opt) {
     const ctl = typeof AbortController === 'function' ? new AbortController() : null;
@@ -9939,15 +10300,19 @@ const Bestenliste = {
     let L = 0; try { L = holeStrecke(id).laenge || 0; } catch (e) { L = 0; }
     return Math.max(CONFIG.bestenliste.minRunde, L / (CONFIG.fahren.vmax * CONFIG.bestenliste.mindestTempo));
   },
-  // Antwort der Datenbank prüfen: nur gültige, mögliche Zeiten mit bekanntem Auto und erlaubtem Namen
-  ausNetz(id, j) {
+  // Antwort der Datenbank prüfen: nur gültige, mögliche Zeiten mit bekanntem Auto und erlaubtem Namen. mitKonto: neue Liste (v2),
+  // dort trägt jeder Eintrag die Konto-Nummer u.
+  ausNetz(id, j, mitKonto) {
     const aus = [], min = this.mindestZeit(id);
     if (!j || typeof j !== 'object') return aus;
     for (const v of Object.values(j)) {
       if (!v || typeof v !== 'object' || typeof v.n !== 'string' || typeof v.z !== 'number' || !isFinite(v.z) || typeof v.a !== 'string') continue;
       const bot = v.b === true, n = v.n.trim();
       if (!n || n.length > (bot ? 20 : 14) || v.z < min || v.z > 600 || !FAHRZEUGE.some((f) => f.id === v.a) || this.verboten(n)) continue;
-      aus.push({ n, z: Math.round(v.z * 1000) / 1000, a: v.a, d: +v.d || 0, s: bot ? String(v.s || '').slice(0, 10) : '', bot, netz: true });
+      if (mitKonto && (typeof v.u !== 'string' || !v.u)) continue;
+      const e = { n, z: Math.round(v.z * 1000) / 1000, a: v.a, d: +v.d || 0, s: bot ? String(v.s || '').slice(0, 10) : '', bot, netz: true };
+      if (mitKonto && !bot) e.u = v.u;
+      aus.push(e);
     }
     return aus;
   },
@@ -9955,13 +10320,15 @@ const Bestenliste = {
   // sofort mit «Aktualisieren». Vorher wartende Zeiten hochladen. Ergebnis: true, wenn eine Antwort (oder ein Fehler) neu da ist.
   ladeNetz(id, sofort) {
     if (!this.mitNetz() || !STRECKEN[id]) return Promise.resolve(false);
-    const C = CONFIG.bestenliste, N = this.netz[id] || (this.netz[id] = { ok: false, zeit: 0, versuch: 0, eintraege: null });
+    const C = CONFIG.bestenliste, N = this.netz[id] || (this.netz[id] = { ok: false, zeit: 0, versuch: 0, neu: null, alt: null });
     if (N.laedt) return N.laedt;
     if (!sofort && N.versuch && Date.now() - N.versuch < (N.ok ? C.frisch : C.nochmals) * 1000) return Promise.resolve(false);
-    this.erstesHochladen();
     N.versuch = Date.now();
-    N.laedt = this.sende().then(() => this.anfrage(this.adresse(id))).then((r) => {
-      if (r.ok && (r.j === null || typeof r.j === 'object')) { N.ok = true; N.zeit = Date.now(); N.eintraege = this.ausNetz(id, r.j); }
+    const gut = (r) => r && r.ok && (r.j === null || typeof r.j === 'object');
+    // Die alte Liste ändert sich nicht mehr: einmal pro Besuch laden
+    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(id)), C.pfadAlt && !N.alt ? this.anfrage(this.adresse(id, true)) : null])).then(([r, rAlt]) => {
+      if (gut(rAlt)) N.alt = this.ausNetz(id, rAlt.j, false);
+      if (gut(r)) { N.ok = true; N.zeit = Date.now(); N.neu = this.ausNetz(id, r.j, true); }
       else N.ok = false;                                        // alte Liste bleiben lassen, Stand-Zeile sagt «keine Verbindung»
       N.laedt = null;
       if (id === this.streckenId) this.merkeRekord();
@@ -9984,6 +10351,15 @@ const Bestenliste = {
       N.ok ? 'Alle Spieler · Stand ' + uhr(N.zeit) : N.zeit ? 'Keine Verbindung · Stand ' + uhr(N.zeit) : 'Keine Verbindung: nur dieses Gerät';
     if (n) t += ' · ' + n + (n === 1 ? ' Zeit wartet' : ' Zeiten warten') + ' aufs Hochladen';
     el.textContent = t;
+    const a = $('bl-anmelden');
+    if (a) a.innerHTML = this.anmeldeHinweis();
+  },
+  // Ohne Anmeldung: kurzer Hinweis mit dem Knopf «Mit Google anmelden» (bei der gemeinsamen Liste und im Ergebnis)
+  anmeldeHinweis(text) {
+    if (!Konto.eingerichtet() || Konto.angemeldet()) return '';
+    if (Konto.nutzer) return '<p class="hinweis">Wähl im Hauptmenü noch deinen Spielnamen, dann kommen deine Zeiten in die gemeinsame Liste.</p>';
+    return '<div class="bl-anmelden"><span>' + (text || 'Neue Zeiten kommen nur mit Anmeldung in die gemeinsame Liste. Einträge mit ' + BL_HAKEN + ' stammen von angemeldeten Spielern.') +
+      '</span>' + Konto.knopf() + '</div>';
   },
   // Warteschlange zum Hochladen (im Browser gespeichert, ohne Speicher bis zum Neuladen)
   schlange() {
@@ -9994,44 +10370,63 @@ const Bestenliste = {
     return this.schlangeMem;
   },
   schlangeSichern() { try { localStorage.setItem(CONFIG.bestenliste.schluessel + '-senden', JSON.stringify(this.schlange())); } catch (e) { /* ohne Speicher */ } },
-  // «Spieler» (noch kein eigener Name) und unerwünschte Namen kommen nicht in die gemeinsame Liste
-  vormerken(id, e, bot) {
-    if (!this.mitNetz() || (!bot && this.schluessel(e.n) === 'spieler') || this.verboten(e.n)) return;
-    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '' });
+  // Nur mit Konto (u). Unerwünschte Namen kommen nicht in die gemeinsame Liste.
+  vormerken(id, e, bot, u) {
+    if (!this.mitNetz() || !u || this.verboten(e.n)) return;
+    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });
     this.schlangeSichern();
   },
-  // Beim ersten Start mit eingetragener Datenbank die bisherigen eigenen Zeiten dieses Geräts einmal hochladen
-  erstesHochladen() {
-    const C = CONFIG.bestenliste, merker = C.schluessel + '-hochgeladen';
-    if (this.erstesFertig) return;
-    this.erstesFertig = true;
-    let war = ''; try { war = localStorage.getItem(merker) || ''; } catch (e) { war = ''; }
-    if (war === C.server.trim()) return;
-    const D = Speicher.daten, ich = new Set([this.schluessel(D.name)].concat((D.lokal || []).map((p) => this.schluessel(p && p.name))));
-    const daten = this.daten || this.laden();
+  // Nach dem ersten Anmelden eines Kontos auf diesem Gerät: die Zeiten, die hier vorher gefahren wurden, einmal mit dem Kontonamen
+  // nachliefern. Dazu zählen Spieler 1 (Namen vor dem Konto, Speicher.daten.vorKonto, oder noch «Spieler») und die Bots aus Rennen,
+  // die dieses Gerät geleitet hat. Spieler 2 bis 4 im Split-Screen und Gäste online bleiben auf dem Gerät.
+  nachliefern() {
+    const N = Konto.nutzer, merker = CONFIG.bestenliste.schluessel + '-nachgeliefert';
+    if (!this.mitNetz() || !Konto.angemeldet() || N.offline) return;
+    let fertig = [];
+    try { const j = JSON.parse(localStorage.getItem(merker) || '[]'); if (Array.isArray(j)) fertig = j; } catch (e) { fertig = []; }
+    if (fertig.includes(N.uid)) return;
+    const D = Speicher.daten, ich = new Set(['spieler', 'spieler 1'].concat((D.vorKonto || []).map((n) => this.schluessel(n))));
+    const daten = this.daten || this.laden(), hier = (e) => e.o === 1 || (e.o === undefined && e.m !== 'online');
     for (const id of Object.keys(daten.strecken)) {
       const S = daten.strecken[id];
-      // ältere Einträge ohne Merker: alles ausser Online-Rennen, dort nur die eigenen Namen
-      for (const e of S.menschen) if (e.o === 1 || (e.o === undefined && (e.m !== 'online' || ich.has(this.schluessel(e.n))))) this.vormerken(id, e, false);
-      for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (e.o === 1 || (e.o === undefined && e.m !== 'online')) this.vormerken(id, e, true); }
+      for (const e of S.menschen) if (!e.u && hier(e) && ich.has(this.schluessel(e.n))) { e.n = N.name; e.u = N.uid; this.vormerken(id, e, false, N.uid); }
+      for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (hier(e)) this.vormerken(id, e, true, N.uid); }
+      for (const f of FAHRZEUGE) this.ordne(id, f.id);
     }
-    try { localStorage.setItem(merker, C.server.trim()); } catch (e) { /* egal */ }
+    fertig.push(N.uid);
+    try { localStorage.setItem(merker, JSON.stringify(fertig)); } catch (e) { /* egal */ }
+    this.sichern();
+  },
+  // Anmelden, Abmelden oder neuer Spielname: Nachliefern, Warteschlange senden, offene Seiten nachführen
+  nachKontoWechsel() {
+    if (Konto.angemeldet() && !Konto.nutzer.offline) { this.nachliefern(); this.nachRennenAnmelden(); this.sende(); }
+    this.merkeRekord();
+    if (Menue.offen === 'bestenliste' && $('bl-liste')) this.zeichneSeite();
+    const h = $('bl-ergebnis-anmelden');
+    if (h) h.innerHTML = this.ergebnisText() ? this.anmeldeHinweis(this.ergebnisText()) : '';
   },
   // Schlange abarbeiten: angenommene und von den Regeln abgelehnte Einträge fallen weg, ohne Verbindung später nochmals.
   // Ohne «Content-Type» ist es eine einfache Anfrage (keine Vorab-Anfrage nötig); die Datenbank liest den Text als JSON.
+  // Gesendet wird nur, was zum angemeldeten Konto gehört (u), Menschen immer unter dem aktuellen Kontonamen. Zeiten eines anderen
+  // Kontos warten, bis es wieder angemeldet ist. Einträge ohne Konto (alte Schlange für v1) fallen weg.
   async sende() {
     if (!this.mitNetz() || this.sendet) return;
     const l = this.schlange();
-    if (!l.length) return;
+    for (let i = l.length - 1; i >= 0; i--) if (!l[i].u) l.splice(i, 1);
+    if (!l.length || !Konto.angemeldet()) return;
     this.sendet = true;
     try {
-      while (l.length) {
-        const x = l[0];
-        const r = await this.anfrage(this.adresse(x.id), { method: 'POST', body: JSON.stringify({ n: x.n, z: x.z, a: x.a, b: x.b, s: x.s, d: { '.sv': 'timestamp' } }) });
+      const a = await Konto.ausweis();
+      if (!a) return;
+      for (let i = 0; i < l.length;) {
+        const x = l[i];
+        if (x.u !== a.uid) { i++; continue; }
+        const n = x.b ? x.n : Konto.name();
+        const r = await this.anfrage(this.adresse(x.id, false, a.t), { method: 'POST', body: JSON.stringify({ n, z: x.z, a: x.a, b: x.b, s: x.s, u: a.uid, d: { '.sv': 'timestamp' } }) });
         if (!r.ok && (r.status === 0 || r.status === 429 || r.status >= 500)) break;
-        l.splice(0, 1); this.schlangeSichern();
+        l.splice(i, 1); this.schlangeSichern();
         const N = this.netz[x.id];
-        if (r.ok && N && N.eintraege) N.eintraege.push({ n: x.n, z: x.z, a: x.a, d: Date.now(), s: x.s, bot: x.b, netz: true });
+        if (r.ok && N && N.neu) { const e = { n, z: x.z, a: x.a, d: Date.now(), s: x.s, bot: x.b, netz: true }; if (!x.b) e.u = a.uid; N.neu.push(e); }
       }
     } finally { this.sendet = false; }
     this.zeigeStand();
@@ -10046,7 +10441,7 @@ const Bestenliste = {
       const p = i + 1, cls = [p <= 3 ? 'bl-p' + p : '', e.bot ? 'bl-bot' : '', hervor && hervor(e) ? 'ich' : ''].filter(Boolean).join(' ');
       const bot = e.bot ? 'Bot' + (BL_STUFE[e.s] ? ' · ' + BL_STUFE[e.s] : '') : '', auto = esc(this.autoName(e.a));
       // Auf dem Handy fällt die Spalte «Auto» weg: Auto (und bei Bots «Bot · Stärke») stehen dann klein unter dem Namen
-      h += '<tr class="' + cls + '"><td class="zahl"><span class="bl-rang">' + p + '</span></td><td>' + (e.bot ? BL_ROBOTER : '') + '<span class="bl-name">' + esc(e.n) + '</span>' +
+      h += '<tr class="' + cls + '"><td class="zahl"><span class="bl-rang">' + p + '</span></td><td>' + (e.bot ? BL_ROBOTER : '') + '<span class="bl-name">' + esc(e.n) + '</span>' + (e.u && !e.bot ? BL_HAKEN : '') +
         (bot ? ' <small class="bl-was">' + bot + '</small>' : '') + '<small class="bl-handy">' + (bot ? bot + ' · ' : '') + auto + '</small></td><td class="zahl">' + zeitText(e.z) +
         '</td><td class="bl-auto">' + auto + '</td><td class="bl-datum">' + this.datum(e.d) + '</td></tr>';
     });
@@ -10073,7 +10468,8 @@ const Bestenliste = {
     const kategorien = [{ wert: '', text: 'Gesamt' }].concat(FAHRZEUGE.map((f) => ({ wert: f.id, text: f.name })));
     const netz = this.mitNetz();
     Menue.zeige('bestenliste', '<div class="tafel breit"><h2>Bestenlisten</h2><p class="hinweis">Schnellste Runde auf jeder Strecke, gesamt und für jedes Auto' +
-      (netz ? ', von allen Spielern' : '') + '. Jeder Name steht einmal da. Von den Bots steht nur der schnellste aller Zeiten in der Liste.</p>' +
+      (netz ? ', von allen Spielern' : '') + '. Jeder Name steht einmal da. Von den Bots steht nur der schnellste aller Zeiten in der Liste.' +
+      (Konto.eingerichtet() ? ' ' + BL_HAKEN + ' = angemeldeter Spieler.' : '') + '</p><div id="bl-anmelden"></div>' +
       Menue.wahlZeile('Strecke', 'blStrecke', Object.keys(STRECKEN).map((s) => ({ wert: s, text: STRECKEN[s].name })), this.blStrecke, (v) => { this.blStrecke = v; this.zeichneSeite(); }) +
       Menue.wahlZeile('Liste', 'blAuto', kategorien, this.blAuto, (v) => { this.blAuto = v; this.zeichneSeite(); }) +
       (netz ? Menue.wahlZeile('Zeigen', 'blQuelle', [{ wert: 'alle', text: 'Alle Spieler' }, { wert: 'geraet', text: 'Dieses Gerät' }], this.quelle, (v) => { this.quelle = v; this.zeichneSeite(); }) : '') +
@@ -10106,6 +10502,249 @@ const Bestenliste = {
       { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; weg(''); this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
       { text: 'Abbrechen', klasse: 'zweit', abbruch: true },
     ]);
+  },
+};
+/* ══════════════════════════════════════════════════════════════════════════
+   TEIL 14: Konto – «Mit Google anmelden» (Firebase Authentication im Popup-Fenster)
+   ══════════════════════════════════════════════════════════════════════════ */
+// Wer sich anmeldet, wählt einmal einen Spielnamen. Ein Name gehört genau einem Konto: Er ist in der Datenbank reserviert, wer zuerst
+// kommt, bekommt ihn. In die gemeinsame Bestenliste kommen nur Zeiten angemeldeter Spieler, immer mit ihrem Kontonamen.
+// In der Datenbank stehen nur der Spielname und die Konto-Nummer (uid), nie die E-Mail-Adresse oder das Bild:
+//   namen/<schlüssel> = { u: uid, n: Name }      Schlüssel = Name in Kleinbuchstaben («Lena» und «lena» sind derselbe Name)
+//   konten/<uid>      = { n: Name, k: Schlüssel }
+// Die Bibliothek (Firebase «compat», feste Version) kommt über CDN. Lädt sie nicht oder fehlt das Netz, läuft das Spiel ohne Anmeldung.
+const FIREBASE_VERSION = '13.2.0';
+const FIREBASE_QUELLEN = (datei) => ['https://www.gstatic.com/firebasejs/' + FIREBASE_VERSION + '/' + datei, 'https://cdn.jsdelivr.net/npm/firebase@' + FIREBASE_VERSION + '/' + datei];
+// Das farbige «G» nach Googles Vorgaben für Anmeldeknöpfe, als eingebettete Grafik
+const GOOGLE_G = '<svg class="g-logo" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>' +
+  '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>' +
+  '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>' +
+  '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+
+const Konto = {
+  zustand: 'aus',          // aus (keine Firebase-Kennungen) · datei (als Datei geöffnet) · laedt · bereit · fehler (Bibliothek nicht geladen)
+  nutzer: null,            // angemeldet: { uid, name ('' = noch keiner gewählt), schluessel, bild, vorschlag, offline }
+  auth: null, gewollt: false, pruefTakt: null,
+  merker: 'baustellenrennen-konto',          // im Browser: { uid, n } des zuletzt angemeldeten Kontos (für den Start ohne Netz)
+
+  eingerichtet() { const f = CONFIG.bestenliste.firebase || {}; return !!(f.apiKey && f.authDomain && f.projectId && Bestenliste.mitNetz()); },
+  angemeldet() { return !!(this.nutzer && this.nutzer.name); },
+  name() { return this.angemeldet() ? this.nutzer.name : ''; },
+
+  // Beim Start: Bibliothek gleich laden, wenn dieses Gerät schon angemeldet war (die Anmeldung bleibt nach dem Neuladen erhalten),
+  // sonst kurz danach. Sie muss beim Tippen auf den Knopf schon da sein: Ein Popup darf nur direkt beim Tippen aufgehen.
+  start() {
+    if (!this.eingerichtet()) { this.zustand = 'aus'; return; }
+    // Der Knopf steht an mehreren Stellen (Hauptmenü, Bestenliste, Ergebnis) und wird teils neu gezeichnet: ein Klick-Lauscher für alle
+    document.addEventListener('click', (ev) => {
+      const b = ev.target && ev.target.closest ? ev.target.closest('.google-knopf') : null;
+      if (!b) return;
+      ev.preventDefault(); Ton.start(); Ton.spiele('klick'); this.anmelden();
+    });
+    if (location.protocol === 'file:') { this.zustand = 'datei'; return; }
+    const war = this.gemerkt();
+    if (war) this.nutzer = { uid: war.uid, name: war.n, schluessel: '', bild: '', vorschlag: '', offline: true };   // bis die Bibliothek bestätigt
+    setTimeout(() => this.lade(), war ? 0 : 1500);
+  },
+  gemerkt() { try { const j = JSON.parse(localStorage.getItem(this.merker) || 'null'); return j && typeof j.uid === 'string' ? j : null; } catch (e) { return null; } },
+  merke(an) {
+    try { if (an && this.nutzer) localStorage.setItem(this.merker, JSON.stringify({ uid: this.nutzer.uid, n: this.nutzer.name || '' })); else localStorage.removeItem(this.merker); } catch (e) { /* ohne Speicher */ }
+  },
+  lade() {
+    if (this.zustand === 'laedt' || this.zustand === 'bereit') return;
+    this.zustand = 'laedt';
+    const fehler = () => { this.zustand = 'fehler'; this.aktualisiereAnzeige(); };
+    ladeSkript(FIREBASE_QUELLEN('firebase-app-compat.js'), () => ladeSkript(FIREBASE_QUELLEN('firebase-auth-compat.js'), () => {
+      try {
+        const f = CONFIG.bestenliste.firebase;
+        const app = firebase.apps && firebase.apps.length ? firebase.app() : firebase.initializeApp({ apiKey: f.apiKey, authDomain: f.authDomain, projectId: f.projectId, appId: f.appId });
+        this.auth = app.auth();
+        const emu = App.parameter.get('authEmulator') || '';      // nur für Tests: ?authEmulator=http://127.0.0.1:9099 (nur dieser Rechner)
+        if (/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(emu)) this.auth.useEmulator(emu, { disableWarnings: true });
+        this.zustand = 'bereit';
+        this.auth.onAuthStateChanged((u) => this.wechsel(u));
+      } catch (e) { fehler(); }
+    }, fehler), fehler);
+  },
+
+  // Anmeldung kommt, geht oder wurde nach dem Neuladen wiederhergestellt
+  async wechsel(u) {
+    if (!u) {
+      const war = this.nutzer;
+      this.nutzer = null; this.merke(false); this.aktualisiereAnzeige();
+      if (war) Bestenliste.nachKontoWechsel();
+      return;
+    }
+    const vorname = String(u.displayName || '').trim().split(/\s+/)[0] || '';
+    const alt = this.nutzer && this.nutzer.uid === u.uid ? this.nutzer : null;
+    this.nutzer = { uid: u.uid, name: alt ? alt.name : '', schluessel: '', bild: u.photoURL || '', vorschlag: this.saeubere(vorname), offline: true };
+    this.aktualisiereAnzeige();
+    const r = await this.lies('konten/' + u.uid);
+    if (!this.nutzer || this.nutzer.uid !== u.uid) return;         // inzwischen abgemeldet
+    if (r.ok) {
+      this.nutzer.offline = false;
+      if (r.j && typeof r.j.n === 'string' && r.j.n) { this.nutzer.name = r.j.n; this.nutzer.schluessel = String(r.j.k || ''); }
+      else this.nutzer.name = '';
+    }
+    this.merke(true);
+    if (this.angemeldet()) this.uebernimmName();
+    this.aktualisiereAnzeige();
+    Bestenliste.nachKontoWechsel();
+    if (r.ok && !this.nutzer.name && this.gewollt) this.nameDialog(this.nutzer.vorschlag, '');   // erstes Anmelden: Spielnamen wählen
+    this.gewollt = false;
+  },
+  // Der Kontoname ersetzt das Namensfeld («Dein Auto», online und Spieler 1 im Split-Screen). Die Namen von vorher merkt sich das
+  // Spiel einmal: Zeiten unter diesen Namen liefert die Bestenliste nach dem ersten Anmelden mit dem Kontonamen nach.
+  uebernimmName() {
+    const D = Speicher.daten, n = this.nutzer.name;
+    if (!Array.isArray(D.vorKonto)) D.vorKonto = [D.name, D.lokal && D.lokal[0] ? D.lokal[0].name : ''].filter((x) => typeof x === 'string' && x.trim());
+    D.name = n; if (D.lokal && D.lokal[0]) D.lokal[0].name = n;
+    Speicher.sichern();
+    for (const id of ['f-name', 'f-name0']) { const f = $(id); if (f) { f.value = n; f.readOnly = true; f.title = 'Name deines Kontos (ändern im Hauptmenü)'; } }
+  },
+
+  // ── Anmelden und Abmelden ──────────────────────────────────────────────
+  // Muss direkt im Klick laufen (ohne vorheriges Warten), sonst blockieren Browser das Popup
+  anmelden() {
+    if (this.zustand === 'datei') { this.hinweis('datei'); return; }
+    if (this.inApp()) { this.hinweis('app'); return; }
+    if (this.zustand === 'fehler') { this.zustand = 'aus'; this.lade(); App.toast('Die Anmeldung wird nochmals geladen. Tippe gleich nochmals auf «Mit Google anmelden».', 4000); return; }
+    if (this.zustand !== 'bereit' || !this.auth) { App.toast('Die Anmeldung lädt noch. Tippe in einem Moment nochmals.', 2500); return; }
+    const p = new firebase.auth.GoogleAuthProvider();
+    p.setCustomParameters({ prompt: 'select_account' });
+    this.gewollt = true;
+    this.auth.signInWithPopup(p).catch((e) => { this.gewollt = false; this.fehler(e); });
+  },
+  abmelden() {
+    if (this.auth) this.auth.signOut().catch(() => {});
+    else { this.nutzer = null; this.merke(false); this.aktualisiereAnzeige(); }
+    for (const id of ['f-name', 'f-name0']) { const f = $(id); if (f) { f.readOnly = false; f.title = ''; } }
+    App.toast('Abgemeldet. Neue Zeiten bleiben auf diesem Gerät.', 2500);
+  },
+  // Browser in Apps wie WhatsApp oder Instagram: Google lässt dort keine Anmeldung zu
+  inApp() { return /FBAN|FBAV|FB_IAB|Instagram|WhatsApp|Line\/|MicroMessenger|Snapchat|TikTok|musical_ly|Twitter|LinkedInApp|GSA\/|; wv\)/i.test(navigator.userAgent || ''); },
+  hinweis(art) {
+    const T = {
+      datei: ['Anmelden geht nur auf der Webseite', 'Du hast das Spiel als Datei geöffnet. Anmelden geht nur, wenn es im Internet liegt (zum Beispiel auf popc-u.github.io). Spielen kannst du trotzdem, die Bestenliste dieses Geräts funktioniert wie immer.'],
+      app: ['Im richtigen Browser öffnen', 'Du hast das Spiel in einer App geöffnet (zum Beispiel WhatsApp oder Instagram). Dort lässt Google keine Anmeldung zu. Öffne den Link in Safari oder Chrome: Tippe oben auf «…» oder das Teilen-Symbol und dann auf «Im Browser öffnen».'],
+    }[art];
+    Dialog.zeige('<h2>' + T[0] + '</h2><p>' + T[1] + '</p>', [{ text: 'OK', klasse: 'los', abbruch: true }]);
+  },
+  // Fehlermeldungen von Firebase: freundlich und genau
+  fehler(e) {
+    const c = String((e && e.code) || '').replace(/^auth\//, '');
+    if (c === 'popup-closed-by-user' || c === 'cancelled-popup-request' || c === 'user-cancelled') { App.toast('Anmeldung abgebrochen.', 2200); return; }
+    const host = location.hostname || location.host;
+    const T = {
+      'popup-blocked': ['Anmelde-Fenster blockiert', 'Der Browser hat das Fenster für die Anmeldung blockiert. Erlaube Popups für diese Seite (meist ein Symbol rechts in der Adresszeile) und tippe nochmals auf «Mit Google anmelden».'],
+      'unauthorized-domain': ['Adresse nicht freigegeben', 'Die Adresse «' + esc(host) + '» ist für die Anmeldung noch nicht freigegeben. In der Firebase-Konsole muss sie unter Authentication → Settings → Authorized domains eingetragen werden.'],
+      'operation-not-allowed': ['Google-Anmeldung ausgeschaltet', 'In der Firebase-Konsole ist die Anmeldung mit Google nicht eingeschaltet (Authentication → Sign-in method → Google).'],
+      'network-request-failed': ['Keine Verbindung', 'Google ist gerade nicht erreichbar. Prüfe die Internetverbindung und versuche es nochmals.'],
+      'web-storage-unsupported': ['Browser speichert nichts', 'Dieser Browser erlaubt der Seite keinen Speicher (zum Beispiel ein privates Fenster). Ohne Speicher geht die Anmeldung nicht.'],
+      'operation-not-supported-in-this-environment': ['Anmelden geht hier nicht', 'In dieser Umgebung geht die Anmeldung nicht. Öffne das Spiel in Safari, Chrome, Firefox oder Edge.'],
+      'internal-error': ['Anmelden hat nicht geklappt', 'Google hat die Anmeldung abgebrochen. Häufige Ursache: Der Browser blockiert Cookies von Drittanbietern. Versuche es nochmals oder in einem anderen Browser.'],
+    }[c] || ['Anmelden hat nicht geklappt', 'Fehler: ' + esc(c || 'unbekannt') + '. Versuche es nochmals.'];
+    Dialog.zeige('<h2>' + T[0] + '</h2><p>' + T[1] + '</p>', [{ text: 'OK', klasse: 'los', abbruch: true }]);
+  },
+
+  // ── Spielname: wählen, prüfen, reservieren ──────────────────────────────
+  saeubere(n) { return String(n || '').replace(/[^\p{L}\p{N} _'-]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 14); },
+  schluessel(n) { return String(n || '').trim().replace(/\s+/g, ' ').toLowerCase(); },
+  nameFehler(n) {
+    if (n.length < 2) return 'Der Name braucht mindestens 2 Zeichen.';
+    if (n.length > 14) return 'Höchstens 14 Zeichen.';
+    if (!/^[\p{L}\p{N}][\p{L}\p{N} _'-]*$/u.test(n)) return 'Erlaubt sind Buchstaben, Ziffern, Leerzeichen, Bindestrich, Unterstrich und Apostroph.';
+    const k = this.schluessel(n);
+    if (k === 'spieler' || /^bot\b/.test(k)) return 'Diesen Namen kann man nicht wählen.';
+    if (Bestenliste.verboten(n)) return 'Dieser Name ist nicht erlaubt.';
+    return '';
+  },
+  nameDialog(wert, text) {
+    if (!this.nutzer) return;
+    const aendern = !!this.nutzer.name;
+    Dialog.zeige('<h2>' + (aendern ? 'Spielnamen ändern' : 'Wähl deinen Spielnamen') + '</h2><p>So stehst du in der gemeinsamen Bestenliste. Ein Name gehört nur einem Konto, höchstens 14 Zeichen.' +
+      (aendern ? ' Dein alter Name wird dann wieder frei.' : '') + '</p>' +
+      '<input class="feld" id="dlg-name" maxlength="14" autocomplete="off" spellcheck="false" value="' + esc(wert || '') + '" aria-label="Spielname" aria-describedby="dlg-name-info">' +
+      '<p class="hinweis" id="dlg-name-info" aria-live="polite">' + esc(text || '') + '</p>', [
+      { text: 'Speichern', klasse: 'los', f: (w) => this.nameSpeichern(w) },
+      { text: aendern ? 'Abbrechen' : 'Später', klasse: 'zweit', abbruch: true },
+    ]);
+    const feld = $('dlg-name');
+    if (feld) { feld.oninput = () => this.pruefeLive(feld.value); if (wert && !text) this.pruefeLive(wert); }
+  },
+  // Beim Tippen prüfen, ob der Name frei ist (kurz nach der letzten Taste)
+  pruefeLive(w) {
+    clearTimeout(this.pruefTakt);
+    const info = $('dlg-name-info'), n = String(w || '').trim().replace(/\s+/g, ' ');
+    if (!info) return;
+    const f = this.nameFehler(n);
+    if (f) { info.textContent = n ? f : ''; info.className = 'hinweis'; return; }
+    info.textContent = 'Prüfe …'; info.className = 'hinweis';
+    this.pruefTakt = setTimeout(async () => {
+      const frei = await this.istFrei(n), el = $('dlg-name-info'), feld = $('dlg-name');
+      if (!el || !feld || feld.value.trim().replace(/\s+/g, ' ') !== n) return;
+      el.textContent = frei === null ? '' : frei ? '«' + n + '» ist frei.' : '«' + n + '» ist schon vergeben.';
+      el.className = 'hinweis ' + (frei === null ? '' : frei ? 'name-frei' : 'name-besetzt');
+    }, 350);
+  },
+  // true = frei (oder schon meiner), false = vergeben, null = unbekannt (keine Verbindung)
+  async istFrei(n) {
+    const r = await this.lies('namen/' + encodeURIComponent(this.schluessel(n)));
+    if (!r.ok) return null;
+    return !r.j || !this.nutzer || r.j.u === this.nutzer.uid;
+  },
+  async nameSpeichern(w) {
+    const N = this.nutzer;
+    if (!N) return;
+    const n = String(w || '').trim().replace(/\s+/g, ' '), f = this.nameFehler(n);
+    if (f) { this.nameDialog(n, f); return; }
+    if (n === N.name) return;
+    const frei = await this.istFrei(n);
+    if (frei === false) { this.nameDialog(n, '«' + n + '» ist schon vergeben. Wähl einen anderen Namen.'); return; }
+    const k = this.schluessel(n), daten = {};
+    daten['namen/' + k] = { u: N.uid, n };
+    daten['konten/' + N.uid] = { n, k };
+    if (N.schluessel && N.schluessel !== k) daten['namen/' + N.schluessel] = null;        // alter Name wird frei
+    const r = await this.schreibe(daten);
+    if (r.ok) {
+      N.name = n; N.schluessel = k; N.offline = false; this.merke(true); this.uebernimmName(); this.aktualisiereAnzeige();
+      App.toast('Dein Spielname ist jetzt «' + n + '».', 2600);
+      Bestenliste.nachKontoWechsel();
+    } else if (r.status === 401 || r.status === 403) this.nameDialog(n, '«' + n + '» geht nicht (schon vergeben oder nicht erlaubt). Wähl einen anderen Namen.');
+    else this.nameDialog(n, 'Keine Verbindung zur Datenbank. Versuch es gleich nochmals.');
+  },
+
+  // ── Datenbank mit Anmeldung (REST, ?auth=<ID-Token>) ─────────────────────
+  // Ausweis für die Datenbank: { t: ID-Token (erneuert sich selbst), uid } oder null (nicht angemeldet, Bibliothek nicht da)
+  async ausweis() {
+    const u = this.auth && this.auth.currentUser;
+    if (!u) return null;
+    try { return { t: await u.getIdToken(), uid: u.uid }; } catch (e) { return null; }
+  },
+  async token() { const a = await this.ausweis(); return a ? a.t : ''; },
+  async lies(pfad) { const t = await this.token(); return Bestenliste.anfrage(Bestenliste.url(pfad, t)); },
+  // Mehrere Stellen auf einmal (alles oder nichts): Name reservieren, Konto ändern, alten Namen freigeben
+  async schreibe(daten) {
+    const t = await this.token();
+    if (!t) return { ok: false, status: 0 };
+    return Bestenliste.anfrage(Bestenliste.url('', t), { method: 'PATCH', body: JSON.stringify(daten) });
+  },
+
+  // ── Anzeige im Hauptmenü ────────────────────────────────────────────────
+  menueHtml() {
+    if (this.zustand === 'aus') return '';
+    const N = this.nutzer, satz = '<p class="hinweis konto-satz">Für die gemeinsame Bestenliste. Gespeichert werden nur dein Spielname und eine Konto-Nummer, nie deine E-Mail-Adresse oder dein Bild.</p>';
+    if (!N) return '<div class="konto">' + this.knopf() + satz + '</div>';
+    const bild = N.bild ? '<img class="konto-bild" src="' + esc(N.bild) + '" alt="" referrerpolicy="no-referrer">' : '<span class="konto-bild leer" aria-hidden="true">' + esc((N.name || '?').slice(0, 1).toUpperCase()) + '</span>';
+    if (!N.name) return '<div class="konto an">' + bild + '<span>Angemeldet. Wähl noch deinen Spielnamen.</span><button class="knopf klein" data-a="kontoName">Spielnamen wählen</button><button class="knopf klein zweit" data-a="abmelden">Abmelden</button></div>';
+    return '<div class="konto an">' + bild + '<span>Angemeldet als <b>' + esc(N.name) + '</b>' + (N.offline ? ' <small class="hinweis">(offline)</small>' : '') + '</span>' +
+      '<button class="knopf klein zweit" data-a="kontoName">Name ändern</button><button class="knopf klein zweit" data-a="abmelden">Abmelden</button></div>';
+  },
+  knopf() { return '<button class="google-knopf" type="button">' + GOOGLE_G + '<span>Mit Google anmelden</span></button>'; },
+  menueAktionen() { return { abmelden: () => this.abmelden(), kontoName: () => this.nameDialog(this.nutzer && this.nutzer.name ? this.nutzer.name : (this.nutzer && this.nutzer.vorschlag) || '', '') }; },
+  aktualisiereAnzeige() {
+    if (Menue.offen === 'haupt' && !$('dialog')) Menue.haupt();
+    if (Menue.offen === 'bestenliste') Bestenliste.zeigeStand();
   },
 };
 App.start();
