@@ -8,9 +8,9 @@ Das ganze Spiel steckt in einer einzigen Datei: `index.html`.
 
 `index.html` doppelklicken (Chrome, Edge, Firefox oder Safari). Es braucht eine Internetverbindung, weil three.js 0.160.0 von einem CDN geladen wird (für Online-Spiele zusätzlich PeerJS 1.5.4). Sonst ist nichts zu installieren.
 
-- **Gegen Bots:** 1 Spieler und bis zu 7 Bots, Stufe leicht, mittel, schwer oder ultra (praktisch unschlagbar).
-- **Lokal am selben Gerät:** 2 Spieler an einer Tastatur, mit Gamepads bis 4, dazu Bots. Der Bildschirm wird geteilt.
-- **Online:** bis 8 Fahrer, ohne eigenen Server (siehe unten).
+- **Gegen Bots:** 1 Spieler und bis zu 11 Bots, Stufe leicht, mittel, schwer oder ultra (praktisch unschlagbar).
+- **Lokal am selben Gerät:** 2 Spieler an einer Tastatur, mit Gamepads bis 4, dazu bis zu 11 Bots. Der Bildschirm wird geteilt.
+- **Online:** bis zu 22 Menschen und dazu bis zu 11 Bots, ohne eigenen Server (siehe unten).
 
 ## Die 8 Autos
 
@@ -189,7 +189,7 @@ Was die Regeln erlauben: Lesen darf jeder, schreiben nur neue Einträge, ändern
 
 1. Der Host wählt «Online: Raum erstellen» und bekommt einen Code mit 5 Zeichen.
 2. Mit «Link kopieren» schickt er den Einladungslink (`…/index.html?raum=CODE`) an die Mitspieler. Der Link funktioniert, sobald das Spiel im Internet liegt. Wer die Datei lokal öffnet, wählt «Online: Raum beitreten» und tippt den Code ein.
-3. Alle wählen Name, Fahrzeug und Farbe und drücken «Bereit». Der Host stellt Strecke, Runden und Bots ein und startet.
+3. Alle wählen Name, Fahrzeug und Farbe und drücken «Bereit». Der Host stellt Strecke, Runden und Bots ein und startet. In einen Raum passen bis zu 22 Menschen (Host eingerechnet), dazu nimmt der Host bis zu 11 Bots.
 
 Die Verbindung läuft direkt von Browser zu Browser (WebRTC), vermittelt über den öffentlichen PeerJS-Server. Lässt das Netz keine direkte Verbindung zu (das kann auch im selben WLAN passieren, wenn Router oder Firewall sie blockieren), läuft sie über einen Umweg-Server (TURN, siehe unten). Fällt ein Mitspieler aus, fährt ein Bot für ihn weiter. Verlässt der Host das Spiel, endet es für alle.
 
@@ -212,7 +212,7 @@ Unter der Meldung steht klein eine Zeile «Diagnose: …» mit der Stufe, der An
 
 ### Umweg-Server (TURN) einrichten
 
-Der frühere Gratis-Umweg-Server von PeerJS ist abgeschaltet. Im Spiel ist darum ein eigener Gratis-Zugang bei Metered eingetragen (Plan «Free Trial», 500 MB pro Monat, das reicht für grob 50 bis 100 Rennen mit einem Gast über den Umweg). Ist das Kontingent aufgebraucht, klappt das Online-Spiel bis zum nächsten Monat nur in Netzen, die direkte Verbindungen zulassen. Den Verbrauch zeigt das Dashboard von Metered. So richtest du einen eigenen Zugang ein:
+Der frühere Gratis-Umweg-Server von PeerJS ist abgeschaltet. Im Spiel ist darum ein eigener Gratis-Zugang bei Metered eingetragen (Plan «Free Trial», 500 MB pro Monat, das reicht für grob 150 Rennen mit 8 Autos oder 50 Rennen mit 33 Autos, je für einen Gast über den Umweg, siehe «Rundenzeit und grosse Felder»). Ist das Kontingent aufgebraucht, klappt das Online-Spiel bis zum nächsten Monat nur in Netzen, die direkte Verbindungen zulassen. Den Verbrauch zeigt das Dashboard von Metered. So richtest du einen eigenen Zugang ein:
 
 1. Bei [Metered Open Relay](https://www.metered.ca/tools/openrelay/) ein Gratis-Konto anlegen, eine App erstellen und den Plan «Free Trial» wählen (500 MB pro Monat, ohne Kreditkarte).
 2. Im Dashboard unter «TURN Server» einen Zugang anlegen («Add Credential»).
@@ -313,6 +313,88 @@ Dabei stand «Ultra» nie länger als 0,28 s still und musste nie zurückgesetzt
 
 **Himalaya:** Mit 8 % Tempo-Vorteil gewann «Ultra» hier nur 91 % statt 99 % der Rennen. Die «Schwer»-Bots bauen jedes Hindernis vor alle Fahrer, die vor ihnen liegen, also immer auch vor den Führenden. In der letzten Runde stehen darum oft mehrere Hindernisse hintereinander vor «Ultra». Am Himalaya liegen zwei Bauplätze an heiklen Stellen: einer in der S-Kurve kurz nach der Schanze, wo «Ultra» mit seinem Tempo noch in der Luft ist, und einer in der holprigen Kehre vor dem Ziel, durch die er rutscht. Dort trifft er oft ein Schlammloch oder eine Absperrung. Ich habe sechs Arten ausprobiert, wie er dort vorsichtiger fahren kann (früher ausweichen, in der Mitte der Lücke bleiben, vor der Schanze bremsen, in der Luft ruhiger lenken, langsamer in Kurven, nicht driften). Jede kostete mehr Zeit, als sie sparte (71 bis 90 % Siege). Geholfen hat nur, vor einer Umleitung früh auf die Seite des Nebenwegs zu fahren. Mit mehr Tempo-Vorteil reicht es: Mit 10 % gewann er am Himalaya 97 %, mit 12 % 99 % der Rennen (je 100 Rennen). Am 17.11.2026 entschieden: «Ultra» bekommt 12 % nur am Himalaya, auf allen anderen Strecken bleiben es 8 %. Nachgemessen mit 200 Rennen gewinnt er dort 99,5 %.
 
+## Rundenzeit und grosse Felder
+
+Stand 17.11.2026 (Etappe 1 des Auftrags «faire Rundenzeit, grosse Lobbys, neue Strecken»).
+
+### Rundenzeit ab der Ziellinie
+
+Die Uhr jeder Runde läuft erst, wenn das Auto die Ziellinie zum ersten Mal überquert (genauer Zeitpunkt der Überfahrt, wie bei allen anderen Runden). Bis dahin zeigt das HUD «Runde 0:00.0». Renndistanz, Reihenfolge im Ziel und die Gesamtzeit ab dem Startsignal bleiben wie bisher. Das gilt überall gleich: gegen Bots, Split-Screen, online (der Host meldet die Überfahrt an alle Gäste), Bestenliste, Simulation und Werkzeuge.
+
+**Fairness gemessen:** schnellste Runde nach Startplatz, je 200 Rennen mit 12 «Mittel»-Bots im gleichen Auto (Sportwagen), über alle sechs Strecken, mit Bauen. Die Zahl ist der Vorteil gegenüber dem Mittel aller Plätze (positiv = schneller). Ziel: kein Startplatz mehr als 0,1 s Vorteil.
+
+| Startplatz | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | grösster Vorteil |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 1 Runde, vorher | +0,66 | +0,43 | +0,26 | +0,18 | +0,11 | +0,02 | −0,02 | −0,27 | −0,18 | −0,32 | −0,36 | −0,51 | **0,66 s** |
+| 1 Runde, nachher | +0,06 | −0,01 | −0,05 | −0,05 | −0,10 | −0,09 | −0,03 | +0,06 | −0,00 | +0,02 | +0,06 | +0,13 | **0,13 s** |
+| 3 Runden, vorher | −0,08 | −0,05 | −0,03 | −0,05 | −0,01 | −0,02 | −0,05 | −0,00 | +0,02 | +0,05 | +0,10 | +0,13 | **0,13 s** |
+| 3 Runden, nachher | −0,02 | −0,05 | −0,03 | −0,06 | −0,06 | −0,02 | +0,02 | +0,02 | +0,04 | +0,07 | +0,04 | +0,05 | **0,07 s** |
+
+Jeder Wert schwankt um rund ±0,03 s. Mit 3 Runden ist das Ziel erreicht. Mit 1 Runde ist der grosse Vorteil der vorderen Plätze (0,66 s) weg, übrig bleiben 0,13 s für den letzten Platz. Das kommt nicht mehr von der Uhr, sondern vom Rennen selbst: Ohne Bauen (gleiche Messung, `BAUEN=0`) ist die erste Reihe 0,30 s schneller, weil sie freie Fahrt hat. Mit Bauen holen die hinteren Plätze mit Rampen, Abkürzungen und Windschatten etwas mehr als das wieder auf. Bei nur einer Runde ist die schnellste Runde eben auch die einzige, mit allem Gedränge.
+
+**Entscheidung Startaufstellung:** Wer vorne steht, hat weniger Anlauf und fährt langsamer über die Linie. Darum rückt ein kleines Feld auf der Startgeraden um ganze Reihen nach hinten, bis die vorderste Reihe höchstens 45 m Anlauf hat (`CONFIG.rennen.startAnlauf`) und die hinterste Reihe noch auf der geraden Strasse steht (Radius über 150 m). Mit 8 Autos stehen sie dann 44 bis 54 m vor der Linie statt 7 bis 32 m. Auf Ägypten und New York liegt die Linie kurz nach einer Kurve, dort bleibt das Feld vorne (Messung nur dieser beiden Strecken, 1 Runde: grösster Vorteil 0,07 s). Bei den Strecken-Umbauten (Etappen 4 und 5) bekommen alle Strecken eine lange Startgerade.
+
+### Bis zu 11 Bots und 22 Menschen
+
+- Gegen Bots und im Split-Screen wählt man bis zu 11 Bots (`CONFIG.rennen.maxBots`), online nimmt der Host bis zu 11 Bots dazu.
+- Online treten bis zu 22 Menschen einer Lobby bei (`maxMenschen`). **Lesart:** Die Bots kommen dazu, im Rennen sind also höchstens 33 Autos (`maxFahrer`). Sind insgesamt höchstens 22 Autos gemeint, ist das nur `maxFahrer: 22`.
+- **Startaufstellung:** in Dreierreihen, 4,6 m zwischen den Reihen, 3,4 m zwischen den Autos einer Reihe, jede Reihe leicht versetzt. 33 Plätze reichen von 7 m bis 55 m vor der Linie.
+- **Jedes Auto bleibt unterscheidbar:** 16 Lacke. Sind mehr Autos als Lacke im Rennen, trägt jedes Namensschild eine Startnummer im Farbkreis des Lacks. Bots und Gäste bekommen immer den Lack, den bisher am wenigsten Autos haben. Das HUD zeigt «Platz 17/33».
+- **Ergebnis mit 33 Zeilen und Lobby mit 22 Menschen:** Ab 13 Autos rückt die Ergebnisliste enger zusammen, auf dem Handy fallen die Spalten BP, Überholt, Bauwerke und Treffer weg (Platz, Name, Zeit, beste Runde bleiben). Die Lobby-Liste zeigt «Fahrer (22/22, bereit 21/21)», rückt ab 9 Spielern zusammen und lässt sich scrollen. Unter «Neu in der Liste» stehen nach dem Rennen höchstens 5 neue Bestenlisten-Zeiten, die eigenen zuerst, der Rest als «… und 17 weitere» (`CONFIG.bestenliste.neuZeilen`). Mit 22 Menschen war das sonst eine Liste von 44 Zeilen über dem Ergebnis.
+- **Handy als Host:** Der Host rechnet alle Autos. Leitet ein Handy oder Tablet ein Rennen mit mehr als 12 Autos (`CONFIG.netz.handyHostMax`), zeigt die Lobby allen einen Hinweis.
+
+### Leistung mit vielen Autos
+
+**Grafik:** Nur die 8 Autos, die einer Kamera am nächsten sind («Niedrig»: 6), haben ein eigenes Modell (`CONFIG.grafik.feinMax`). Alle anderen zeichnet die Grafikkarte als Instanzen in einer noch einfacheren Fassung (1200 bis 2000 Dreiecke statt 1900 bis 3500), ein Zeichenaufruf pro Autotyp, und nur, wenn sie im Bild sind. Ein Auto wechselt erst, wenn es zwei Plätze weiter vorne oder hinten ist, damit es an der Grenze nicht flackert. Namensschilder zeigt jedes Bild höchstens für die 10 nächsten Autos (`CONFIG.grafik.schilder`). Mit bis zu 8 Autos («Niedrig»: 6) ändert sich nichts.
+
+Dreiecke und Zeichenaufrufe pro Bild, gemessen 1,5 s nach dem Start mit der Kamera hinter dem letzten Auto, also mit dem ganzen Feld im Bild (der schwerste Moment eines Rennens):
+
+| Stufe | Strecke | 8 Autos | 12 Autos | 33 Autos | Budget |
+|---|---|---|---|---|---|
+| Niedrig | Kiesgrube | 89 000 / 105 | 96 000 / 116 | 126 000 / 109 | 160 000 / 160 |
+| Niedrig | Paris | 130 000 / 130 | 137 000 / 140 | 166 000 / 134 | 160 000 / 160 |
+| Mittel | Kiesgrube | 396 000 / 367 | 401 000 / 375 | 433 000 / 380 | 460 000 / 370 |
+| Mittel | Paris | 424 000 / 394 | 429 000 / 405 | 462 000 / 407 | 460 000 / 370 |
+| Hoch | Kiesgrube | 473 000 / 371 | 479 000 / 379 | 510 000 / 382 | 560 000 / 390 |
+| Hoch | Paris | 490 000 / 396 | 494 000 / 408 | 527 000 / 410 | 560 000 / 390 |
+
+33 statt 8 Autos kosten ab «Mittel» rund 8 % mehr Dreiecke und höchstens 15 Zeichenaufrufe mehr, auf «Niedrig» (dort sind die Autos ein grosser Teil des Bildes) 28 bis 41 % mehr Dreiecke. Über dem Budget liegt mit 33 Autos nur Paris auf «Niedrig» (166 000, 4 % darüber) und knapp auf «Mittel» (462 000). Die Zeichenaufrufe liegen in Paris schon mit 8 Autos in diesem Moment über dem Budget, das 6 s nach dem Start gemessen ist. «Ultra» habe ich mit vielen Autos nicht gemessen (Zeitüberschreitung in der Testumgebung).
+
+**Rechenzeit pro Schritt** (der Host rechnet alle Autos, 60 Schritte pro Sekunde, Kiesgrube, Paris und New York, Mittel aus 30 s Rennen mit «Mittel»- und «Schwer»-Bots): mit 8 Autos 0,2 bis 0,3 ms, mit 12 Autos 0,3 ms und mit 33 Autos 1,0 ms (99 % der Schritte unter 2,3 ms). Das sind mit 33 Autos rund 6 % der Rechenzeit einer Sekunde auf meinem Testrechner. Ein Handy rechnet grob drei- bis fünfmal langsamer, darum der Hinweis in der Lobby, wenn ein Handy ein grosses Rennen leitet.
+
+### Netz
+
+**Rennstart:** Beim Start baut jedes Gerät zuerst die Strecke auf. Bisher galt ein Gerät nach 6 Sekunden Funkstille als ausgefallen. Brauchte der Host für den Aufbau länger, meldeten alle Gäste «Die Verbindung zum Host ist abgebrochen», und ein langsamer Gast flog beim Host raus. Neu gilt beim Start eine Frist von 30 Sekunden, bis das erste Rennbild da ist (`CONFIG.netz.startTimeout`), danach wieder 6 Sekunden.
+
+Der Host schickt jedem Gast 20-mal pro Sekunde den Zustand. Neu bekommt jeder Gast die 10 Autos, die seinem Auto am nächsten sind, jedes Mal, die übrigen jedes zweite Mal, und Werte, die sich selten ändern (BP, Rang, Runde), nur jedes fünfte Mal. Zahlen werden kürzer geschrieben. Fremde Autos zeichnet der Gast wie bisher 100 ms verzögert weich nach; fehlt ein Zustand, rechnet er höchstens 0,25 s weiter.
+
+| Nutzdaten (KB/s, ohne WebRTC-Kopf) | vorher pro Gast | nachher pro Gast | vorher Host | nachher Host |
+|---|---|---|---|---|
+| 8 Autos, 7 Gäste | 12,0 | 8,6 | 84 | 60 |
+| 33 Autos, 21 Gäste | 49,4 | **25,5** | 1038 | **536** |
+
+Ziel erreicht: pro Gast höchstens 30 KB/s, beim Host zusammen höchstens 1 MB/s (Mittel über ein ganzes Rennen).
+
+**Volltest mit 22 Menschen im Browser:** 22 Browserfenster auf einem Rechner (Host und 21 Gäste, dazu 11 Bots, Paris, 1 Runde) über einen lokalen Vermittlungsserver. Alle 22 traten der Lobby bei und waren 5 s nach «Rennen starten» im Rennen, alle 21 Gäste kamen ins Ergebnis, und alle 22 sahen dieselbe Ergebnisliste mit 33 Zeilen. In den ersten 15 Sekunden, wenn das ganze Feld dicht beisammen fährt und darum fast jedes Auto zu den 10 nächsten gehört, kamen pro Gast 30,6 KB/s an (knapp über dem Ziel) und der Host schickte zusammen 643 KB/s. Verteilt sich das Feld, sinkt es auf die Werte der Tabelle.
+
+**Umweg-Server (500 MB pro Monat):** Ein Rennen mit 3 Runden dauert mit Start und Ziel rund 2,5 Minuten. Mit 33 Autos sind das pro Gast rund 3,7 MB Nutzdaten, mit Verpackung und weil der Umweg-Server beide Richtungen zählt, grob 10 MB pro Gast, der den Umweg braucht (mit 8 Autos grob 3 MB). Die 500 MB reichen also für rund 50 «Gast-Rennen» über den Umweg: Brauchen 2 von 21 Gästen den Umweg, sind das rund 25 Rennen mit 22 Spielern im Monat, bei 5 Gästen rund 10. Wer im selben WLAN oder in einem offenen Netz spielt, braucht den Umweg meist nicht.
+
+### Bauen mit vielen Autos
+
+Mit vielen Autos wird im Pulk viel öfter überholt (am Bergpass 52-mal pro Rennen mit 8 Autos, 1317-mal mit 33), und jeder Fahrer verdiente doppelt so viele Baupunkte. Darum gibt es ab 9 Fahrern weniger pro Mal: Baupunkte × (8 ÷ Fahrer)^0,5, also × 0,82 mit 12 und × 0,49 mit 33 Fahrern (`CONFIG.bp.feldExponent`). Mit bis zu 8 Fahrern ändert sich nichts. Gleichzeitig stehen wie bisher höchstens 6 Hindernisse auf der Strecke.
+
+Gemessen mit «Mittel»-Bots, je Strecke 100 Rennen (33 Fahrer: 40), Werte für Kiesgrube / Bergpass, pro Rennen:
+
+| Fahrer | Baupunkte pro Fahrer | Bauwerke | davon Hindernisse | Treffer pro Auto | Überholmanöver | Feld in 8 s im Ziel |
+|---|---|---|---|---|---|---|
+| 8 | 7,0 / 8,6 | 14 / 18 | 11 / 14 | 0,16 / 0,59 | 38 / 52 | 100 / 100 % |
+| 12, ohne Faktor | 9,6 / 10,8 | 30 / 32 | 24 / 24 | 0,38 / 1,43 | 102 / 143 | 100 / 100 % |
+| 12, mit Faktor | 8,0 / 8,7 | 25 / 27 | 20 / 21 | 0,32 / 1,18 | 97 / 141 | 100 / 100 % |
+| 33, ohne Faktor | 16,2 / 17,2 | 53 / 47 | 34 / 29 | 0,64 / 1,92 | 671 / 1317 | 100 / 100 % |
+| 33, mit Faktor | 9,5 / 10,4 | 49 / 43 | 33 / 28 | 0,60 / 1,80 | 612 / 1218 | 100 / 98 % |
+
+Mit dem Faktor verdient jeder Fahrer wieder fast so viele Baupunkte wie mit 8 Autos. Gebaut wird trotzdem kaum weniger, weil höchstens 6 Hindernisse gleichzeitig stehen und diese Grenze in grossen Feldern fast immer erreicht ist. Ein Hindernis im Pulk trifft mehr Autos: Am Bergpass fährt mit 33 Autos jedes rund 1,8-mal pro Rennen in eine Baustelle, mit 8 Autos 0,6-mal. Länger als 0,4 s steht dabei niemand still. Wer in grossen Feldern weniger Baustellen will, setzt `CONFIG.bp.feldExponent` höher (1 heisst: Baupunkte × 8 ÷ Fahrer).
+
 ## Wichtigste CONFIG-Werte
 
 Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
@@ -328,7 +410,14 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `bau.preise` | 3, 6, 3, 3, 4, 6 | Rampe, Abkürzung, Pylonen, Schlamm, Absperrung, Umleitung (Pylonen bis 17.11.2026: 2 BP) |
 | `bau.minVorlauf`, `bau.schutzZeit` | 3 s, 3 s | Vorwarnzeit und Schutz nach einem Treffer |
 | `bau.maxProSpieler`, `bau.maxGesamt`, `bau.wartezeit` | 2, 6, 4 s | Grenzen für Hindernisse |
+| `bp.feldExponent` | 0,5 | ab 9 Fahrern gibt es pro Mal weniger Baupunkte: × (8 ÷ Fahrer)^0,5, also × 0,82 mit 12 und × 0,49 mit 33 Fahrern (0 = wie mit 8) |
 | `bau.maxSchlenker` | 4 m | Sperren stehen so, dass die Ideallinie höchstens so weit im gesperrten Teil liegt |
+| `rennen.maxBots`, `maxMenschen`, `maxFahrer` | 11, 22, 33 | Bots pro Rennen, Menschen pro Online-Raum (Host eingerechnet), Autos pro Rennen |
+| `rennen.startAnlauf` | 45 m | ein kleines Feld rückt nach hinten, bis die vorderste Reihe höchstens so viel Anlauf bis zur Ziellinie hat |
+| `rennen.startBreite`, `startReihe`, `startSeite3`, `startVersatz` | 3, 4,6 m, 3,4 m, 0,9 m | Autos pro Startreihe, Abstand der Reihen, Abstand in der Reihe, Versatz innerhalb der Reihe |
+| `netz.nahAnzahl`, `fernTeiler`, `refTeiler` | 10, 2, 5 | die 10 nächsten Autos bekommt jeder Gast 20-mal pro Sekunde, die übrigen jedes 2. Mal, Platz, BP und Runde jedes 5. Mal |
+| `netz.handyHostMax` | 12 | leitet ein Handy oder Tablet ein Rennen mit mehr Autos, zeigt die Lobby einen Hinweis |
+| `netz.startTimeout` | 30 s | beim Rennstart darf es so lange still bleiben, bis das erste Rennbild da ist (langsame Geräte bauen dann die Strecke auf), danach gilt `netz.ausfallTimeout` (6 s) |
 | `windschatten.bonus` | 0,02 | 2 % mehr Höchsttempo im Windschatten |
 | `bots.stufen` | Mut 0,76 / 0,83 / 1,04 / 1,18 bis 1,30 | Fahrkönnen der Bots leicht, mittel, schwer, ultra («Ultra» je Strecke eigene Werte) |
 | `bots.stufen.schwer` | `profi`, `bremsen` 34, `driftAb` 0,5, `tempo` 1,03 | Profi ohne Fehler, spätere Bremspunkte, früher Drift, 3 % Tempo-Vorteil (höchstens erlaubt) |
@@ -339,15 +428,19 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `grafik.leben` | Gras 6000 / 14000 / 26000 | Gras, Blumen, Steine und Vögel pro Grafik-Stufe |
 | `grafik.leben.passanten` | 50 / 90 / 140 | Fussgänger in Paris und New York ab «Mittel» |
 | `grafik.lod` | 30 / 45 / 70 m | ab dieser Entfernung zeigen Autos ihre einfache Fassung («Mittel», «Hoch», «Ultra») |
+| `grafik.feinMax` | 6 / 8 / 8 / 8 | so viele Autos (die nächsten) haben ein eigenes Modell («Niedrig», «Mittel», «Hoch», «Ultra»), alle übrigen sind Instanzen |
+| `grafik.schilder` | 10 | höchstens so viele Namensschilder pro Bild |
 | `grafik.delle` | ab 3 m/s, höchstens 0,13 m | Dellen nach Stössen |
 | `bestenliste` | `proName` 1, `zeigen` 10, `speichern` 50, `minRunde` 8 s | Zeiten pro Name und Liste, sichtbare und gespeicherte Plätze, kürzeste gültige Runde |
+| `bestenliste.neuZeilen` | 5 | so viele «Neu in der Liste»-Zeilen zeigt das Ergebnis nach dem Rennen (eigene zuerst), mehr werden zu «… und 17 weitere» |
 | `bestenliste.server` | Firebase-Datenbank «baustellen-rennen» (Belgien) | Adresse der gemeinsamen Datenbank, leer heisst: jedes Gerät hat nur seine eigene Liste |
 | `bestenliste.zeitlimit`, `frisch`, `nochmals` | 6 s, 60 s, 15 s | Wartezeit auf die Datenbank, so lange gilt eine geladene Liste, neuer Versuch nach einem Fehler |
 | `bestenliste.mindestTempo`, `verboten` | 2, 10 Wörter | Mindestzeit = Streckenlänge ÷ (2 × Höchsttempo), unerwünschte Wörter in Namen |
 
 ## Entscheidungen, die ich getroffen habe
 
-- Höchstens 8 Fahrer pro Rennen.
+- Höchstens 33 Autos pro Rennen: online bis zu 22 Menschen und dazu bis zu 11 Bots (bis 17.11.2026 höchstens 8). Sind insgesamt höchstens 22 Autos gemeint, ist das nur `CONFIG.rennen.maxFahrer: 22`.
+- Die Rundenzeit läuft ab der ersten Fahrt über die Ziellinie. Die Gesamtzeit und die Reihenfolge im Ziel zählen weiter ab dem Startsignal, damit die Reihenfolge im Ziel zur Gesamtzeit passt.
 - Baupunkte gibt es nur für neu gewonnene Plätze. Wer einen eben verlorenen Platz zurückholt, bekommt dafür wenig. Sonst füttert das Hin und Her im Pulk laufend neue Baustellen.
 - Wer dicht an der Spitze klebt, sammelt weniger. Wer weit zurückliegt, sammelt voll. So hilft das Bauen vor allem denen, die wirklich hinten liegen.
 - In den ersten 8 s nach dem Start und für Plätze, die man mit Rampe oder Abkürzung gekauft hat, gibt es keine Punkte.
@@ -374,6 +467,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Ton lässt sich in der Test-Umgebung nicht anhören. Geprüft ist, dass alle Klänge ohne Fehler laufen, abgehört hat sie noch niemand.
 
 - Der Online-Modus ist mit zwei Browsern gegen einen lokalen Vermittlungsserver getestet (Lobby, Rennen, Ergebnis, Revanche, Bot-Übernahme), ebenso die Fehlerfälle beim Beitritt (falscher Code, Host antwortet nicht, Netz blockiert, Vermittler nicht erreichbar). Über den öffentlichen PeerJS-Server im echten Internet konnte ich ihn in meiner Testumgebung nicht ausprobieren. Ein erster Versuch mit zwei Geräten scheiterte am 13.11.2026 beim Beitritt. Die Ursache ist noch offen, die Diagnose-Zeile unter der Fehlermeldung soll sie zeigen. Zwischen Geräten in verschiedenen Netzen braucht es manchmal einen TURN-Server, und die mitgelieferten von PeerJS sind nicht immer erreichbar.
+- **Grosse Lobbys:** 22 Menschen sind mit 22 Browserfenstern auf einem Rechner gegen einen lokalen Vermittlungsserver getestet, nicht mit 22 echten Geräten in verschiedenen Netzen. Der Host rechnet alle Autos und schickt allen Gästen die Daten. Mit 33 Autos sollte darum ein Laptop oder Computer der Host sein, kein Handy. Auf Ägypten und New York steht das Feld noch wie bisher vorne, weil die Ziellinie dort kurz nach einer Kurve liegt (wird mit den Strecken-Umbauten behoben).
 - Die Bildrate ist nur mit Software-Grafik geprüft. Ruckelt es auf einem Gerät, hilft die Grafikstufe «Niedrig».
 - Die Touch-Steuerung ist eingebaut, aber nicht getestet.
 - Einen Grand-Prix-Modus gibt es nicht.
