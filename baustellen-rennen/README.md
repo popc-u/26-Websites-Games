@@ -16,24 +16,45 @@ Das ganze Spiel steckt in einer einzigen Datei: `index.html`.
 
 ## Die 8 Autos
 
-Es gibt acht Autos in vier Klassen. Jedes hat eine eigene Form, einen eigenen Motorklang, genau eine klare Stärke und eine klare Schwäche. Alle Modelle sind eigene Entwürfe aus einfachen Flächen, ohne Marken, Logos oder Waffen.
+Es gibt acht Autos in vier Klassen. Jedes hat eine eigene Form, einen eigenen Motorklang und 14 Fähigkeiten mit einem Wert von 1 (schwach) bis 10 (stark). Jedes Auto hat mindestens einen Wert 10, einen zweiten von 8 bis 10 und mindestens zwei Werte von 1 bis 3, und jedes ist in mindestens einer Fähigkeit allein das beste. Die Punktsummen liegen zwischen 75 und 79, im Mittel bei 77. Alle Modelle sind eigene Entwürfe aus einfachen Flächen, ohne Marken, Logos oder Waffen.
 
-| Klasse | Auto | Stärke | Schwäche |
-|---|---|---|---|
-| Luxus | Sportwagen | Höchstes Tempo auf der Geraden | Verliert auf Kies und im Schlamm viel Tempo |
-| Luxus | Limousine | Starker Windschatten, holt hinter anderen auf | Träge Lenkung |
-| Militär | Panzerwagen (acht Räder) | Treffer an Baustellen bremsen kaum | Langsame Beschleunigung |
-| Militär | Transporter (sechs Räder) | Schiebt andere beim Rempeln weg | Langsam in engen Kurven |
-| Gelände | Geländewagen | Kaum Tempoverlust neben der Strecke und auf Abkürzungen | Tieferes Höchsttempo |
-| Gelände | Pick-up | Bauwerke kosten 1 Baupunkt weniger | Etwas langsamer als alle anderen |
-| Rennsport | Rennwagen | Beste Kurvenlage, stärkerer Drift-Schub | Treffer bremsen ihn stärker |
-| Rennsport | Rallye-Auto | Drift lädt schneller, Rampen geben mehr Schub | Tieferes Höchsttempo |
+| Fähigkeit | Sportwagen | Limousine | Panzerwagen | Transporter | Geländewagen | Pick-up | Rennwagen | Rallye-Auto |
+|---|---|---|---|---|---|---|---|---|
+| *Klasse* | Luxus | Luxus | Militär | Militär | Gelände | Gelände | Rennsport | Rennsport |
+| Höchsttempo | **10** | 8 | 8 | 6 | 3 | 3 | 4 | 3 |
+| Beschleunigung | 7 | 4 | 4 | 7 | 5 | **8** | 4 | 6 |
+| Lenkung | 4 | 3 | 3 | 3 | 6 | 7 | **8** | 4 |
+| Kurvenlage | 5 | 4 | 8 | 3 | 6 | 7 | **10** | 4 |
+| Drift-Aufladung | 4 | 5 | 8 | 6 | 6 | 6 | 4 | **10** |
+| Drift-Turbo | 4 | 4 | 8 | 5 | 6 | 7 | **10** | 4 |
+| Windschatten | 8 | **10** | 3 | 4 | 3 | 4 | 7 | 3 |
+| Rempeln | 4 | 7 | 8 | **10** | 5 | 5 | 3 | 3 |
+| Gelände | 3 | 3 | 3 | 5 | **10** | 4 | 3 | 7 |
+| Bande | 3 | 6 | 8 | 8 | 5 | 4 | 3 | 8 |
+| Hindernisse | 3 | 6 | **10** | 5 | 8 | 4 | 2 | 8 |
+| Rampen und Boost-Felder | 4 | 4 | 3 | 6 | 6 | 3 | 4 | **10** |
+| Baukosten | 8 | 7 | 3 | 5 | 4 | **10** | 7 | 3 |
+| BP-Aufladung | 8 | 6 | 2 | 5 | 4 | 7 | 8 | 3 |
+| **Summe** | 75 | 77 | 79 | 78 | 77 | 79 | 77 | 76 |
+| **Typ** | Raser | Windschatten-Jäger | Unaufhaltsam | Rammbock | Querfeldein | Baumeister | Kurvenkünstler | Drift-Springer |
+| **Risiko (gemessen)** | mittel | mittel | tief | tief | hoch | hoch | mittel | mittel |
+
+Fett: in dieser Fähigkeit allein das beste Auto. Was ein Wert genau bewirkt, steht unter «Jedes Auto mit 14 Fähigkeiten».
+
+- **Sportwagen (Raser):** Auf der Geraden kaum zu schlagen, verliert aber neben der Strasse und an der Bande sehr viel.
+- **Limousine (Windschatten-Jäger):** Holt im Windschatten auf, hat vorne allein aber nichts davon und lenkt träge.
+- **Panzerwagen (Unaufhaltsam):** Kaum aufzuhalten, lenkt aber träge und kann kaum bauen.
+- **Transporter (Rammbock):** Schiebt alle weg, ist in engen Kurven aber langsam.
+- **Geländewagen (Querfeldein):** Fährt überall fast gleich schnell, ist auf langen Geraden aber langsam.
+- **Pick-up (Baumeister):** Baut viel und billig, fährt aber langsamer.
+- **Rennwagen (Kurvenkünstler):** In Kurven und beim Driften der beste, jede Berührung kostet ihn aber viel.
+- **Rallye-Auto (Drift-Springer):** Driftet und springt am besten, ist auf Geraden aber langsam und kann kaum bauen.
 
 **Lack:** 16 Farben, darunter matte («Olivgold matt», «Schwarz matt»), metallische («Silber metallic», «Nachtblau metallic», «Weinrot metallic») und ein Tarnmuster. Die Militärfahrzeuge tragen immer ein Tarnmuster im Ton der gewählten Farbe.
 
-**Zufalls-Auto:** Vor jedem Rennen bekommt jeder Fahrer, auch jeder Bot, eines der 8 Autos zugelost. Vor dem Countdown zeigt eine kurze Auslosung das Auto mit Stärke und Schwäche. Niemand bekommt zweimal hintereinander dasselbe Auto. In den Renn-Einstellungen steht der Schalter «Zufalls-Auto: Ein / Aus». Ist er aus, wählt jeder sein Auto im Showroom selbst. Online legt der Host den Schalter für den ganzen Raum fest. Ist das Zufalls-Auto eingeschaltet, wählt man nur den Lack.
+**Zufalls-Auto:** Vor jedem Rennen bekommt jeder Fahrer, auch jeder Bot, eines der 8 Autos zugelost. Vor dem Countdown zeigt eine kurze Auslosung das Auto mit Typ, Risiko, den drei stärksten und den zwei schwächsten Fähigkeiten. Niemand bekommt zweimal hintereinander dasselbe Auto. In den Renn-Einstellungen steht der Schalter «Zufalls-Auto: Ein / Aus». Ist er aus, wählt jeder sein Auto im Showroom selbst. Online legt der Host den Schalter für den ganzen Raum fest. Ist das Zufalls-Auto eingeschaltet, wählt man nur den Lack.
 
-**Die Bots kennen ihr Auto:** Der Geländewagen baut eher Abkürzungen, das Rallye-Auto eher Rampen, der Pick-up baut öfter, die Limousine sucht den Windschatten.
+**Die Bots kennen ihr Auto:** Jeder Bot nutzt die Stärken seines Autos und meidet seine Risiken: Der Geländewagen schneidet Kurven über das Gelände ab, der Panzerwagen fährt durch Pylonen, Transporter und Panzerwagen rempeln, die Limousine sucht den Windschatten, der Pick-up baut öfter, das Rallye-Auto nimmt jedes Boost-Feld mit. Mehr unter «Jedes Auto mit 14 Fähigkeiten».
 
 ## Ton und Bild
 
@@ -314,6 +335,8 @@ Die Zugangsdaten stehen damit lesbar in der Seite. Schlimmstenfalls brauchen Fre
 
 ## Balancing: gemessene Werte
 
+Diese Messung gilt für die Autos bis Version 1.1 (eine Stärke und eine Schwäche pro Auto). Seit Version 1.2 hat jedes Auto 14 Fähigkeiten, die Messung dazu steht unter «Jedes Auto mit 14 Fähigkeiten».
+
 Stand 17.11.2026, seit Pylonen 3 BP kosten und Bots kaum noch Pylonen setzen. Pro Strecke 200 Rennen mit 8 gleich starken Bots und 100 Rennen mit einem «Schwer»-Bot gegen 7 «Mittel»-Bots, jedes Rennen lost die Autos neu zu. «Vorher» ist derselbe Code mit den alten Werten (Pylonen 2 BP, Bots bauen wie bis 17.11.2026), mit demselben Zufall.
 
 | Zielwert | Kiesgrube vorher | Kiesgrube nachher | Bergpass vorher | Bergpass nachher |
@@ -344,9 +367,9 @@ Die Bots setzen also 98 % weniger Pylonen. Mit den Punkten bauen sie stattdessen
 
 Bei 200 Rennen schwanken diese Werte um rund ±2,5 Prozentpunkte. Schon vorher lagen in der Kiesgrube die Limousine (24 %) und das Rallye-Auto (6 %) ausserhalb des Ziels. Nachher liegt am Bergpass der Rennwagen mit 24 % klar darüber und das Rallye-Auto mit 4 % darunter. Der Grund: Ohne Pylonen gibt es viel weniger Treffer, und davon profitiert der Rennwagen, der schnellste, aber empfindlichste Wagen. Ich habe die Autos nicht neu abgestimmt, weil sie sonst anders fahren würden als vorher. Das wäre ein eigener Auftrag. Am 14.11.2026 (400 Rennen pro Strecke, damals noch mit vielen Pylonen) lagen alle Autos zwischen 9,5 % und 15 %.
 
-Damit die Autos trotz ihrer Eigenheiten gleich stark sind, sind Höchsttempo und Lenkung jedes Autos zusätzlich um wenige Prozent fein abgestimmt (`CONFIG.fahrzeuge`). Die Limousine hat einen 2,5-fachen statt 4-fachen Windschatten, weil sie sonst zu oft führte und dann doch verlor. Am Bergpass gewann der starke Bot damals mit 45 % etwas seltener als das Ziel von 50 %. Seit dem 17.11.2026 ist «Schwer» viel stärker und gewinnt 97 bis 100 % (siehe «Schwer»-Bots). Mit den alten Pylonen-Werten (`bots.pylonen` 1, Pylonen 2 BP, `bots.schlammSparen` 0) gehen Rennen mit 8 «Mittel»-Bots genau gleich aus wie vor der Pylonen-Änderung (36 von 36 Vergleichsrennen mit gleichem Zufall). Fahrphysik und Fahren der Bots sind also unverändert, anders ist nur, was sie bauen.
+Damit die Autos trotz ihrer Eigenheiten gleich stark waren, waren Höchsttempo und Lenkung jedes Autos bis Version 1.1 zusätzlich um wenige Prozent fein abgestimmt. Seit Version 1.2 gibt es solche versteckten Faktoren nicht mehr. Die Limousine hat einen 2,5-fachen statt 4-fachen Windschatten, weil sie sonst zu oft führte und dann doch verlor. Am Bergpass gewann der starke Bot damals mit 45 % etwas seltener als das Ziel von 50 %. Seit dem 17.11.2026 ist «Schwer» viel stärker und gewinnt 97 bis 100 % (siehe «Schwer»-Bots). Mit den alten Pylonen-Werten (`bots.pylonen` 1, Pylonen 2 BP, `bots.schlammSparen` 0) gehen Rennen mit 8 «Mittel»-Bots genau gleich aus wie vor der Pylonen-Änderung (36 von 36 Vergleichsrennen mit gleichem Zufall). Fahrphysik und Fahren der Bots sind also unverändert, anders ist nur, was sie bauen.
 
-Selbst nachmessen: `index.html?sim=200` öffnen (dauert einige Minuten). Die Siegquote pro Auto zeigt diese Seite noch nicht an, sie stammt aus meiner Mess-Reihe.
+Selbst nachmessen: `index.html?sim=200` öffnen (dauert einige Minuten). Seit Version 1.2 zeigt diese Seite auch Siege, mittleren Platz, Streuung und letzte Plätze pro Auto.
 
 ## «Schwer»-Bots
 
@@ -630,6 +653,190 @@ Was online geändert ist: Die Verzögerung der fremden Autos passt sich pro Auto
 - Zeichenaufrufe auf «Niedrig»: −18 % statt −25 %. Dort ist der Anteil der Autos kleiner.
 - Hänger auf echten Geräten lassen sich hier nicht messen. Ersatz: Im ganzen Rennen entstehen keine neuen Shader-Programme und keine neuen Bilder mehr.
 - Gebündelte Autos laden pro Bild eine kleine Tabelle mit 4 Knochen-Lagen hoch (wenige hundert Bytes pro Auto).
+
+## Jedes Auto mit 14 Fähigkeiten
+
+Stand 18.11.2026, Version 1.2 (Etappe 2 des Auftrags «Auto-Fähigkeiten, Bots, Leistung, Strecken»).
+
+Jedes Auto hat jetzt 14 Fähigkeiten mit Werten von 1 bis 10 (Tabelle unter «Die 8 Autos»). Was ein Wert bewirkt, steht als kommentierte Tabelle in `CONFIG.faehigkeit`, die Werte der Autos stehen in `CONFIG.fahrzeuge`. Die Fahrphysik, die Bots und die Anzeige rechnen nur mit diesen Zahlen. Versteckte Zusatzfaktoren pro Auto gibt es keine (`CONFIG.feinabstimmung` ist leer).
+
+### In der Auto-Wahl
+
+Unter dem Showroom stehen 14 Balken von 1 bis 10 in fünf Gruppen: Fahren (Höchsttempo, Beschleunigung, Lenkung, Kurvenlage), Drift (Aufladung, Turbo), Robust (Rempeln, Bande, Hindernisse), Strecke (Gelände, Windschatten, Rampen und Boost-Felder) und Bauen (Baukosten, BP-Aufladung). Rot sind Werte von 1 bis 3, grün Werte von 8 bis 10. Daneben stehen Klasse, Typ, das gemessene Risiko und zwei Zeilen «Stark bei …» (alle Werte ab 8) und «Risiko bei …» (die Werte bis 3). Antippen, Zeigen mit der Maus oder Ansteuern mit der Tab-Taste erklärt eine Fähigkeit in einem Satz mit der echten Wirkung, zum Beispiel «Baukosten 3: Alle Bauwerke kosten 1,3-mal so viel.» Bei der Auslosung des Zufalls-Autos zeigt eine Karte die Kurzfassung: Typ, Risiko, die drei stärksten und die zwei schwächsten Werte.
+
+Die Bilder liegen im Projektordner unter `leistung/`: `e2-sport-wahl.png` (Auto-Wahl am Computer), `e2-handy-wahl.png` (Auto-Wahl auf dem Handy mit der Erklärung zu «Gelände 10») und `e2-handy-los.png` (Karte bei der Auslosung), erzeugt mit `tools/faehigbild.js`.
+
+### Was die Werte bewirken (`CONFIG.faehigkeit`)
+
+Jede Zahl ist ein Faktor zur Einstellung weiter oben in `CONFIG` (1 = genau wie dort). Die Spalte «Startwert» ist die Spanne aus dem Auftrag.
+
+| Fähigkeit | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | Startwert | wirkt auf |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Höchsttempo | 0,9925 | 0,9942 | 0,9958 | 0,9975 | 0,9992 | 1,0008 | 1,0025 | 1,0042 | 1,0058 | 1,0075 | −4 % bis +4 % | Höchsttempo |
+| Beschleunigung | 0,9 | 0,922 | 0,944 | 0,967 | 0,989 | 1,011 | 1,033 | 1,056 | 1,078 | 1,1 | ×0,7 bis ×1,3 | Beschleunigung |
+| Lenkung | 0,95 | 0,961 | 0,972 | 0,983 | 0,994 | 1,006 | 1,017 | 1,028 | 1,039 | 1,05 | ×0,85 bis ×1,15 | Drehrate und wie direkt die Lenkung reagiert |
+| Kurvenlage | 1,2 | 1,144 | 1,089 | 1,033 | 0,978 | 0,922 | 0,867 | 0,811 | 0,756 | 0,7 | ×1,4 bis ×0,5 | Tempoverlust beim Lenken |
+| Drift-Aufladung | 1,15 | 1,117 | 1,083 | 1,05 | 1,017 | 0,983 | 0,95 | 0,917 | 0,883 | 0,85 | ×1,5 bis ×0,6 | Zeit bis zum Mini-Turbo |
+| Drift-Turbo | 0,85 | 0,889 | 0,928 | 0,967 | 1,006 | 1,044 | 1,083 | 1,122 | 1,161 | 1,2 | ×0,6 bis ×1,5 | Schub des Mini-Turbos (Stärke und Dauer je mit der Wurzel) |
+| Windschatten | 0,3 | 0,45 | 0,6 | 0,8 | 1 | 1,2 | 1,45 | 1,75 | 2,1 | 2,5 | ×0,3 bis ×2,5 | Tempo-Gewinn im Windschatten |
+| Rempeln | 0,6 | 0,7 | 0,8 | 0,9 | 1 | 1,25 | 1,5 | 1,9 | 2,4 | 3 | ×0,6 bis ×3 | Masse beim Rempeln |
+| Gelände | 1,5 | 1,35 | 1,2 | 1,1 | 1 | 0,9 | 0,75 | 0,6 | 0,47 | 0,35 | ×1,5 bis ×0,35 | Tempoverlust neben der Strasse, im Schlamm, auf Kies, Sand, Schnee und Abkürzungen |
+| Bande | 1,5 | 1,35 | 1,2 | 1,1 | 1 | 0,9 | 0,8 | 0,65 | 0,5 | 0,4 | ×1,5 bis ×0,4 | Tempoverlust an Wand und Bande |
+| Hindernisse | 1,6 | 1,45 | 1,3 | 1,15 | 1 | 0,88 | 0,75 | 0,6 | 0,45 | 0,3 | ×1,6 bis ×0,3 | Bremsen durch Pylonen und Absperrungen |
+| Rampen und Boost-Felder | 0,85 | 0,894 | 0,939 | 0,983 | 1,028 | 1,072 | 1,117 | 1,161 | 1,206 | 1,25 | ×0,7 bis ×1,5 | Schub-Dauer eigener Rampen und der Boost-Felder |
+| Baukosten | 1,5 | 1,4 | 1,3 | 1,2 | 1,1 | 1 | 0,9 | 0,8 | 0,65 | 0,5 | ×1,5 bis ×0,6 | Preis aller Bauwerke |
+| BP-Aufladung | 0,6 | 0,7 | 0,8 | 0,9 | 1 | 1,1 | 1,2 | 1,35 | 1,55 | 1,75 | ×0,6 bis ×1,5 | gesammelte Baupunkte |
+
+Preise mit Baukosten: Grundpreis × Faktor, kaufmännisch gerundet (x,5 aufwärts), mindestens 1 BP. Beispiel Pick-up (Baukosten 10, Faktor 0,5): Rampe 2, Pylonen 2, Schlammloch 2, Absperrung 2, Abkürzung 3, Umleitung 3 BP.
+
+### Gemessen: gleich stark?
+
+Je 400 Rennen pro Strecke und Stufe: 8 Bots derselben Stufe, jedes Auto einmal, zufällige Startplätze, mit Bauen (`node tools/faehig.js 400`). «Ultra» mit 100 Rennen pro Strecke. Ziel über alle Strecken: jedes Auto 10 bis 15 % Siege und mittlerer Platz 4,0 bis 5,0. Streuung: Standardabweichung der Zielplätze.
+
+| Auto | Siege «Mittel» | Platz «Mittel» | Siege «Schwer» | Platz «Schwer» | Siege «Ultra» | Platz «Ultra» | Streuung (Mittel und Schwer) | vorher Siege «Mittel» / «Schwer» |
+|---|---|---|---|---|---|---|---|---|
+| Sportwagen | 12,9 % | 4,44 | 13,4 % | 4,42 | 17,2 % | 4,26 | 2,28 | 13,5 % / 8,0 % |
+| Limousine | 12,5 % | 4,14 | 11,8 % | 4,10 | 12,7 % | 4,01 | 2,21 | 21,7 % / 27,0 % |
+| Panzerwagen | 12,3 % | 4,32 | 11,5 % | 4,21 | 9,0 % | 4,44 | 2,12 | 17,0 % / 14,3 % |
+| Transporter | 12,0 % | 4,11 | 8,6 % | 4,08 | 8,0 % | 4,36 | 2,08 | 10,7 % / 10,7 % |
+| Geländewagen | 14,2 % | 4,77 | 15,8 % | 4,71 | 12,3 % | 4,81 | 2,42 | 13,2 % / 16,0 % |
+| Pick-up | 13,0 % | 4,99 | 9,8 % | 5,29 | 6,8 % | 5,24 | 2,42 | 11,5 % / 12,7 % |
+| Rennwagen | 13,4 % | 4,38 | 11,3 % | 4,78 | 15,8 % | 4,45 | 2,27 | 8,8 % / 8,7 % |
+| Rallye-Auto | 9,7 % | 4,86 | 17,8 % | 4,42 | 18,2 % | 4,43 | 2,30 | 3,7 % / 2,7 % |
+
+«Vorher» ist der Stand vor dieser Etappe (alte Autos mit einer Stärke und einer Schwäche), 100 Rennen pro Strecke und Stufe, gleicher Zufall.
+
+**Pro Strecke** (Siege, Mittel aus «Mittel» und «Schwer»; erlaubt sind 4 bis 25 %, jedes Auto soll auf mindestens einer Strecke unter den besten drei sein):
+
+| Strecke | Sportwagen | Limousine | Panzerwagen | Transporter | Geländewagen | Pick-up | Rennwagen | Rallye-Auto |
+|---|---|---|---|---|---|---|---|---|
+| Kiesgrube | 9,9 % | 8,8 % | 19,1 % | 10,5 % | 3,6 % | 24,9 % | 14,3 % | 9,0 % |
+| Bergpass | 13,0 % | 9,8 % | 12,9 % | 10,3 % | 12,3 % | 14,9 % | 18,4 % | 8,6 % |
+| Paris | 14,1 % | 13,1 % | 12,8 % | 17,8 % | 5,6 % | 9,1 % | 14,3 % | 13,3 % |
+| Himalaya | 3,9 % | 3,1 % | 6,9 % | 7,6 % | 41,9 % | 8,6 % | 7,6 % | 20,4 % |
+| Ägypten | 15,5 % | 10,3 % | 9,8 % | 8,9 % | 24,1 % | 4,6 % | 8,9 % | 18,0 % |
+| New York | 22,5 % | 28,0 % | 10,3 % | 7,0 % | 2,5 % | 6,1 % | 10,5 % | 13,1 % |
+| unter den besten drei | 4-mal | 1-mal | 1-mal | 1-mal | 2-mal | 3-mal | 3-mal | 3-mal |
+
+Über alle Strecken liegen 4 von 8 Autos in beiden Stufen zwischen 10 und 15 %. Daneben liegen: Transporter (8,6 % auf «Schwer»), Geländewagen (15,8 % auf «Schwer»), Pick-up (9,8 % auf «Schwer», mittlerer Platz 5,29), Rallye-Auto (9,7 % auf «Mittel», 17,8 % auf «Schwer»). Beim Rallye-Auto gehen die beiden Stufen in verschiedene Richtungen: Ein Punkt mehr hilft ihm auf «Mittel» und macht es auf «Schwer» noch stärker. Pro Strecke sind die Unterschiede gross: Der Geländewagen gewinnt am Himalaya 41,9 %, in der Kiesgrube und in New York unter 5 %. Das liegt an den Strecken selbst (Gelände, Abkürzungen, lange Geraden). Sie werden in Etappe 4 und 5 neu gebaut, danach gleiche ich in Etappe 6 noch einmal aus.
+
+### Risiko
+
+Das Risiko eines Autos ist die Streuung seiner Zielplätze: die Standardabweichung der Plätze in den Rennen oben, gemittelt über «Mittel» und «Schwer». Ein Auto, das jeden der 8 Plätze gleich oft erreicht, hat die Streuung 2,29. Risiko «tief» heisst Streuung unter 2,20, «hoch» ab 2,35, dazwischen «mittel». Diese gemessene Stufe steht in `FAHRZEUGE` (`risiko`) und erscheint in der Auto-Wahl und bei der Auslosung.
+
+| Auto | Streuung | Risiko (gemessen) | Siege | Letzter Platz | Risiko im Auftrag geschätzt |
+|---|---|---|---|---|---|
+| Sportwagen | 2,28 | mittel | 13,1 % | 12,6 % | hoch |
+| Limousine | 2,21 | mittel | 12,2 % | 10,4 % | mittel |
+| Panzerwagen | 2,12 | tief | 11,9 % | 6,8 % | tief |
+| Transporter | 2,08 | tief | 10,3 % | 6,0 % | mittel |
+| Geländewagen | 2,42 | hoch | 15,0 % | 15,9 % | tief |
+| Pick-up | 2,42 | hoch | 11,4 % | 23,0 % | mittel |
+| Rennwagen | 2,27 | mittel | 12,3 % | 13,3 % | sehr hoch |
+| Rallye-Auto | 2,30 | mittel | 13,7 % | 12,1 % | mittel |
+
+Autos mit Risiko «hoch» streuen im Mittel 15 % mehr als die mit Risiko «tief» (Ziel: mindestens 20 %, nicht erreicht). In Rennen unter Bots entscheidet vor allem das Tempo auf der Ideallinie. Treffer, Wandkontakte und Gelände kommen selten vor, darum wirken die riskanten Werte weniger, als ihre Tabellen vermuten lassen. Menschen treffen Wände und Hindernisse öfter, für sie ist der Unterschied grösser. Mehr Streuung bräuchte noch grössere Tabellen bei Bande, Hindernissen und Gelände, das prüfe ich in Etappe 6 mit den neuen Strecken.
+
+### Die Bots kennen ihr Auto
+
+Jeder Bot liest die Werte seines Autos und fährt danach (`CONFIG.bots.auto`). Regeln für einzelne Autos gibt es keine, alles folgt aus den Fähigkeiten. Darum gilt es auch für jedes Auto, dessen Werte jemand ändert:
+
+- **Gelände:** Ab 8 schneidet er Kurven innen neben der Strasse ab (bis 2,2 m), wo er dort nicht langsamer wird. Je höher der Wert, desto öfter baut er Abkürzungen, mit 1 bis 4 seltener als normal. (Geländewagen)
+- **Hindernisse 9 und 10:** Fährt durch Pylonen, statt auszuweichen, und durch Absperrungen, wenn der Umweg mehr als 1,5 m zur Seite führen würde. (Panzerwagen)
+- **Rempeln 8 bis 10:** Weicht beim Überholen leichteren Autos (unter 70 % seiner Masse) nur halb aus und schiebt sie zur Seite. (Panzerwagen, Transporter)
+- **Bande 1 bis 4:** Hält beim Überholen mehr Abstand, bei Bande 3 rund einen halben Meter, damit er nicht an Gegner und Wand stösst. (Sportwagen, Pick-up, Rennwagen)
+- **Windschatten 4 bis 10:** Sucht hinter anderen den Windschatten, je stärker, desto auch in leichten Kurven. (Limousine am meisten)
+- **Drift:** Je besser Drift-Aufladung und Drift-Turbo zusammen, desto öfter und früher driftet er.
+- **Rampen und Boost-Felder:** Mit dem Wert 10 nimmt er jedes Boost-Feld mit. Je höher der Wert, desto lieber baut er Rampen. (Rallye-Auto)
+- **Baukosten und BP-Aufladung:** Mit günstigen Bauwerken und schneller Aufladung baut er öfter (bis 30 Prozentpunkte), mit teuren seltener (bis 15 Prozentpunkte). (Pick-up am meisten)
+
+### «Schwer» und «Ultra» pro Auto
+
+Mit zufälligen Autos wie bisher, je 100 Rennen pro Strecke (`node tools/faehig.js 100 stark,ultra`), mit Bauen. Die Zeile «gesamt» zählt alle 600 Rennen, die Spalten pro Auto nur die Rennen, in denen der stärkere Bot dieses Auto fuhr (je rund 75).
+
+| | gesamt | Sportwagen | Limousine | Panzerwagen | Transporter | Geländewagen | Pick-up | Rennwagen | Rallye-Auto |
+|---|---|---|---|---|---|---|---|---|---|
+| «Schwer» gewinnt gegen 7 «Mittel» | 98,7 % | 96,7 % | 98,7 % | 100,0 % | 98,8 % | 100,0 % | 96,4 % | 98,5 % | 100,0 % |
+| «Ultra» gewinnt gegen 7 «Schwer» | 99,3 % | 100,0 % | 98,3 % | 98,9 % | 100,0 % | 99,1 % | 98,3 % | 100,0 % | 100,0 % |
+
+Pro Strecke gewinnt «Schwer» Kiesgrube 100,0 %, Bergpass 97,0 %, Paris 100,0 %, Himalaya 97,0 %, Ägypten 98,0 %, New York 100,0 % und «Ultra» Kiesgrube 100,0 %, Bergpass 100,0 %, Paris 98,0 %, Himalaya 99,0 %, Ägypten 99,0 %, New York 100,0 %.
+
+**Schnellste Runde «Ultra» pro Auto** (allein, beste fliegende Runde, `node tools/ultraauto.js`): «im Spiel» mit 8 % Tempo-Vorteil (Himalaya 12 %), daneben derselbe Bot ohne Tempo-Vorteil. Ohne Tempo-Vorteil fährt er die Linie des Optimierers und liegt damit beim Sportwagen 0 bis 1 % hinter dessen Zeiten (siehe «Ultra»-Bots). Der Abstand ist also der Vorsprung auf den Optimierer.
+
+| Auto | Kiesgrube | Bergpass | Paris | Himalaya | Ägypten | New York | kleinster Vorsprung |
+|---|---|---|---|---|---|---|---|
+| Sportwagen | 39,88 s (−6,1 %) | 39,09 s (−5,3 %) | 41,34 s (−5,3 %) | 40,52 s (−11,5 %) | 43,25 s (−7,0 %) | 39,28 s (−7,3 %) | 5,3 % |
+| Limousine | 40,06 s (−6,2 %) | 39,40 s (−5,1 %) | 41,58 s (−5,4 %) | 40,97 s (−8,7 %) | 43,62 s (−6,1 %) | 39,51 s (−7,3 %) | 5,1 % |
+| Panzerwagen | 39,57 s (−6,9 %) | 39,07 s (−5,3 %) | 41,39 s (−4,7 %) | 40,67 s (−8,3 %) | 42,89 s (−7,3 %) | 39,34 s (−7,0 %) | 4,7 % |
+| Transporter | 40,02 s (−6,2 %) | 39,49 s (−4,6 %) | 41,36 s (−5,1 %) | 40,58 s (−9,9 %) | 43,31 s (−6,5 %) | 39,45 s (−7,3 %) | 4,6 % |
+| Geländewagen | 40,00 s (−6,3 %) | 39,28 s (−5,0 %) | 41,21 s (−6,2 %) | 39,74 s (−8,2 %) | 43,02 s (−7,1 %) | 39,53 s (−7,3 %) | 5,0 % |
+| Pick-up | 39,92 s (−6,4 %) | 39,57 s (−4,2 %) | 41,15 s (−5,7 %) | 40,60 s (−9,4 %) | 43,20 s (−7,1 %) | 39,57 s (−7,4 %) | 4,2 % |
+| Rennwagen | 39,83 s (−6,4 %) | 38,69 s (−6,0 %) | 41,49 s (−4,9 %) | 40,75 s (−9,8 %) | 43,33 s (−7,1 %) | 39,38 s (−7,4 %) | 4,9 % |
+| Rallye-Auto | 39,64 s (−6,3 %) | 39,40 s (−4,8 %) | 41,07 s (−5,4 %) | 40,09 s (−8,5 %) | 42,41 s (−7,3 %) | 39,36 s (−7,4 %) | 4,8 % |
+
+**Himalaya mit 8 statt 12 %:** «Ultra» gewinnt dort dann 82,5 % gegen 7 «Schwer» (200 Rennen). Die 12 % braucht es also noch. Der Himalaya wird in Etappe 5 neu gebaut, danach prüfe ich es wieder.
+
+### Online und Bestenliste
+
+- Alle fahren mit denselben Werten, denn sie stehen im Spiel selbst. Damit niemand mit einer alten Fassung mitfährt, schickt jedes Gerät seine Fassung (`CONFIG.version`, jetzt 1.2) mit. Hat ein Gast eine ältere geladen, steht in der Lobby neben seinem Namen «andere Fassung: Seite neu laden», und der Host kann erst starten, wenn alle dieselbe Fassung haben. Ab Fassung 1.2 sieht auch der Gast selbst einen Hinweis, wenn seine Fassung nicht zu der des Hosts passt. Ein Host mit der alten Fassung 1.1 prüft das noch nicht.
+- Jede Strecke hat eine neue Liste in der Bestenliste (`STRECKEN.<id>.liste`, zum Beispiel `kiesgrube-2`), weil Zeiten mit den neuen Autos nicht mehr mit den alten vergleichbar sind. Die alten Einträge bleiben gespeichert, die Bestenliste zeigt aber nur noch die neuen. Die Listen pro Auto bleiben wie bisher. Die Firebase-Regeln müssen dafür nicht geändert werden: Sie erlauben schon jetzt Kennungen mit Bindestrich.
+
+### CONFIG-Werte dieser Etappe
+
+| Wert | Bedeutung |
+|---|---|
+| `CONFIG.faehigkeit.<fähigkeit>` | 10 Faktoren pro Fähigkeit für die Werte 1 bis 10 (Tabelle oben) |
+| `CONFIG.fahrzeuge.<auto>` | die 14 Werte des Autos von 1 bis 10, in der Reihenfolge von `FAEHIGKEITEN` |
+| `CONFIG.feinabstimmung` | leer: keine versteckten Faktoren pro Auto |
+| `CONFIG.belag.<art>.gelaende` | `true` bei Schotter, Schnee, Kies und Sand: Dort wirkt die Fähigkeit «Gelände» auf den Tempoverlust |
+| `CONFIG.wirkung.abkuerzungGelaende` | 0,12: Tempo auf Abkürzungen × (1 − 0,12 × (Gelände-Faktor − 1)), also −6 % bei Gelände 1 und +7,8 % bei Gelände 10 |
+| `CONFIG.bots.auto` | wie die Bots ihr Auto nutzen: `durchTreffer` 0,5, `durchSchlenker` 1,5 m, `rempelMasse` 1,8, `rempelSeite` 1,4 m, `gedraenge` 1,2 m, `abschneiden` 2,2 m, `abschneidenKr` 0,04, `driftPlus` 0,25, `bauen` 0,6 |
+| `CONFIG.version` | 1.2: Online müssen alle dieselbe Fassung haben |
+| `STRECKEN.<id>.liste` | Kennung der Bestenliste dieser Strecke, jetzt `<id>-2` |
+
+### Entscheidungen
+
+- **Tabellen enger als im Auftrag:** Mit den Startwerten (Höchsttempo ±4 %) gewann der Rennwagen 66 % der Rennen und der Sportwagen 30 %, die anderen fast nie. Unter Bots entscheidet das Tempo auf der Linie, schon 1 % Höchsttempo ist ein grosser Vorteil. Darum wirken Höchsttempo (±0,75 %), Beschleunigung, Lenkung, Kurvenlage, Drift und Rampen schwächer als im Vorschlag. Windschatten, Rempeln, Gelände, Bande, Hindernisse, Baukosten und BP-Aufladung haben die Spannen aus dem Auftrag, an den starken Enden zum Teil etwas mehr. So sind die Risiken echt spürbar, und die Tempo-Werte kippen das Gleichgewicht nicht.
+- **Werte der Autos:** Gesucht mit `tools/ausgleich.js`. Es verschiebt ganze Punkte zwischen den Tempo-Fähigkeiten und den übrigen, bis alle Autos ähnlich oft gewinnen. Die Schwerpunkte (die Werte 10 und der zweite hohe Wert) und die Risiken (Werte 1 bis 3) bleiben dabei fest. Gegenüber dem Vorschlag im Auftrag haben sich vor allem die Tempo-Werte verschoben. Die Summen liegen zwischen 75 und 79 (erlaubt 77 ± 2).
+- **Zweite Schlussmessung:** In der ersten Messung mit 400 Rennen pro Strecke gewann der Sportwagen 17 %, Panzerwagen und Transporter kamen auf «Schwer» nur auf 8,8 und 8,5 %, das Rallye-Auto auf «Mittel» auf 7,8 %, und der Pick-up hatte den mittleren Platz 5,3. Darum habe ich fünf Autos um je einen Punkt verschoben: Sportwagen Beschleunigung 8 → 7 und Rempeln 3 → 4, Panzerwagen Beschleunigung 3 → 4 und Bande 9 → 8, Transporter Beschleunigung 6 → 7, Pick-up Beschleunigung 7 → 8 und BP-Aufladung 8 → 7, Rallye-Auto Beschleunigung 5 → 6. Die Tabellen oben zeigen die zweite Messung. Eine dritte Runde habe ich nicht gemacht, weil die Strecken in Etappe 4 und 5 ohnehin neu gebaut werden.
+- **Rempeln:** Weicht ein schwerer Bot gar nicht aus, gewinnt der Transporter viel zu oft (mittlerer Platz 3,0). Darum weicht er leichteren Autos halb aus und schiebt sie dabei weg.
+- **Baukosten:** Grundpreis × Faktor, kaufmännisch gerundet (x,5 aufwärts), mindestens 1 BP. Bei Baukosten 5 ist der Faktor 1,1: Rampe, Pylonen, Schlammloch und Absperrung kosten nach dem Runden gleich viel wie bisher, Abkürzung und Umleitung 1 BP mehr.
+- **Drift-Turbo:** Der Faktor teilt sich mit der Wurzel auf Stärke und Dauer auf, damit ein starker Turbo nicht doppelt zählt.
+- **Gelände:** wirkt neben der Strasse, im Schlamm, auf Schotter, Schnee, Kies, Sand und auf Abkürzungen, nicht auf festem Belag wie Asphalt, Pflaster, Platten, Holz, Gitter oder Eis.
+- **Rampen und Boost-Felder:** wirkt auf die Dauer des Schubs eigener Rampen und der Boost-Felder der Strecke.
+- **Risiko-Stufen:** feste Grenzen der Streuung (2,20 und 2,35) statt Rängen, damit «hoch» immer dasselbe heisst, auch wenn sich Werte ändern. «Sehr hoch» zeigt das Spiel nicht, die Messung kennt nur drei Stufen.
+
+### Grenzen
+
+- Gemessen ist das Gleichgewicht mit Bots. Menschen treffen Wände, Hindernisse und Gelände öfter, für sie zählen Bande, Hindernisse und Gelände mehr. Wer viel neben die Strasse gerät, ist mit dem Geländewagen oder dem Panzerwagen besser bedient, als die Tabelle oben zeigt.
+- Ganze Punkte sind grob: Ein Punkt Höchsttempo ändert die Siegquote eines Autos um mehrere Prozentpunkte. Feiner geht es nur über die Tabellen, und die gelten für alle Autos.
+- Bei 400 Rennen pro Strecke schwankt eine Siegquote von 12,5 % um rund ±1,7 Prozentpunkte, über alle 6 Strecken um rund ±0,7.
+- Die Strecken werden in Etappe 4 und 5 neu gebaut. Danach messe ich das Gleichgewicht in Etappe 6 noch einmal und stimme die Werte, falls nötig, nach.
+
+### Ziele dieser Etappe
+
+| Ziel | Ergebnis | |
+|---|---|---|
+| 14 Fähigkeiten, Wirkung als kommentierte Tabellen in CONFIG | `CONFIG.faehigkeit`, keine versteckten Faktoren | erreicht |
+| Jedes Auto: eine 10, ein zweiter Wert 8 bis 10, mindestens zwei Werte 1 bis 3 | alle 8 Autos | erreicht |
+| Jedes Auto in mindestens einer Fähigkeit allein das beste | alle 8 Autos | erreicht |
+| Punktsumme 77, nach dem Feintuning höchstens 2 daneben | 75 bis 79 | erreicht |
+| Über alle Strecken 10 bis 15 % Siege («Mittel» und «Schwer») | 8,6 % bis 17,8 % | **nicht erreicht** |
+| Mittlerer Zielplatz 4,0 bis 5,0 | 4,08 bis 5,29 | **nicht erreicht** |
+| Pro Strecke 4 bis 25 % Siege | 2,5 % bis 41,9 % | **nicht erreicht** |
+| Jedes Auto auf mindestens einer Strecke unter den besten drei | 4, 1, 1, 1, 2, 3, 3, 3 Strecken | erreicht |
+| «Ultra» gemessen und berichtet | Tabelle oben | erreicht |
+| `?sim=` zeigt Siege, mittleren Platz und Streuung pro Auto | Tabelle «pro Auto» auf der Sim-Seite | erreicht |
+| Spiel zeigt das gemessene Risiko | Auto-Wahl und Auslosung | erreicht |
+| Auto-Wahl: 14 Balken in Gruppen, Typ, Risiko, «Stark bei …», «Risiko bei …», Erklärung beim Antippen, Kurzfassung bei der Auslosung, auf dem Handy lesbar | Bilder im Projektordner | erreicht |
+| Die Bots kennen ihr Auto | `CONFIG.bots.auto`, siehe oben | erreicht |
+| Risiko «hoch» streut mindestens 20 % mehr als «tief» | 15 % mehr | **nicht erreicht** |
+| «Schwer» gewinnt fast immer gegen 7 «Mittel» | 98,7 % (schwächstes Auto 96,4 %) | erreicht |
+| «Ultra» gewinnt mindestens 99 % gegen 7 «Schwer» | 99,3 % (schwächstes Auto 98,3 %) | erreicht |
+| «Ultra» mindestens 4 % schneller als der Optimierer | jedes Auto auf jeder Strecke, kleinster Vorsprung 4,2 % | erreicht |
+| «Ultra» höchstens 8 % Tempo-Vorteil | 8 %, am Himalaya 12 % | **nicht erreicht** |
+| Online alle mit denselben Werten, ältere Fassung bekommt einen Hinweis | Fassung 1.2 wird geprüft, Hinweis in der Lobby, Start gesperrt | erreicht |
+| Neue Bestenlisten-Kennung pro Strecke, Listen pro Auto bleiben | `kiesgrube-2` usw. | erreicht |
 
 ## Wichtigste CONFIG-Werte
 

@@ -149,6 +149,20 @@ kbd { display: inline-block; min-width: 26px; text-align: center; background: va
 .schau-text b{font-size:1.15rem;line-height:1.15}
 .schau-text small,.h-los small{opacity:.7;text-transform:uppercase;letter-spacing:.08em;font-size:.68rem}
 .plus{color:#7fe08a}.minus{color:#ff9d8f}
+/* Fähigkeiten in der Auto-Wahl: 14 Balken von 1 bis 10 in 5 Gruppen; Antippen erklärt die echte Wirkung */
+.risiko{align-self:flex-start;border-radius:99px;padding:1px 9px;font-size:.72rem;font-weight:700;border:1px solid rgba(255,255,255,.25)}
+.risiko.tief{background:#2d5a35;color:#d8f5dc}.risiko.mittel{background:#6a5a1c;color:#fff1c2}.risiko.hoch{background:#7a2d24;color:#ffe0db}
+.faehig{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:4px 12px;margin:0 0 8px;padding:8px 10px 6px;background:rgba(14,17,21,.78);border-radius:12px}
+.faehig h4{margin:2px 0 1px;font-size:.66rem;letter-spacing:.09em;text-transform:uppercase;color:var(--gelb);opacity:.9}
+.fz{display:flex;align-items:center;gap:6px;width:100%;background:none;border:0;padding:2px 0;color:#e9edf2;font:inherit;font-size:.78rem;cursor:pointer;text-align:left;border-radius:4px}
+.fz:hover,.fz:focus-visible,.fz.an{background:rgba(255,198,26,.14);outline:none}
+.fz .fn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fz .fb{flex:0 0 64px;height:8px;border-radius:2px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.13) 0 5.4px,transparent 5.4px 6.4px)}
+.fz .fb i{display:block;height:100%;border-radius:2px;background:repeating-linear-gradient(90deg,currentColor 0 5.4px,transparent 5.4px 6.4px)}
+.fz .fw{flex:0 0 16px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.fz.v-tief .fb i{color:#ff8a7a}.fz.v-mitte .fb i{color:#d9dde3}.fz.v-hoch .fb i{color:#7fe08a}
+.ferkl{grid-column:1/-1;margin:4px 0 0;min-height:2.6em;font-size:.8rem;line-height:1.3;color:#fff1c2}
+.h-los .kurz{font-size:.86rem;opacity:.95}
 @media(max-width:560px){.schau{grid-template-columns:1fr}.schau canvas{height:140px}.schau-text{padding:0 12px 10px}}
 .h-los{position:absolute;left:50%;top:20%;transform:translateX(-50%);background:rgba(14,17,21,.88);color:#fff;border-radius:14px;padding:14px 22px;text-align:center;min-width:250px;max-width:88%;border:1px solid rgba(255,255,255,.16)}
 .h-los small{display:block}.h-los b{display:block;font-size:1.7rem;margin:2px 0}.h-los span{display:block;font-size:.9rem;margin-top:4px}
@@ -273,7 +287,7 @@ input[type=range]{accent-color:var(--gold)}
    Längen in Metern, Zeiten in Sekunden, Tempo in m/s (30 m/s = 108 km/h).
    ══════════════════════════════════════════════════════════════════════════ */
 const CONFIG = {
-  version: '1.1',
+  version: '1.2',
 
   // ── Fahrphysik ──────────────────────────────────────────────────────────
   fahren: {
@@ -304,16 +318,17 @@ const CONFIG = {
   // ── Driften und Mini-Turbo ──────────────────────────────────────────────
   // Beläge der Fahrbahn. tempo: Anteil am Höchsttempo · lenk: Anteil an der Drehrate (kleiner = das Auto lenkt träger ein)
   // ruettel: wie stark die Federung arbeitet (nur Optik). Die Bots rechnen mit diesen Werten und bremsen früher.
+  // gelaende: true = loser Untergrund: Der Verlust (1 − tempo, 1 − lenk) wächst oder schrumpft mit der Fähigkeit «Gelände».
   belag: {
     asphalt:  { tempo: 1.0,  lenk: 1.0,  ruettel: 1 },
     pflaster: { tempo: 0.99, lenk: 0.97, ruettel: 3.2 },   // Kopfsteinpflaster: rüttelt, etwas weniger Halt
     platten:  { tempo: 1.0,  lenk: 0.98, ruettel: 1.4 },   // grosse Steinplatten (Tempelhof): fast wie Asphalt
-    schotter: { tempo: 0.97, lenk: 0.95, ruettel: 2.6 },   // Naturstrasse
-    schnee:   { tempo: 0.96, lenk: 0.9,  ruettel: 1.6 },   // fester Schnee: weicher, lenkt träger
+    schotter: { tempo: 0.97, lenk: 0.95, ruettel: 2.6, gelaende: true },   // Naturstrasse
+    schnee:   { tempo: 0.96, lenk: 0.9,  ruettel: 1.6, gelaende: true },   // fester Schnee: weicher, lenkt träger
     eis:      { tempo: 1.0,  lenk: 0.74, ruettel: 0.6 },   // Eis: schnell, aber das Auto dreht nur zögernd ein
     holz:     { tempo: 1.0,  lenk: 1.0,  ruettel: 2.2 },   // Bohlen
-    kies:     { tempo: 1.0,  lenk: 1.0,  ruettel: 2.6 },   // Nebenwege
-    sand:     { tempo: 0.95, lenk: 0.9,  ruettel: 1.8 },   // Wüstensand: bremst, das Heck schwimmt etwas
+    kies:     { tempo: 1.0,  lenk: 1.0,  ruettel: 2.6, gelaende: true },   // Nebenwege
+    sand:     { tempo: 0.95, lenk: 0.9,  ruettel: 1.8, gelaende: true },   // Wüstensand: bremst, das Heck schwimmt etwas
     nass:     { tempo: 1.0,  lenk: 0.86, ruettel: 1 },     // nasser Asphalt: gleich schnell, aber weniger Halt in Kurven
     gitter:   { tempo: 1.0,  lenk: 0.94, ruettel: 2.4 },   // Gitterrost auf Brücken: summt und rüttelt
   },
@@ -404,29 +419,51 @@ const CONFIG = {
     pylonen: { tempoFaktor: 0.72, radius: 0.4, treffer: 1.0, reihenAbstand: 24 },
     schlamm: { laenge: 15, tempoFaktor: 0.5, lenkFaktor: 0.55, anteil: 0.5 },
     absperrung: { anteil: 0.6, tempoFaktor: 0.42, lahmZeit: 0.6, lahmFaktor: 0.55 },
+    abkuerzungGelaende: 0.12, // Abkürzungen (Kies): Tempo × (1 − so viel × (Gelände-Faktor − 1)), Gelände 1: −6 %, Gelände 10: +7,8 %
     minTempoNachTreffer: 8,   // langsamer wird man durch einen Treffer nie (man bleibt nie stehen)
     umleitungLaenge: 34,      // Länge der schrägen Leitwand (m)
   },
 
-  // ── Die 8 Autos: jedes hat eine Stärke und eine Schwäche ────────────────
-  // Alle Werte sind Faktoren zum Normalwert (1 = wie oben eingestellt). Nicht genannte Werte sind normal.
-  //   vmax: Höchsttempo            beschl: Beschleunigung         lenk: Drehrate
-  //   ansprechen: wie direkt die Lenkung reagiert                 kurve: Tempoverlust beim Lenken (0 = keiner)
-  //   offroad: Tempo neben der Fahrbahn    schlamm: Tempo im Schlammloch    abkuerzung: Tempo auf Abkürzungen (Kies)
-  //   treffer: wie stark Baustellen-Treffer bremsen               wind: Stärke des Windschattens
-  //   masse: Gewicht beim Rempeln  driftLaden: Zeit bis zum Mini-Turbo      turbo: Stärke des Mini-Turbos
-  //   rampe: Dauer des Rampen-Schubs       baurabatt: so viele BP kosten Bauwerke weniger (kein Faktor)
-  fahrzeuge: {
-    // «vmax» und «lenk» sind zusätzlich fein abgestimmt (tools/tune.js), damit alle 8 Autos auf beiden Strecken etwa gleich oft gewinnen.
-    sport:       { vmax: 1.012, beschl: 0.86, lenk: 0.99, offroad: 0.7, schlamm: 0.75, abkuerzung: 0.93 },   // Stärke: Höchsttempo · Schwäche: Kies und Schlamm
-    limo:        { wind: 2.5, ansprechen: 0.6, vmax: 1.001 },                                                // Stärke: Windschatten · Schwäche: träge Lenkung
-    panzer:      { treffer: 0.3, schlamm: 1.5, beschl: 0.92, vmax: 1.011, lenk: 0.958 },                     // Stärke: Treffer bremsen kaum · Schwäche: Beschleunigung
-    transporter: { masse: 3, kurve: 1.35, lenk: 0.992, vmax: 1.005 },                                        // Stärke: schiebt andere weg · Schwäche: enge Kurven
-    gelaende:    { offroad: 1.65, abkuerzung: 1.08, schlamm: 1.3, vmax: 0.998, lenk: 0.99 },                 // Stärke: neben der Strecke und auf Abkürzungen · Schwäche: Höchsttempo
-    pickup:      { baurabatt: 1, vmax: 0.997, lenk: 0.99 },                                                  // Stärke: Bauwerke 1 BP günstiger · Schwäche: etwas langsamer
-    renn:        { kurve: 0.5, lenk: 1.02, turbo: 1.15, treffer: 1.5, vmax: 0.982 },                         // Stärke: Kurvenlage, Drift-Schub · Schwäche: Treffer bremsen stärker
-    rallye:      { driftLaden: 0.7, rampe: 1.5, vmax: 0.973, lenk: 1.078 },                                  // Stärke: Drift lädt schneller, Rampen · Schwäche: Höchsttempo
+  // ── Fähigkeiten der Autos: Wirkung der Werte 1 bis 10 ─────────────────────
+  // Jedes Auto hat 14 Fähigkeiten mit einem Wert von 1 (schwach) bis 10 (stark), siehe «fahrzeuge» unten.
+  // Hier steht, was ein Wert bewirkt: Die 1. Zahl einer Liste gilt für den Wert 1, die 10. Zahl für den Wert 10.
+  // Alle Zahlen sind Faktoren zur Einstellung weiter oben (1 = genau wie dort eingestellt). Werte um 5 bis 6 fahren etwa normal.
+  // Die Anzeige in der Auto-Wahl rechnet mit genau diesen Zahlen.
+  faehigkeit: {
+    //               Wert:  1      2      3      4      5      6      7      8      9      10
+    hoechsttempo:   [0.9925, 0.9942, 0.9958, 0.9975, 0.9992, 1.0008, 1.0025, 1.0042, 1.0058, 1.0075],   // × Höchsttempo (fahren.vmax): −0,75 % bis +0,75 % (Startwert war ±4 %, siehe README)
+    beschleunigung: [0.900, 0.922, 0.944, 0.967, 0.989, 1.011, 1.033, 1.056, 1.078, 1.100],   // × Beschleunigung (am Start, nach Kurven, nach Unfällen)
+    lenkung:        [0.950, 0.961, 0.972, 0.983, 0.994, 1.006, 1.017, 1.028, 1.039, 1.050],   // × Drehrate und × wie direkt die Lenkung reagiert
+    kurvenlage:     [1.200, 1.144, 1.089, 1.033, 0.978, 0.922, 0.867, 0.811, 0.756, 0.700],   // × Tempoverlust beim Lenken (kleiner = besser)
+    driftAufladung: [1.150, 1.117, 1.083, 1.050, 1.017, 0.983, 0.950, 0.917, 0.883, 0.850],   // × Zeit, bis ein Drift den Mini-Turbo auflädt (kleiner = schneller)
+    driftTurbo:     [0.850, 0.889, 0.928, 0.967, 1.006, 1.044, 1.083, 1.122, 1.161, 1.200],   // × Schub des Mini-Turbos (Stärke und Dauer je mit der Wurzel daraus, zusammen genau dieser Faktor)
+    windschatten:   [0.30,  0.45,  0.60,  0.80,  1.00,  1.20,  1.45,  1.75,  2.10,  2.50],    // × Tempo-Gewinn im Windschatten
+    rempeln:        [0.60,  0.70,  0.80,  0.90,  1.00,  1.25,  1.50,  1.90,  2.40,  3.00],    // × Masse: schiebt andere weg und wird selbst weniger geschoben
+    gelaende:       [1.50,  1.35,  1.20,  1.10,  1.00,  0.90,  0.75,  0.60,  0.47,  0.35],    // × Tempoverlust neben der Strasse, auf Kies, Sand und Schnee, im Schlammloch und auf Abkürzungen
+    bande:          [1.50,  1.35,  1.20,  1.10,  1.00,  0.90,  0.80,  0.65,  0.50,  0.40],    // × Tempoverlust beim Aufprall an Wand oder Bande
+    hindernisse:    [1.60,  1.45,  1.30,  1.15,  1.00,  0.88,  0.75,  0.60,  0.45,  0.30],    // × wie stark Pylonen und Absperrungen der Gegner bremsen
+    rampen:         [0.850, 0.894, 0.939, 0.983, 1.028, 1.072, 1.117, 1.161, 1.206, 1.250],   // × Dauer des Schubs von eigenen Rampen und von Boost-Feldern
+    baukosten:      [1.50,  1.40,  1.30,  1.20,  1.10,  1.00,  0.90,  0.80,  0.65,  0.50],   // × Preis aller Bauwerke, kaufmännisch gerundet, mindestens 1 BP (9 und 10 stärker als der Startwert)
+    bpAufladung:    [0.60,  0.70,  0.80,  0.90,  1.00,  1.10,  1.20,  1.35,  1.55,  1.75],   // × gesammelte Baupunkte (8 bis 10 stärker als der Startwert)
   },
+
+  // ── Die 8 Autos: Werte der 14 Fähigkeiten (1 bis 10) ─────────────────────
+  // Jedes Auto hat mindestens einen Wert 10, einen zweiten von 8 bis 10 und mindestens zwei Werte von 1 bis 3, Summe 77 ± 2.
+  // Die Reihenfolge der Zahlen ist immer dieselbe (wie in der Kopfzeile). Abgestimmt mit tools/ausgleich.js (README). Johann darf jeden Wert ändern.
+  fahrzeuge: {
+    //            Tempo Beschl Lenk Kurve DLaden DTurbo Wind Rempeln Gelände Bande Hindern. Rampen Baukosten BP
+    sport:       [10, 7, 4, 5, 4, 4, 8, 4, 3, 3, 3, 4, 8, 8],            // Raser, Summe 75
+    limo:        [8, 4, 3, 4, 5, 4, 10, 7, 3, 6, 6, 4, 7, 6],            // Windschatten-Jäger, Summe 77
+    panzer:      [8, 4, 3, 8, 8, 8, 3, 8, 3, 8, 10, 3, 3, 2],            // Unaufhaltsam, Summe 79
+    transporter: [6, 7, 3, 3, 6, 5, 4, 10, 5, 8, 5, 6, 5, 5],            // Rammbock, Summe 78
+    gelaende:    [3, 5, 6, 6, 6, 6, 3, 5, 10, 5, 8, 6, 4, 4],            // Querfeldein, Summe 77
+    pickup:      [3, 8, 7, 7, 6, 7, 4, 5, 4, 4, 4, 3, 10, 7],            // Baumeister, Summe 79
+    renn:        [4, 4, 8, 10, 4, 10, 7, 3, 3, 3, 2, 4, 7, 8],           // Kurvenkünstler, Summe 77
+    rallye:      [3, 6, 4, 4, 10, 4, 3, 3, 7, 8, 8, 10, 3, 3],           // Drift-Springer, Summe 76
+  },
+  // Versteckte Feinabstimmung pro Auto: nur wenn es mit ganzen Punkten nicht geht, höchstens ±1 %, in der README genannt.
+  // Beispiel: rallye: { vmax: 1.005 }. Leer = keine.
+  feinabstimmung: {},
 
   // ── Leistungstest (Einstellungen) und Bildrate-Anzeige ───────────────────
   leistung: {
@@ -502,6 +539,18 @@ const CONFIG = {
     vorausZeit: 0.42,      // Bots zielen auf einen Punkt, der so viele Sekunden voraus liegt
     sichtweite: 75,        // so weit voraus beachten Bots Hindernisse (m)
     boostSicht: 40,        // so weit vor einem Boost-Feld ziehen Bots langsam zu ihm hin (m)
+    // Die Bots kennen ihr Auto: Sie richten sich nach den Faktoren aus CONFIG.faehigkeit (nicht nach dem Namen des Autos)
+    auto: {
+      durchTreffer: 0.5,   // Hindernisse: Bremsfaktor bis hier → fährt durch Pylonen statt auszuweichen (Panzerwagen)
+      durchSchlenker: 1.5, //   … und durch Absperrungen, wenn der Umweg um sie mehr als so viele Meter zur Seite führt
+      rempelMasse: 1.8,    // Rempeln: ab dieser Masse weicht der Bot leichteren Autos nur halb aus und schiebt sie beim Vorbeifahren weg (Transporter, Panzerwagen)
+      rempelSeite: 1.4,    //   … so weit zieht er dabei zur Seite (m; normal sind es 3)
+      gedraenge: 1.2,      // m: so viel mehr seitlicher Abstand zu anderen Autos bei Bande-Faktor 1,5 (Rennwagen; Sportwagen etwas weniger)
+      abschneiden: 2.2,    // m: so weit schneidet der Bot enge Kurven über den Rand ab bei Gelände-Faktor 0,35 (Geländewagen; Rallye weniger)
+      abschneidenKr: 0.04, //   … nur in Kurven, die mindestens so eng sind (Krümmung 1/m), und nur, wenn er dort langsamer ist als neben der Strasse erlaubt
+      driftPlus: 0.25,     // Drift: so viel öfter und schon in sanfteren Kurven driften Bots mit schneller Aufladung oder starkem Turbo (Rallye, Rennwagen)
+      bauen: 0.6,          // Bauen: Bau-Freude + so viel × (1 − Baukosten-Faktor) + halb so viel × (BP-Faktor − 1) (Pick-up baut öfter)
+    },
   },
 
   // ── Grafik-Stufen ───────────────────────────────────────────────────────
@@ -663,23 +712,80 @@ BAUWERKE.forEach((b, i) => { BAUWERK_INDEX[b.art] = i; });
 // Welche Slot-Art braucht welches Bauwerk?
 const SLOT_ART = { rampe: 'rampe', abkuerzung: 'abkuerzung', pylonen: 'hindernis', schlamm: 'hindernis', absperrung: 'hindernis', umleitung: 'umleitung' };
 
-// Die 8 Autos in vier Klassen. Die Zahlen dazu stehen in CONFIG.fahrzeuge. Alle Namen und Formen sind eigene Entwürfe.
+// Die 8 Autos in vier Klassen. Ihre Fähigkeiten stehen in CONFIG.fahrzeuge. Alle Namen und Formen sind eigene Entwürfe.
+// risiko: gemessen als Streuung der Zielplätze (tools/faehig.js, Mittel aus «Mittel» und «Schwer»: tief unter 2,2, hoch ab 2,35; README «Jedes Auto mit 14 Fähigkeiten»)
 const FAHRZEUGE = [
-  { id: 'sport',       name: 'Sportwagen',   klasse: 'Luxus',     plus: 'Höchstes Tempo auf der Geraden',               minus: 'Verliert auf Kies und im Schlamm viel Tempo' },
-  { id: 'limo',        name: 'Limousine',    klasse: 'Luxus',     plus: 'Starker Windschatten, holt hinter anderen auf', minus: 'Träge Lenkung' },
-  { id: 'panzer',      name: 'Panzerwagen',  klasse: 'Militär',   plus: 'Treffer an Baustellen bremsen kaum',            minus: 'Langsame Beschleunigung' },
-  { id: 'transporter', name: 'Transporter',  klasse: 'Militär',   plus: 'Schiebt andere beim Rempeln weg',               minus: 'Langsam in engen Kurven' },
-  { id: 'gelaende',    name: 'Geländewagen', klasse: 'Gelände',   plus: 'Kaum Tempoverlust neben der Strecke und auf Abkürzungen', minus: 'Tieferes Höchsttempo' },
-  { id: 'pickup',      name: 'Pick-up',      klasse: 'Gelände',   plus: 'Bauwerke kosten 1 Baupunkt weniger',            minus: 'Etwas langsamer als alle anderen' },
-  { id: 'renn',        name: 'Rennwagen',    klasse: 'Rennsport', plus: 'Beste Kurvenlage, stärkerer Drift-Schub',       minus: 'Treffer bremsen ihn stärker' },
-  { id: 'rallye',      name: 'Rallye-Auto',  klasse: 'Rennsport', plus: 'Drift lädt schneller, Rampen geben mehr Schub', minus: 'Tieferes Höchsttempo' },
+  { id: 'sport',       name: 'Sportwagen',   klasse: 'Luxus',     typ: 'Raser',              risiko: 'mittel',  text: 'Auf der Geraden kaum zu schlagen, verliert aber neben der Strasse und an der Bande sehr viel.' },
+  { id: 'limo',        name: 'Limousine',    klasse: 'Luxus',     typ: 'Windschatten-Jäger', risiko: 'mittel', text: 'Holt im Windschatten auf, hat vorne allein aber nichts davon und lenkt träge.' },
+  { id: 'panzer',      name: 'Panzerwagen',  klasse: 'Militär',   typ: 'Unaufhaltsam',       risiko: 'tief',  text: 'Kaum aufzuhalten, lenkt aber träge und kann kaum bauen.' },
+  { id: 'transporter', name: 'Transporter',  klasse: 'Militär',   typ: 'Rammbock',           risiko: 'tief', text: 'Schiebt alle weg, ist in engen Kurven aber langsam.' },
+  { id: 'gelaende',    name: 'Geländewagen', klasse: 'Gelände',   typ: 'Querfeldein',        risiko: 'hoch',  text: 'Fährt überall fast gleich schnell, ist auf langen Geraden aber langsam.' },
+  { id: 'pickup',      name: 'Pick-up',      klasse: 'Gelände',   typ: 'Baumeister',         risiko: 'hoch', text: 'Baut viel und billig, fährt aber langsamer.' },
+  { id: 'renn',        name: 'Rennwagen',    klasse: 'Rennsport', typ: 'Kurvenkünstler',     risiko: 'mittel',  text: 'In Kurven und beim Driften der beste, jede Berührung kostet ihn aber viel.' },
+  { id: 'rallye',      name: 'Rallye-Auto',  klasse: 'Rennsport', typ: 'Drift-Springer',     risiko: 'mittel', text: 'Driftet und springt am besten, ist auf Geraden aber langsam und kann kaum bauen.' },
 ];
 const FAHRZEUG_INDEX = {};
 FAHRZEUGE.forEach((f, i) => { FAHRZEUG_INDEX[f.id] = i; });
-const FAHRZEUG_NORMAL = { vmax: 1, beschl: 1, lenk: 1, ansprechen: 1, kurve: 1, offroad: 1, schlamm: 1, abkuerzung: 1, treffer: 1, wind: 1, masse: 1, driftLaden: 1, turbo: 1, rampe: 1, baurabatt: 0 };
-// Werte eines Autos (Normalwerte, überschrieben durch CONFIG.fahrzeuge). Unbekannte Autos fahren normal.
+
+// Die 14 Fähigkeiten in der Reihenfolge von CONFIG.fahrzeuge. felder: welche Werte der Fahrphysik (k.w) sie einstellen.
+// satz(z): erklärt die Wirkung mit dem echten Faktor z (Text, schon mit Komma)
+const FAEHIGKEITEN = [
+  { id: 'hoechsttempo',   name: 'Höchsttempo',             kurz: 'Höchsttempo',    felder: ['vmax'],               prozent: true,
+    satz: (z, f) => z + (f >= 1 ? ' % mehr' : ' % weniger') + ' Höchsttempo als normal.' },
+  { id: 'beschleunigung', name: 'Beschleunigung',          kurz: 'Beschleunigung', felder: ['beschl'],             satz: (z) => 'Beschleunigt ' + z + '-mal so stark wie normal.' },
+  { id: 'lenkung',        name: 'Lenkung',                 kurz: 'Lenkung',        felder: ['lenk', 'ansprechen'], satz: (z) => 'Lenkt ' + z + '-mal so stark und so direkt wie normal.' },
+  { id: 'kurvenlage',     name: 'Kurvenlage',              kurz: 'Kurvenlage',     felder: ['kurve'],              satz: (z) => 'Verliert beim Lenken ' + z + '-mal so viel Tempo wie normal.' },
+  { id: 'driftAufladung', name: 'Drift-Aufladung',         kurz: 'Aufladung',      felder: ['driftLaden'],         satz: (z) => 'Ein Drift braucht ' + z + '-mal so lange bis zum Mini-Turbo wie normal.' },
+  { id: 'driftTurbo',     name: 'Drift-Turbo',             kurz: 'Turbo',          felder: ['turbo'],              satz: (z) => 'Der Mini-Turbo schiebt ' + z + '-mal so viel wie normal (stärker und länger).' },
+  { id: 'windschatten',   name: 'Windschatten',            kurz: 'Windschatten',   felder: ['wind'],               satz: (z) => 'Gewinnt im Windschatten ' + z + '-mal so viel Tempo wie normal.' },
+  { id: 'rempeln',        name: 'Rempeln',                 kurz: 'Rempeln',        felder: ['masse'],
+    satz: (z, f) => 'Ist beim Rempeln ' + z + '-mal so schwer wie normal' + (f > 1 ? ': schiebt andere weg.' : ': wird leicht weggeschoben.') },
+  { id: 'gelaende',       name: 'Gelände',                 kurz: 'Gelände',        felder: ['gelaende'],
+    satz: (z) => 'Verliert neben der Strasse, auf Kies, Sand und Schnee, im Schlamm und auf Abkürzungen ' + z + '-mal so viel Tempo wie normal.' },
+  { id: 'bande',          name: 'Bande',                   kurz: 'Bande',          felder: ['bande'],              satz: (z) => 'Verliert beim Aufprall an Wand und Bande ' + z + '-mal so viel Tempo wie normal.' },
+  { id: 'hindernisse',    name: 'Hindernisse',             kurz: 'Hindernisse',    felder: ['treffer'],            satz: (z) => 'Pylonen und Absperrungen bremsen es ' + z + '-mal so stark wie normal.' },
+  { id: 'rampen',         name: 'Rampen und Boost-Felder', kurz: 'Rampen, Boost',  felder: ['rampe'],              satz: (z) => 'Eigene Rampen und Boost-Felder schieben ' + z + '-mal so lange wie normal.' },
+  { id: 'baukosten',      name: 'Baukosten',               kurz: 'Baukosten',      felder: ['baukosten'],          satz: (z) => 'Alle Bauwerke kosten ' + z + '-mal so viel.' },
+  { id: 'bpAufladung',    name: 'BP-Aufladung',            kurz: 'BP-Aufladung',   felder: ['bpLaden'],            satz: (z) => 'Sammelt Baupunkte ' + z + '-mal so schnell wie normal.' },
+];
+const FAEHIGKEIT_INDEX = {};
+FAEHIGKEITEN.forEach((f, i) => { FAEHIGKEIT_INDEX[f.id] = i; });
+// Gruppen für die Anzeige in der Auto-Wahl
+const FAEHIGKEIT_GRUPPEN = [
+  ['Fahren', ['hoechsttempo', 'beschleunigung', 'lenkung', 'kurvenlage']],
+  ['Drift', ['driftAufladung', 'driftTurbo']],
+  ['Robust', ['rempeln', 'bande', 'hindernisse']],
+  ['Strecke', ['gelaende', 'windschatten', 'rampen']],
+  ['Bauen', ['baukosten', 'bpAufladung']],
+];
+const FAHRZEUG_NORMAL = { vmax: 1, beschl: 1, lenk: 1, ansprechen: 1, kurve: 1, driftLaden: 1, turbo: 1, wind: 1, masse: 1, gelaende: 1, bande: 1, treffer: 1, rampe: 1, baukosten: 1, bpLaden: 1 };
+// Wert (1 bis 10) einer Fähigkeit eines Autos
+function faehigkeitWert(id, faehigkeit) {
+  const l = CONFIG.fahrzeuge[id];
+  return l ? Math.min(10, Math.max(1, Math.round(l[FAEHIGKEIT_INDEX[faehigkeit]]))) : 5;
+}
+// Wirkung (Faktor) einer Fähigkeit beim Wert v, direkt aus CONFIG.faehigkeit
+function faehigkeitFaktor(faehigkeit, v) { return CONFIG.faehigkeit[faehigkeit][Math.min(10, Math.max(1, Math.round(v))) - 1]; }
+// Erklärung in einem Satz, z. B. «Baukosten 3: Alle Bauwerke kosten 1,3-mal so viel.»
+function faehigkeitSatz(faehigkeit, v) {
+  const F = FAEHIGKEITEN[FAEHIGKEIT_INDEX[faehigkeit]], f = faehigkeitFaktor(faehigkeit, v);
+  const z = F.prozent ? String(+Math.abs((f - 1) * 100).toFixed(1)).replace('.', ',') : String(+f.toFixed(2)).replace('.', ',');
+  return F.name + ' ' + v + ': ' + (Math.abs(f - 1) < 0.0005 ? 'genau normal.' : F.satz(z, f));
+}
+// Werte eines Autos für die Fahrphysik (k.w): aus den Fähigkeiten, dazu die (leere) Feinabstimmung. Unbekannte Autos fahren normal.
 function fahrzeugWerte(id) {
-  return Object.assign({}, FAHRZEUG_NORMAL, CONFIG.fahrzeuge[id] || {});
+  const w = Object.assign({}, FAHRZEUG_NORMAL);
+  if (CONFIG.fahrzeuge[id]) for (const F of FAEHIGKEITEN) { const f = faehigkeitFaktor(F.id, faehigkeitWert(id, F.id)); for (const feld of F.felder) w[feld] = f; }
+  const fein = CONFIG.feinabstimmung && CONFIG.feinabstimmung[id];
+  if (fein) for (const key in fein) if (key in w) w[key] *= Math.min(1.01, Math.max(0.99, fein[key]));
+  return w;
+}
+// Kurzfassung eines Autos: die stärksten und die schwächsten Fähigkeiten (bei Gleichstand in der Reihenfolge der Tabelle)
+function fahrzeugProfil(id, nStark, nSchwach) {
+  const l = FAEHIGKEITEN.map((F, i) => ({ F, i, v: faehigkeitWert(id, F.id) }));
+  const stark = l.slice().sort((a, b) => b.v - a.v || a.i - b.i).slice(0, nStark);
+  const schwach = l.slice().sort((a, b) => a.v - b.v || a.i - b.i).slice(0, nSchwach);
+  return { stark, schwach };
 }
 // Zufalls-Auto: mischt die 8 Autos und teilt sie der Reihe nach zu. «vorher» (Liste der Autos im Rennen davor)
 // sorgt dafür, dass möglichst niemand zweimal hintereinander dasselbe bekommt.
@@ -742,6 +848,7 @@ const STRECKEN = {
   // ── Kiesgrube: enge Kehren, Sprung, Abzweigung, Brücke über den Baggersee ──
   kiesgrube: {
     name: 'Kiesgrube',
+    liste: 'kiesgrube-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «kiesgrube» bleibt in der Datenbank)
     text: 'Zwei Kehren, eine Schanze und der Weg um den Baggersee.',
     breite: 15,
     rand: 3.5,
@@ -810,6 +917,7 @@ const STRECKEN = {
   // ── Bergpass: drei Serpentinen hinauf, Brücke über die Schlucht, steile Abfahrt ──
   bergpass: {
     name: 'Bergpass',
+    liste: 'bergpass-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «bergpass» bleibt in der Datenbank)
     text: 'Drei Serpentinen hinauf, über die Schluchtbrücke und steil wieder ins Tal.',
     breite: 15,
     rand: 3.5,
@@ -870,6 +978,7 @@ const STRECKEN = {
   // ── Paris am Abend: durch den Triumphbogen, am Fluss entlang, über zwei Brücken, unter dem Eisenturm hindurch, hinauf zum Hügel mit der Mühle ──
   paris: {
     name: 'Paris',
+    liste: 'paris-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «paris» bleibt in der Datenbank)
     text: 'Abendrennen durch den Triumphbogen, über den Fluss und unter dem Eisenturm hindurch.',
     breite: 15,
     rand: 3.5,
@@ -955,6 +1064,7 @@ const STRECKEN = {
   // ── Himalaya: vom Bergdorf durch den Schnee zum Kloster, Hängebrücke über die Gletscherschlucht, über den gefrorenen See, steile Abfahrt ──
   himalaya: {
     name: 'Himalaya',
+    liste: 'himalaya-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «himalaya» bleibt in der Datenbank)
     text: 'Vom Bergdorf durch den Schnee zum Kloster, über die Hängebrücke und den gefrorenen See.',
     breite: 15,
     rand: 3.5,
@@ -1032,6 +1142,7 @@ const STRECKEN = {
   // ── Ägypten: Mittagssonne am Nil, durch das Tempeltor und die Säulenhalle, hinauf zu den Pyramiden, über die Dünen ──
   aegypten: {
     name: 'Ägypten',
+    liste: 'aegypten-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «aegypten» bleibt in der Datenbank)
     text: 'Mittagsrennen am Nil: durch Tempeltor und Säulenhalle, an Sphinx und Pyramiden vorbei, über die Dünen.',
     breite: 15,
     rand: 3.5,
@@ -1108,6 +1219,7 @@ const STRECKEN = {
   // ── New York: Nachtrennen durch Häuserschluchten und über den Leuchtreklame-Platz, über die Hängebrücke, an der Uferpromenade entlang, über die Stahlbrücke und durch den Park ──
   newyork: {
     name: 'New York',
+    liste: 'newyork-2',          // Kennung der Bestenliste (neu ab 18.11.2026: Autos mit 14 Fähigkeiten; die alte Liste «newyork» bleibt in der Datenbank)
     text: 'Nachtrennen auf nassen Strassen: Leuchtreklamen, Hängebrücke, Skyline am Fluss, Stahlbrücke und Park.',
     breite: 15,
     rand: 3.5,
@@ -1718,11 +1830,12 @@ class Rennen {
     if (k.typ === 'bot' && k.bot && k.bot.p.tempo) vmax *= k.bot.p.tempo;      // nur «Schwer» und «Ultra»: Tempo-Vorteil (CONFIG.bots)
     if (boost) vmax *= k.boostStaerke;
     if (k.windAktiv) vmax *= 1 + W.bonus * w.wind;
-    if (!k.aufStrasse) vmax *= boost ? CONFIG.boost.offroadFaktor : Math.min(1, F.offroadFaktor * w.offroad);
-    else if (w.abkuerzung !== 1 && k.pfad > 0 && this.S.wege[k.pfad - 1].art === 'abkuerzung') vmax *= w.abkuerzung;
-    if (k.schlamm) vmax *= Math.min(1, CONFIG.wirkung.schlamm.tempoFaktor * w.schlamm);
+    // Fähigkeit «Gelände» (w.gelaende): Faktor auf den Tempoverlust neben der Strasse, im Schlamm, auf losem Belag und auf Abkürzungen
+    if (!k.aufStrasse) vmax *= boost ? CONFIG.boost.offroadFaktor : clamp(1 - (1 - F.offroadFaktor) * w.gelaende, 0.1, 1);
+    else if (w.gelaende !== 1 && k.pfad > 0 && this.S.wege[k.pfad - 1].art === 'abkuerzung') vmax *= 1 - CONFIG.wirkung.abkuerzungGelaende * (w.gelaende - 1);
+    if (k.schlamm) vmax *= clamp(1 - (1 - CONFIG.wirkung.schlamm.tempoFaktor) * w.gelaende, 0.1, 1);
     const bel = (amBoden && k.aufStrasse && CONFIG.belag[k.belag]) || null;      // Belag unter den Rädern
-    if (bel) vmax *= bel.tempo;
+    if (bel) vmax *= bel.gelaende ? 1 - (1 - bel.tempo) * w.gelaende : bel.tempo;
     if (k.lahmZeit > 0) vmax *= CONFIG.wirkung.absperrung.lahmFaktor;
     if (!k.drift) vmax *= 1 - F.kurvenVerlust * w.kurve * Math.abs(k.lenk) * clamp(k.v / F.vmax, 0, 1);
     if (k.zielZeit != null) vmax *= 0.6;       // nach dem Ziel ausrollen
@@ -1756,7 +1869,8 @@ class Rennen {
     } else if (!e.drift) {
       if (k.driftStufe > 0) {
         const T = k.driftStufe === 2 ? D.turbo2 : D.turbo1;
-        this.gibBoost(k, T.dauer, 1 + (T.staerke - 1) * w.turbo);
+        const f = Math.sqrt(w.turbo);           // Fähigkeit «Drift-Turbo»: Stärke und Dauer je × Wurzel, der Schub zusammen × w.turbo
+        this.gibBoost(k, T.dauer * f, 1 + (T.staerke - 1) * f);
         this.melde('turbo', k.idx, k.driftStufe);
       }
       k.drift = 0; k.driftZeit = 0; k.driftStufe = 0;
@@ -1773,8 +1887,8 @@ class Rennen {
     const omega = lerp(F.lenkrateLangsam, F.lenkrateSchnell, anteil) * w.lenk * clamp(Math.abs(k.v) / 5, 0, 1);
     let rate = k.drift ? k.drift * omega * (D.lenkMitte + D.lenkBereich * k.lenk * k.drift) : k.lenk * omega;
     if (k.luft) rate *= F.luftLenkung;
-    if (k.schlamm) rate *= CONFIG.wirkung.schlamm.lenkFaktor;
-    if (bel) rate *= bel.lenk;
+    if (k.schlamm) rate *= clamp(1 - (1 - CONFIG.wirkung.schlamm.lenkFaktor) * w.gelaende, 0.1, 1);
+    if (bel) rate *= bel.gelaende ? 1 - (1 - bel.lenk) * w.gelaende : bel.lenk;
     if (k.v < 0) rate = -rate;
     k.richtung += rate * dt;
     // Sichtbarer Schräglauf: folgt dem Drift weich (kritisch gedämpft), damit das Heck beim Einlenken und Aufrichten nicht ruckt. Nur Optik.
@@ -1895,7 +2009,7 @@ class Rennen {
         if (dd > L / 2) dd -= L; else if (dd < -L / 2) dd += L;
         if (Math.abs(dd) < f.laenge / 2 && Math.abs(d - f.d) < f.breite / 2 + 0.7) { auf = f.nr; break; }
       }
-      if (auf >= 0 && k.boostFeld !== auf && k.zielZeit == null) { this.gibBoost(k, CONFIG.boostfeld.dauer, CONFIG.boostfeld.staerke); this.melde('boostfeld', k.idx); }
+      if (auf >= 0 && k.boostFeld !== auf && k.zielZeit == null) { this.gibBoost(k, CONFIG.boostfeld.dauer * k.w.rampe, CONFIG.boostfeld.staerke); this.melde('boostfeld', k.idx); }
       k.boostFeld = auf;
     }
 
@@ -1983,7 +2097,7 @@ class Rennen {
     }
     // schräg: an der Wand entlang abgelenkt
     const rx = vx - nx * vn * (1 + F.wandAbprall), rz = vz - nz * vn * (1 + F.wandAbprall);
-    const neu = tempo * (1 - F.wandVerlust * aufprall) * (1 - F.wandSchleifen * dt);
+    const neu = tempo * Math.max(0.1, 1 - F.wandVerlust * aufprall * k.w.bande) * (1 - F.wandSchleifen * k.w.bande * dt);      // Fähigkeit «Bande»
     if (k.v >= 0) { k.richtung = Math.atan2(rz, rx); k.v = neu; }
     else { k.richtung = Math.atan2(-rz, -rx); k.v = -neu; }
     if (aufprall > 0.35 && k.drift) this.driftAbbruch(k);
@@ -2326,7 +2440,7 @@ class Rennen {
     }
     // Grosse Felder: Im Pulk wird viel öfter überholt. Ab 9 Fahrern gibt es weniger pro Mal, damit pro Fahrer etwa gleich viel gebaut wird wie mit 8
     const feld = this.n > 8 && B.feldExponent > 0 ? Math.pow(8 / this.n, B.feldExponent) : 1;
-    const neu = Math.min(B.max, k.bp + menge * faktor * nah * feld);
+    const neu = Math.min(B.max, k.bp + menge * faktor * nah * feld * k.w.bpLaden);      // Fähigkeit «BP-Aufladung»
     k.bpVerdient += neu - k.bp;
     if (Math.floor(neu) > Math.floor(k.bp)) this.melde('bp', k.idx, Math.floor(neu), grund);
     k.bp = neu;
@@ -2394,7 +2508,8 @@ class Rennen {
 
   // Übersicht für die Bauleiste: pro Bauwerk Preis, ob es geht und warum nicht
   // Preis eines Bauwerks für dieses Auto (der Pick-up baut günstiger)
-  preis(k, art) { return Math.max(1, CONFIG.bau.preise[art] - k.w.baurabatt); }
+  // Fähigkeit «Baukosten»: Grundpreis × Faktor, kaufmännisch gerundet (x,5 aufwärts), mindestens 1 BP
+  preis(k, art) { return Math.max(1, Math.round(CONFIG.bau.preise[art] * k.w.baukosten + 1e-9)); }
 
   bauStatus(k) {
     return BAUWERKE.map((b, i) => {
@@ -2555,6 +2670,16 @@ class Bot {
     this.weg = -1;              // geplanter Nebenweg (−1 = Hauptstrecke)
     this.frei = null;           // freie Lücke neben einem Hindernis voraus: { a, b }
     this.e = { lenk: 0, gas: 0, bremse: 0, drift: false, wahl: 0, bauWechsel: 0, slotWechsel: 0, bauen: false, reset: false, bauArt: null, bauSlot: -1 };
+    // Der Bot kennt sein Auto (k.w, aus den Fähigkeiten): Stärken nutzen, Risiken meiden (CONFIG.bots.auto)
+    const w = k.w, A = CONFIG.bots.auto;
+    this.durch = w.treffer <= A.durchTreffer;                                   // Hindernisse kosten ihn wenig: durchfahren
+    this.rempler = w.masse >= A.rempelMasse;                                    // schwer: leichtere Autos abdrängen statt ausweichen
+    this.gedraenge = A.gedraenge * clamp((w.bande - 1) / 0.5, 0, 1);            // verliert an Bande und beim Rempeln viel: Abstand zu anderen
+    this.abschneiden = A.abschneiden * clamp((0.75 - w.gelaende) / 0.4, 0, 1);  // verliert neben der Strasse wenig: Kurven abschneiden
+    this.driftPlus = A.driftPlus * clamp((1 - w.driftLaden + w.turbo - 1) / 0.6, 0, 1);
+    this.bauLust = clamp(A.bauen * (1 - w.baukosten) + A.bauen * 0.5 * (w.bpLaden - 1), -0.15, 0.3);
+    if (this.driftPlus > 0) this.driftLust = z() < p.drift + this.driftPlus;
+    if (w.rampe >= 1.25) this.boostLust = 1;                                    // starker Schub von Boost-Feldern: jedes mitnehmen
     this.o = { x: 0, z: 0, y: 0 };
   }
 
@@ -2587,6 +2712,15 @@ class Bot {
     const i = Math.floor(sm / H.ds) % H.n;
     const lim = H.hb[i] - 1.3;
     let d = clamp(S.ideal[i] + versatz, -lim, lim);
+    if (this.abschneiden > 0 && !this.frei) {
+      // Geländewagen: enge Kurven innen über den Rand abkürzen, wo dort Platz ist (kein Abgrund, genug Rand bis zur Wand)
+      const kr = S.idealKr[i], innen = kr > 0 ? 1 : -1, ak = Math.abs(kr), K = CONFIG.bots.auto.abschneidenKr;
+      const vGelaende = CONFIG.fahren.vmax * k.w.vmax * (1 - (1 - CONFIG.fahren.offroadFaktor) * k.w.gelaende);      // so schnell darf er neben der Strasse
+      if (ak > K && d * innen > lim - 0.6 && k.v < vGelaende - 0.5) {
+        const offen = innen > 0 ? S.offenL[i] === 1 : S.offenR[i] === 1, platz = (innen > 0 ? S.randL[i] : S.randR[i]) - 1.4;
+        if (!offen && platz > 0) d += innen * Math.min(platz + 1.3, this.abschneiden * clamp((ak - K) / K, 0, 1));
+      }
+    }
     if (seiteW > 0) d += (seite * (lim - 0.7) - d) * seiteW;
     if (this.frei) {
       // erst kurz vor dem Hindernis zur Lücke ziehen (weich eingeblendet), nicht schon 75 m vorher die Ideallinie verlassen
@@ -2645,6 +2779,7 @@ class Bot {
     if (!best) return;
     const i = Math.floor(best.s / H.ds) % H.n;
     const lim = H.hb[i] - 1.2;
+    if (best.art === 'pylonen' && this.durch) return;      // Panzerwagen: Pylonen bremsen ihn kaum, also geradeaus durch
     if (best.art === 'pylonen') {
       // Slalom: beide Reihen zusammen planen – die Lücke der ersten Reihe so wählen, dass der Schlenker zur zweiten klein bleibt
       const freiIn = (reihe) => {
@@ -2691,6 +2826,7 @@ class Bot {
       const wert = dist + Math.abs(k.d - (l[0] + l[1]) / 2) * 0.15 - Math.min(l[1] - l[0], 3) * 0.3;
       if (wert < wahlD) { wahlD = wert; wahl = l; }
     }
+    if (wahl && this.durch && best.art === 'absperrung' && wahlD > CONFIG.bots.auto.durchSchlenker) return;      // Umweg zu gross: durch
     if (wahl) this.frei = { a: wahl[0], b: wahl[1], s: best.s, l: best.laenge };
   }
 
@@ -2717,13 +2853,15 @@ class Bot {
         const vor = k.pfad > 0 ? o.s - k.s : rundenDiff(o.sHaupt, k.sHaupt, L);
         if (vor < 0.5 || vor > 18) continue;
         const dd = o.d - k.d;
-        if (k.v > o.v + 0.6 && Math.abs(dd) < 2.9 && vor < 15) {
+        const breit = 2.9 + this.gedraenge;
+        if (k.v > o.v + 0.6 && Math.abs(dd) < breit && vor < 15) {
           // vorbeiziehen: auf die Seite mit mehr Platz
           let seite = dd > 0 ? -1 : 1;
           const hb = k.pfad > 0 ? 3.5 : R.S.haupt.hb[k.mi];
-          if (Math.abs(o.d + seite * 2.9) > hb - 1.2) seite = -seite;
-          seit += seite * 3.0;
-        } else if (Math.abs(krHier) < (k.w.wind > 1 ? 0.014 : 0.006) && vor > 4 && !k.windAktiv) {      // Autos mit starkem Windschatten suchen ihn öfter
+          if (Math.abs(o.d + seite * breit) > hb - 1.2) seite = -seite;
+          // schwer gegen leichter: nur halb ausweichen und den anderen beim Vorbeifahren wegschieben (Rempeln)
+          seit += seite * (this.rempler && o.w.masse < k.w.masse * 0.7 ? CONFIG.bots.auto.rempelSeite : 3.0 + this.gedraenge);
+        } else if (k.w.wind >= 0.8 && Math.abs(krHier) < 0.006 * Math.min(2.5, k.w.wind) && vor > 4 && !k.windAktiv) {      // starker Windschatten: öfter dahinter einreihen
           seit += clamp(dd, -2, 2) * 0.8;      // dahinter einreihen (Windschatten)
         }
       }
@@ -2768,7 +2906,7 @@ class Bot {
       this.lustUhr -= dt;
       if (Math.abs(krNah) < 0.004 && this.lustUhr <= 0) { this.lustUhr = 1.5; this.driftLust = z() < this.p.drift; }
       const bedarf = (Math.abs(krNah) * k.v) / omegaMax;
-      const dAb = this.p.driftAb || 0.6;      // ab so viel Lenkbedarf (Anteil der vollen Drehrate) lohnt sich für den Bot ein Drift
+      const dAb = (this.p.driftAb || 0.6) - this.driftPlus * 0.6;      // ab so viel Lenkbedarf (Anteil der vollen Drehrate) lohnt sich für den Bot ein Drift
       if (this.driftLust && k.zielZeit == null && k.v > D.minTempo + 4 && bedarf > dAb && krNah * krWeit > 0 && (Math.abs(krWeit) * k.v) / omegaMax > dAb - 0.1
           && !k.luft && k.aufStrasse && !k.driftGesperrt && e.lenk * krNah > 0 && Math.abs(e.lenk) > 0.3) this.driftAn = true;
     } else {
@@ -2787,7 +2925,7 @@ class Bot {
     if (this.bauUhr > 0) return;
     this.bauUhr = 0.5 + R.zufall() * 0.6;
     if (!R.bauenAn || R.phase !== 'rennen' || k.rang === 1 || k.bauSperre > 0 || k.bp < 2 || k.zielZeit != null || k.typ !== 'bot') return;
-    if (R.zufall() > this.p.bauen + (k.w.baurabatt ? 0.25 : 0)) return;      // wer günstiger baut, baut öfter
+    if (R.zufall() > this.p.bauen + this.bauLust) return;      // wer günstiger baut oder schneller sammelt, baut öfter
     const L = R.L, z = R.zufall;
     const P = {};
     for (const b of BAUWERKE) P[b.art] = R.preis(k, b.art);
@@ -2811,8 +2949,8 @@ class Bot {
     for (const o of R.karts) if (o.strecke > k.strecke && o.zielZeit == null) vorne++;
     const m = Math.min(vorne, 4);
     // Die Stärke des eigenen Autos zählt mit: Geländewagen lieben Abkürzungen, Rallye-Autos Rampen, Sportwagen meiden Kies
-    pruefe('abkuerzung', 9 + (k.w.abkuerzung > 1 ? 3 : k.w.abkuerzung < 1 ? -3.5 : 0), 300);      // lohnt sich am meisten: spart rund 2 s
-    pruefe('rampe', 4.2 + (k.w.rampe > 1 ? 3.5 : 0), 240);
+    pruefe('abkuerzung', 9 + clamp((1 - k.w.gelaende) * 6, -3.5, 3), 300);      // lohnt sich am meisten: spart rund 2 s
+    pruefe('rampe', 4.2 + clamp((k.w.rampe - 1) * 7, -2, 3.5), 240);
     // Hindernisse für die anderen. «Ultra» baut sie nur selten (p.hindernisse) und spart lieber für Abkürzung und Rampe.
     const hind = this.p.hindernisse, gegen = (art, wert) => { if (hind == null || z() < hind) pruefe(art, wert, 0); };
     gegen('umleitung', 4.4 + m * 0.7);
@@ -2935,9 +3073,9 @@ function simAuswertung(liste) {
   const A = { rennen: N, fuehrerGewinnt: 0, streuungMedian: 0, streuungUnter8: 0, maxSteh: 0, resets: 0, bpVerdient: 0, bpAusgegeben: 0,
     gebaut: 0, ueberholt: 0, treffer: 0, rundenZeit: 0, pylonen: 0, arten: {}, verlust: {}, siegNachStufe: {}, siegNachStart: {}, autos: {} };
   const streu = [];
-  for (const f of FAHRZEUGE) A.autos[f.id] = { rennen: 0, siege: 0, rang: 0 };      // pro Auto: Starts, Siege, mittlerer Platz
+  for (const f of FAHRZEUGE) A.autos[f.id] = { rennen: 0, siege: 0, rang: 0, q: 0, letzte: 0 };      // pro Auto: Starts, Siege, mittlerer Platz, Streuung, letzte Plätze
   for (const r of liste) {
-    r.raenge.forEach((kIdx, platz) => { const a = A.autos[r.autos[kIdx]]; if (a) { a.rennen++; a.rang += platz + 1; if (platz === 0) a.siege++; } });
+    r.raenge.forEach((kIdx, platz) => { const a = A.autos[r.autos[kIdx]]; if (a) { a.rennen++; a.rang += platz + 1; a.q += (platz + 1) * (platz + 1); if (platz === 0) a.siege++; if (platz === r.raenge.length - 1) a.letzte++; } });
     if (r.fuehrerGewinnt) A.fuehrerGewinnt++;
     if (r.streuung != null) { streu.push(r.streuung); if (r.streuung <= 8) A.streuungUnter8++; }
     A.maxSteh = Math.max(A.maxSteh, r.maxSteh); A.resets += r.resets;
@@ -2949,7 +3087,12 @@ function simAuswertung(liste) {
     A.siegNachStart[r.siegerStart] = (A.siegNachStart[r.siegerStart] || 0) + 1;
     for (const v of r.verluste) { (A.verlust[v.art] = A.verlust[v.art] || []).push(v.verlust); }
   }
-  for (const id in A.autos) { const a = A.autos[id]; a.siegAnteil = a.rennen ? a.siege / a.rennen : 0; a.rang = a.rennen ? a.rang / a.rennen : 0; }
+  for (const id in A.autos) {
+    const a = A.autos[id];
+    a.siegAnteil = a.rennen ? a.siege / a.rennen : 0; a.rang = a.rennen ? a.rang / a.rennen : 0;
+    a.streuung = a.rennen ? Math.sqrt(Math.max(0, a.q / a.rennen - a.rang * a.rang)) : 0;      // Standardabweichung der Zielplätze (Risiko)
+    a.letzteAnteil = a.rennen ? a.letzte / a.rennen : 0;
+  }
   streu.sort((a, b) => a - b);
   A.streuungMedian = streu.length ? streu[streu.length >> 1] : 0;
   A.streuungUnter8 = streu.length ? A.streuungUnter8 / streu.length : 0;
@@ -2972,8 +3115,10 @@ const SIM_SZENARIEN = {
   stark12: ['schwer'].concat(Array(11).fill('mittel')),
   ultra12: ['ultra'].concat(Array(11).fill('schwer')),
   gleich33: Array(33).fill('mittel'),
+  gleichSchwer: Array(8).fill('schwer'),                      // Auto-Ausgleich: 8 gleich starke Bots, jedes Auto einmal, auf «Schwer»
+  gleichUltra: Array(8).fill('ultra'),                        // … und auf «Ultra» (fährt fast fehlerfrei)
 };
-const SIM_SAAT = { gleich: 0, stark: 100000, ultra: 200000, gleich12: 300000, stark12: 400000, ultra12: 500000, gleich33: 600000 };
+const SIM_SAAT = { gleich: 0, stark: 100000, ultra: 200000, gleich12: 300000, stark12: 400000, ultra12: 500000, gleich33: 600000, gleichSchwer: 700000, gleichUltra: 800000 };
 function simEinzel(szenario, nr, opt) {
   const ids = Object.keys(STRECKEN);
   return simRennen({ strecke: (opt && opt.strecke) || ids[nr % ids.length], stufen: SIM_SZENARIEN[szenario], seed: nr + 1 + (SIM_SAAT[szenario] || 0),
@@ -4174,7 +4319,7 @@ Object.assign(Grafik, {
         const sl = R.S.slots[si];
         this.zielMarke.position.set(sl.x, sl.y + 8, -sl.z);
         this.zielMarke.material.color.setHex(b.eigen ? 0x3fb54a : 0xe0362c);
-        this.zielMarke.material.opacity = (k.bp >= CONFIG.bau.preise[b.art] ? 0.34 : 0.12) + Math.sin(this.zeit * 6) * 0.08;
+        this.zielMarke.material.opacity = (k.bp >= R.preis(k, b.art) ? 0.34 : 0.12) + Math.sin(this.zeit * 6) * 0.08;
         sichtbar = true;
       }
     }
@@ -8717,7 +8862,7 @@ const Online = {
   peer: null, host: false, code: '', gaeste: {}, zumHost: null, zumHostZ: null, meineId: '', lobby: null, imRennen: false, bereit: false,
   versatz: 0, rtt: 0, bestRtt: 1e9, t0: 0, schrittNr: 0, puffer: [], bekannt: {}, letzterEmpfang: 0, meinKart: -1, endeGesendet: false, takte: [], zeitlimit: null, verstecktSeit: 0, lauf: 0, turnGeholt: null, turnFehler: '',
 
-  profil() { const D = Speicher.daten; return { name: D.name, fahrzeug: D.fahrzeug, farbe: D.farbe }; },
+  profil() { const D = Speicher.daten; return { name: D.name, fahrzeug: D.fahrzeug, farbe: D.farbe, v: CONFIG.version }; },      // v: Fassung des Spiels
   jetzt() { return performance.now() + (this.host ? 0 : this.versatz); },           // gemeinsame Uhr (die des Hosts)
   peerOptionen() {
     const o = { debug: 1, config: { iceServers: this.iceServer(), sdpSemantics: 'unified-plan' } };
@@ -8869,6 +9014,7 @@ const Online = {
     const R = Spiel.R, imRennen = this.imRennen && g.kart >= 0 && R && Spiel.netz === this && !R.fertig;
     switch (d[0]) {
       case 'hallo': case 'profil':
+        g.v = String((d[1] && d[1].v) || '').slice(0, 12);          // ältere Fassungen schicken keine (alle müssen mit denselben Auto-Werten fahren)
         g.name = String((d[1] && d[1].name) || 'Gast').slice(0, 14); g.fahrzeug = clamp(d[1].fahrzeug | 0, 0, FAHRZEUGE.length - 1); g.farbe = clamp(d[1].farbe | 0, 0, FARBEN.length - 1);
         this.sendeLobby(); break;
       case 'bereit': g.bereit = !!d[1]; this.sendeLobby(); break;
@@ -8888,8 +9034,8 @@ const Online = {
   },
   spielerListe() {
     const P = this.profil();
-    const l = [{ id: 'host', name: P.name, fahrzeug: P.fahrzeug, farbe: P.farbe, bereit: true, ping: 0, host: true }];
-    for (const id in this.gaeste) { const g = this.gaeste[id]; l.push({ id, name: g.name, fahrzeug: g.fahrzeug, farbe: g.farbe, bereit: g.bereit, ping: g.ping, host: false }); }
+    const l = [{ id: 'host', name: P.name, fahrzeug: P.fahrzeug, farbe: P.farbe, bereit: true, ping: 0, host: true, v: CONFIG.version }];
+    for (const id in this.gaeste) { const g = this.gaeste[id]; l.push({ id, name: g.name, fahrzeug: g.fahrzeug, farbe: g.farbe, bereit: g.bereit, ping: g.ping, host: false, v: g.v || '' }); }
     // Gleiche Lacke vermeiden: Hat schon jemand diese Farbe, bekommt der Spätere die am wenigsten benutzte (ab 17 Spielern hilft die Startnummer)
     const belegt = [];
     for (const s of l) { s.farbe = (s.farbe | 0) % FARBEN.length; if (belegt.includes(s.farbe)) s.farbe = freieFarbe(belegt); belegt.push(s.farbe); }
@@ -8898,12 +9044,14 @@ const Online = {
   sendeLobby() {
     if (!this.host || !this.lobby) return;
     this.lobby.spieler = this.spielerListe();
+    this.lobby.v = CONFIG.version;
     this.sendeAlle(['lobby', this.lobby]);
     this.aktualisiereLobby();
   },
   hostStart() {
     const L = this.lobby, gaeste = Object.keys(this.gaeste).map((id) => this.gaeste[id]), P = this.profil();
     if (gaeste.some((g) => !g.bereit)) { App.toast('Es sind noch nicht alle bereit.'); return; }
+    if (gaeste.some((g) => g.v !== CONFIG.version)) { App.toast('Jemand hat eine andere Fassung des Spiels und muss zuerst die Seite neu laden.', 3500); return; }
     Menue.nameLesen(); Speicher.sichern();
     const liste = this.spielerListe(), farbeVon = (id) => liste.find((s) => s.id === id).farbe;
     const fahrer = [{ peer: 'host', typ: 'mensch', name: P.name, fahrzeug: FAHRZEUGE[P.fahrzeug].id, farbe: farbeVon('host') }];
@@ -9103,8 +9251,12 @@ const Online = {
     $('lobby-zahl').textContent = '(' + L.spieler.length + '/' + CONFIG.rennen.maxMenschen + (gaeste.length ? ', bereit ' + gaeste.filter((s) => s.bereit).length + '/' + gaeste.length : '') + ')';
     liste.classList.toggle('viele', L.spieler.length > 8);
     // Ein Handy als Host rechnet alle Autos und schickt jedem Gast die Lage: Bei grossen Feldern kann es ins Stocken kommen
+    // Andere Fassung als der Host: Hinweis «Seite neu laden» (ältere Hosts schicken keine Fassung mit)
+    if (!this.host && L.v !== CONFIG.version) { $('lobby-handy').textContent = 'Du und der Host habt verschiedene Fassungen des Spiels (du ' + CONFIG.version + ', Host ' + (L.v || 'älter') +
+      '). Wer die ältere hat, muss die Seite neu laden, sonst kann das Rennen nicht starten.'; } else
     $('lobby-handy').textContent = L.handy && autos > CONFIG.netz.handyHostMax ? (this.host ? 'Du leitest das Rennen auf einem Handy oder Tablet. Mit ' + autos + ' Autos kann es ins Stocken kommen. Besser leitet ein Laptop oder Computer das Rennen.' : 'Der Host spielt auf einem Handy oder Tablet. Mit ' + autos + ' Autos kann das Rennen ins Stocken kommen.') : '';
     liste.innerHTML = L.spieler.map((s) => '<div class="zeile"><span class="farbfeld" style="background:' + hexCss(FARBEN[s.farbe % FARBEN.length].hex) + '"></span><b>' + esc(s.name) + '</b><span class="hinweis">' + (L.zufall ? 'Zufalls-Auto' : FAHRZEUGE[s.fahrzeug % FAHRZEUGE.length].name) + '</span>' +
+      (s.v !== L.v ? '<span class="minus" title="Alle im Raum müssen dieselbe Fassung des Spiels haben (dieselben Auto-Werte)">andere Fassung: Seite neu laden</span>' : '') +
       '<span style="margin-left:auto" class="' + (s.bereit ? 'bereit' : 'hinweis') + '">' + (s.host ? 'Host' : s.bereit ? 'bereit' : 'wartet') + '</span>' + (s.host ? '' : '<span class="hinweis">' + (s.ping | 0) + ' ms</span>') + '</div>').join('') +
       (bots ? '<div class="zeile"><span class="hinweis">dazu ' + bots + (bots === 1 ? ' Bot' : ' Bots') + ' (' + stufe + ')</span></div>' : '');
     const info = $('lobby-info');
@@ -9361,7 +9513,10 @@ const Hud = {
     for (const t of this.teile) {
       const f = FAHRZEUGE[FAHRZEUG_INDEX[R.karts[t.sp.kart].fahrzeug]], d = document.createElement('div');
       d.className = 'h-los';
-      d.innerHTML = '<small>Dein Auto für dieses Rennen</small><b>' + f.name + '</b><small>' + f.klasse + '</small><span class="plus">▲ ' + f.plus + '</span><span class="minus">▼ ' + f.minus + '</span>';
+      // Kurzfassung: Typ, die drei stärksten und die zwei schwächsten Werte
+      const pr = fahrzeugProfil(f.id, 3, 2), zeile = (l) => l.map((x) => x.F.name + ' ' + x.v).join(', ');
+      d.innerHTML = '<small>Dein Auto für dieses Rennen</small><b>' + f.name + '</b><small>' + f.typ + ' · Risiko ' + f.risiko + '</small>' +
+        '<span class="plus kurz">▲ ' + zeile(pr.stark) + '</span><span class="minus kurz">▼ ' + zeile(pr.schwach) + '</span>';
       t.el.appendChild(d); t.los = d;
     }
   },
@@ -9902,6 +10057,7 @@ const Menue = {
     return '<div class="zeile"><label for="f-name">Name</label><input class="feld" id="f-name" maxlength="14" autocomplete="off" value="' + esc(konto ? Konto.name() : D.name) + '"' +
       (konto ? ' readonly title="Name deines Kontos (ändern im Hauptmenü)"' : '') + '></div>' +
       '<div class="schau"><canvas id="schau"></canvas><div class="schau-text" id="schau-text"></div></div>' +
+      '<div class="faehig" id="faehig"></div>' +
       (this.schauZufall ? '' : this.wahlZeile('Auto', 'fahrzeug', FAHRZEUG_LISTE, D.fahrzeug, (v) => { D.fahrzeug = v; neu(); })) +
       this.wahlZeile('Lack', 'farbe', FARB_LISTE, D.farbe, (v) => { D.farbe = v; neu(); });
   },
@@ -9912,11 +10068,38 @@ const Menue = {
     clearInterval(this.schauTakt);
     const zeig = (i, zufall) => {
       const f = FAHRZEUGE[i]; Schauraum.zeige(f.id, D.farbe);
-      if (t) t.innerHTML = zufall ? '<small>Zufalls-Auto</small><b>' + f.name + '?</b><span>Vor jedem Rennen wird dir eines der 8 Autos zugelost. Hier wählst du nur den Lack.</span>'
-        : '<small>' + f.klasse + '</small><b>' + f.name + '</b><span class="plus">▲ ' + f.plus + '</span><span class="minus">▼ ' + f.minus + '</span>';
+      if (t) t.innerHTML = zufall ? '<small>Zufalls-Auto · ' + f.typ + '</small><b>' + f.name + '?</b><span>Vor jedem Rennen wird dir eines der 8 Autos zugelost. Hier wählst du nur den Lack.</span>'
+        : '<small>' + f.klasse + ' · ' + f.typ + '</small><b>' + f.name + '</b>' + this.autoZeilen(f);
+      this.faehigkeiten(f);
     };
-    if (this.schauZufall) { let i = Math.floor(Math.random() * FAHRZEUGE.length); zeig(i, true); this.schauTakt = setInterval(() => { i = (i + 1) % FAHRZEUGE.length; zeig(i, true); }, 2600); }
+    if (this.schauZufall) { let i = Math.floor(Math.random() * FAHRZEUGE.length); zeig(i, true); this.schauTakt = setInterval(() => { i = (i + 1) % FAHRZEUGE.length; zeig(i, true); }, 4000); }
     else zeig(D.fahrzeug, false);
+  },
+  // Risiko und die zwei Zeilen «Stark bei …» / «Risiko bei …», aus den Werten erzeugt (Werte ab 8 und bis 3)
+  autoZeilen(f) {
+    const pr = fahrzeugProfil(f.id, 3, 3);
+    const stark = pr.stark.filter((x) => x.v >= 8).map((x) => x.F.name), schwach = pr.schwach.filter((x) => x.v <= 3).map((x) => x.F.name);
+    return '<span class="risiko ' + f.risiko + '" title="gemessen: wie stark die Zielplätze schwanken">Risiko: ' + f.risiko + '</span>' +
+      (stark.length ? '<span class="plus">▲ Stark bei ' + stark.join(', ') + '</span>' : '') + (schwach.length ? '<span class="minus">▼ Risiko bei ' + schwach.join(', ') + '</span>' : '');
+  },
+  // 14 Balken von 1 bis 10 in Gruppen. Antippen, Zeigen oder Ansteuern mit Tab erklärt die Fähigkeit mit der echten Wirkung.
+  faehigkeiten(f) {
+    const el = $('faehig');
+    if (!el) return;
+    const alt = el.querySelector('.fz.an'), wahl = alt ? alt.dataset.f : null;
+    el.innerHTML = FAEHIGKEIT_GRUPPEN.map(([gruppe, liste]) => '<div><h4>' + gruppe + '</h4>' + liste.map((id) => {
+      const F = FAEHIGKEITEN[FAEHIGKEIT_INDEX[id]], v = faehigkeitWert(f.id, id);
+      return '<button type="button" class="fz ' + (v <= 3 ? 'v-tief' : v >= 8 ? 'v-hoch' : 'v-mitte') + (id === wahl ? ' an' : '') + '" data-f="' + id + '" data-v="' + v + '" title="' + esc(faehigkeitSatz(id, v)) + '">' +
+        '<span class="fn">' + F.kurz + '</span><span class="fb"><i style="width:' + v * 10 + '%"></i></span><span class="fw">' + v + '</span></button>';
+    }).join('') + '</div>').join('') + '<p class="ferkl" id="ferkl">' + (wahl ? esc(faehigkeitSatz(wahl, faehigkeitWert(f.id, wahl))) : esc(f.text) + ' Tippe auf eine Fähigkeit für ihre Wirkung.') + '</p>';
+    const erklaere = (ev) => {
+      const b = ev.target.closest('.fz');
+      if (!b) return;
+      for (const x of el.querySelectorAll('.fz.an')) x.classList.remove('an');
+      b.classList.add('an');
+      $('ferkl').textContent = faehigkeitSatz(b.dataset.f, +b.dataset.v);
+    };
+    el.onclick = erklaere; el.onpointerover = (ev) => { if (ev.pointerType === 'mouse') erklaere(ev); }; el.onfocusin = erklaere;
   },
   nameLesen() {
     const f = $('f-name');
@@ -10143,6 +10326,9 @@ const SimSeite = {
       '<tr><td>BP verdient / ausgegeben pro Fahrer</td><td class="zahl">' + A.bpVerdient.toFixed(1) + ' / ' + A.bpAusgegeben.toFixed(1) + '</td></tr>' +
       '<tr><td>Bauwerke</td><td class="zahl">' + A.gebaut.toFixed(1) + '</td></tr><tr><td>Hindernis-Treffer</td><td class="zahl">' + A.treffer.toFixed(1) + '</td></tr>' +
       '<tr><td>Zurücksetzer</td><td class="zahl">' + A.resets.toFixed(2) + '</td></tr></table>' +
+      '<h3>Pro Auto (8 gleich starke Bots, jedes Auto einmal)</h3><p class="hinweis">Ziel über alle Strecken: jedes Auto 10–15 % Siege, mittlerer Platz 4,0–5,0. Streuung: wie stark die Zielplätze schwanken (Risiko).</p>' +
+      '<table><tr><th>Auto</th><th class="zahl">Siege</th><th class="zahl">mittlerer Platz</th><th class="zahl">Streuung</th><th class="zahl">Letzter</th></tr>' +
+      FAHRZEUGE.map((f) => { const a = A.autos[f.id], z = (x) => x.toFixed(2).replace('.', ','); return '<tr><td>' + f.name + ' (Risiko ' + f.risiko + ')</td><td class="zahl">' + pz(a.siegAnteil) + '</td><td class="zahl">' + z(a.rang) + '</td><td class="zahl">' + z(a.streuung) + '</td><td class="zahl">' + pz(a.letzteAnteil) + '</td></tr>'; }).join('') + '</table>' +
       '<h3>Zeitverlust nach Hindernis</h3><table><tr><th>Hindernis</th><th class="zahl">Treffer</th><th class="zahl">Mittel</th><th class="zahl">95 %</th><th class="zahl">Maximum</th></tr>' + verlustZeilen + '</table>' +
       '<h3>Siege nach Startplatz (gleich starke Bots)</h3><p>' + Object.keys(A.siegNachStart).sort((a, b) => a - b).map((p) => 'Platz ' + p + ': ' + A.siegNachStart[p]).join(' · ') + '</p>' +
       '<p class="hinweis">Alle Werte lassen sich oben im Code im Objekt CONFIG einstellen. <a href="?" style="color:var(--gelb)">Zum Spiel</a></p>';
@@ -10410,9 +10596,13 @@ const Bestenliste = {
     try { localStorage.setItem(CONFIG.bestenliste.schluessel, JSON.stringify(this.daten)); this.ohneSpeicher = false; }
     catch (e) { this.ohneSpeicher = true; }               // privates Fenster o. Ä.: Die Liste gilt dann bis zum Neuladen
   },
+  // Kennung der Liste einer Strecke (STRECKEN[id].liste). Ändern sich die Zeiten grundsätzlich (neue Auto-Werte, neue Streckenführung),
+  // bekommt die Strecke eine neue Kennung: Die alte Liste bleibt im Speicher und in der Datenbank, gezeigt wird nur die neue.
+  lid(id) { const s = STRECKEN[id]; return (s && s.liste) || id; },
   strecke(id) {
     if (!this.daten) this.laden();
-    return this.daten.strecken[id] || (this.daten.strecken[id] = { menschen: [], bots: {} });
+    const k = this.lid(id);
+    return this.daten.strecken[k] || (this.daten.strecken[k] = { menschen: [], bots: {} });
   },
   schluessel(n) { return String(n == null ? '' : n).trim().toLowerCase(); },     // gleicher Name: Gross/klein und Leerzeichen am Rand egal
   autoName(a) { const f = FAHRZEUGE.find((x) => x.id === a); return f ? f.name : String(a); },
@@ -10644,7 +10834,7 @@ const Bestenliste = {
     N.versuch = Date.now();
     const gut = (r) => r && r.ok && (r.j === null || typeof r.j === 'object');
     // Die alte Liste ändert sich nicht mehr: einmal pro Besuch laden
-    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(id)), C.pfadAlt && !N.alt ? this.anfrage(this.adresse(id, true)) : null])).then(([r, rAlt]) => {
+    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(this.lid(id))), C.pfadAlt && !N.alt && this.lid(id) === id ? this.anfrage(this.adresse(id, true)) : null])).then(([r, rAlt]) => {
       if (gut(rAlt)) N.alt = this.ausNetz(id, rAlt.j, false);
       if (gut(r)) { N.ok = true; N.zeit = Date.now(); N.neu = this.ausNetz(id, r.j, true); }
       else N.ok = false;                                        // alte Liste bleiben lassen, Stand-Zeile sagt «keine Verbindung»
@@ -10691,7 +10881,7 @@ const Bestenliste = {
   // Nur mit Konto (u). Unerwünschte Namen kommen nicht in die gemeinsame Liste.
   vormerken(id, e, bot, u) {
     if (!this.mitNetz() || !u || this.verboten(e.n)) return;
-    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });
+    this.schlange().push({ id: this.lid(id), n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });      // id: Kennung der Liste
     this.schlangeSichern();
   },
   // Nach dem ersten Anmelden eines Kontos auf diesem Gerät: die Zeiten, die hier vorher gefahren wurden, einmal mit dem Kontonamen
@@ -10705,8 +10895,8 @@ const Bestenliste = {
     if (fertig.includes(N.uid)) return;
     const D = Speicher.daten, ich = new Set(['spieler', 'spieler 1'].concat((D.vorKonto || []).map((n) => this.schluessel(n))));
     const daten = this.daten || this.laden(), hier = (e) => e.o === 1 || (e.o === undefined && e.m !== 'online');
-    for (const id of Object.keys(daten.strecken)) {
-      const S = daten.strecken[id];
+    for (const id of Object.keys(STRECKEN)) {          // nur die heutigen Listen (alte Listen werden nicht mehr nachgeliefert)
+      const S = this.strecke(id);
       for (const e of S.menschen) if (!e.u && hier(e) && ich.has(this.schluessel(e.n))) { e.n = N.name; e.u = N.uid; this.vormerken(id, e, false, N.uid); }
       for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (hier(e)) this.vormerken(id, e, true, N.uid); }
       for (const f of FAHRZEUGE) this.ordne(id, f.id);
@@ -10813,10 +11003,10 @@ const Bestenliste = {
   // Einstellungen: eine Strecke oder alle löschen, mit Rückfrage
   loeschenDialog() {
     const id = Speicher.daten.strecke, name = STRECKEN[id] ? STRECKEN[id].name : id;
-    const weg = (nur) => { const l = this.schlange(); for (let i = l.length - 1; i >= 0; i--) if (!nur || l[i].id === nur) l.splice(i, 1); this.schlangeSichern(); };
+    const weg = (nur) => { const l = this.schlange(); for (let i = l.length - 1; i >= 0; i--) if (!nur || l[i].id === this.lid(nur)) l.splice(i, 1); this.schlangeSichern(); };
     Dialog.zeige('<h2>Bestenliste löschen?</h2><p>Gelöschte Zeiten lassen sich nicht zurückholen.' +
       (this.mitNetz() ? ' Gelöscht wird nur die Liste dieses Geräts, die gemeinsame Liste aller Spieler bleibt.' : '') + '</p>', [
-      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[id]; weg(id); this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
+      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[this.lid(id)]; weg(id); this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
       { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; weg(''); this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
       { text: 'Abbrechen', klasse: 'zweit', abbruch: true },
     ]);
