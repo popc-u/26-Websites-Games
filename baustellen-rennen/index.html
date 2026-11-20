@@ -104,6 +104,7 @@ kbd { display: inline-block; min-width: 26px; text-align: center; background: va
 .h-abstand b { font-weight: 700; color: var(--gelb); font-variant-numeric: tabular-nums; }
 .h-mitte { left: 50%; top: calc(var(--m) * 8px + 38px); transform: translateX(-50%); text-align: center; white-space: nowrap; }
 .h-warnung { display: inline-block; background: var(--gelb); color: #000; text-shadow: none; border: 3px solid #000; border-radius: 8px; padding: 3px 14px 2px; font-size: calc(var(--m) * 24px); box-shadow: 0 4px 0 #000; animation: blink .5s steps(2) infinite; }
+.h-warnung.gabel { background: #1560a8; color: #fff; animation: none; }
 .h-warnung .pf { display: inline-block; font-size: 1.25em; line-height: .8; vertical-align: -0.08em; margin: 0 4px; }
 @keyframes blink { 50% { background: var(--orange); } }
 .h-meldung { margin-top: 6px; font-size: calc(var(--m) * 22px); color: var(--weiss); min-height: 1.2em; transition: opacity .3s; }
@@ -287,7 +288,7 @@ input[type=range]{accent-color:var(--gold)}
    Längen in Metern, Zeiten in Sekunden, Tempo in m/s (30 m/s = 108 km/h).
    ══════════════════════════════════════════════════════════════════════════ */
 const CONFIG = {
-  version: '1.3',
+  version: '1.4',
 
   // ── Fahrphysik ──────────────────────────────────────────────────────────
   fahren: {
@@ -520,14 +521,15 @@ const CONFIG = {
       // schon in sanfteren Kurven (driftAb). tempo: Tempo-Vorteil auf das Höchsttempo (1.03 = 3 %, mehr ist nicht erlaubt).
       schwer: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.03, kurvenStreu: 0.35, einlenkStreu: 2 },
       // «Ultra» fährt, so gut es die Fahrphysik erlaubt: Fahr-Einstellungen pro Strecke vom Optimierer (tools/ultra.js, mit
-      // mehreren Autos geprüft), jedes Boost-Feld, keine Fehler, sieht jedes Hindernis. tempo: Tempo-Vorteil (1.08 = 8 %; nur am Himalaya
-      // 1.12, so am 17.11.2026 entschieden, weil «Ultra» dort mit 8 % nur 91 % statt 99 % der Rennen gegen «Schwer» gewinnt).
+      // mehreren Autos geprüft), jedes Boost-Feld, keine Fehler, sieht jedes Hindernis. tempo: Tempo-Vorteil (1.08 = 8 %; am Himalaya
+      // 1.12, so am 17.11.2026 entschieden, weil «Ultra» dort mit 8 % nur 91 % statt 99 % der Rennen gegen «Schwer» gewinnt; in Paris
+      // ebenfalls 1.12, so am 19.11.2026 entschieden: in den engen Gassen des neuen Paris gewann er mit 8 % nur 94 %).
       // hindernisse: Anteil der Hindernisse, die er baut (er spart vor allem für Abkürzung und Rampe); pylonen: 0 = setzt keine.
-      // umsichtig: fährt vor einem Nebenweg früh auf dessen Seite und lenkt nie mehr in eine Abzweigung, die schon hinter ihm liegt.
+      // umsichtig: fährt vor einem Nebenweg früh auf dessen Seite (in keine Abzweigung, die schon hinter ihm liegt, lenkt seit Fassung 1.4 kein Bot mehr).
       ultra: { mut: 1.04, linie: 0, drift: 1.00, sehen: 1.0, bauen: 1.0, fehler: 0, profi: true, bremsen: 34, driftAb: 0.5, tempo: 1.08, hindernisse: 0.15, pylonen: 0, umsichtig: true, kurvenStreu: 0.15, einlenkStreu: 1,
-        strecken: {           // gemessen mit tools/ultra.js (200 Versuche, Tempo-Vorteil 8 %, vier Autos)
-          kiesgrube: { mut: 1.3, bremsen: 46, driftAb: 0.5, drift: 1 }, bergpass: { mut: 1.18, bremsen: 36, driftAb: 0.2, drift: 1 },
-          paris: { mut: 1.18, bremsen: 24, driftAb: 0.33, drift: 1 }, himalaya: { mut: 1.27, bremsen: 39, driftAb: 0.25, drift: 0.88, tempo: 1.12 },
+        strecken: {           // gemessen mit tools/ultra.js (200 Versuche, Tempo-Vorteil 8 %, vier Autos); Paris mit einer Zufallssuche über alle 8 Autos (jedes mindestens 4 % schneller)
+          kiesgrube: { mut: 1.26, bremsen: 49, driftAb: 0.2, drift: 0.96 }, bergpass: { mut: 1.18, bremsen: 36, driftAb: 0.2, drift: 1 },
+          paris: { mut: 1.1, bremsen: 18, driftAb: 0.23, drift: 0.94, tempo: 1.12 }, himalaya: { mut: 1.27, bremsen: 39, driftAb: 0.25, drift: 0.88, tempo: 1.12 },
           aegypten: { mut: 1.3, bremsen: 44, driftAb: 0.21, drift: 0.94 }, newyork: { mut: 1.3, bremsen: 49, driftAb: 0.28, drift: 1 },
         } },
     },
@@ -537,6 +539,18 @@ const CONFIG = {
     zielVordermann: 0.8,   // Anteil der Hindernisse, die Bots ihrem direkten Gegner statt dem Führenden in den Weg bauen
     streuung: 0.02,        // zufällige Tagesform: ± so viel Unterschied im Mut zwischen gleich starken Bots
     ausweichWeg: 45,       // m: so weit vor einem Hindernis beginnen Bots, zur Lücke zu ziehen
+    gabelZwang: null,      // nur für Messungen: 0 = an jeder Gabelung der erste Weg (Hauptstrecke), 1 = immer der zweite Weg, { weg: 1 } = nur dort der zweite, null = wie im Spiel
+    // Gabelungen (Etappe 4): Jeder Bot entscheidet bei jeder Durchfahrt neu. Grundwert ist der Anteil der Strecke für den zweiten Weg
+    // (anteil, meist 0,5), dazu kommen diese Zuschläge (Anteil): Auto, eigene Vorliebe, Verkehr, Lage im Rennen, Abwechslung, Vordermann
+    gabel: {
+      auto: 0.22,          // Auto: Geländewagen auf losem Belag, kurvenstarke Autos auf dem engeren Weg, starker Schub dort, wo Schanze oder Boost-Feld liegt
+      lieb: 0.18,          // eigene Vorliebe pro Gabelung und Rennen: zufällig bis ± so viel
+      verkehr: 0.07,       // pro Auto, das bis 50 m vor ihm schon auf einem Weg fährt oder ihn gewählt hat: so viel weniger Lust auf diesen Weg
+      hinten: 0.12,        // wer hinten liegt, wagt mehr: bis so viel mehr Lust auf den wilderen Weg (loser Belag, Schanze)
+      wechsel: 0.12,       // Abwechslung: so viel mehr Lust auf den Weg, den er beim letzten Mal nicht genommen hat
+      folgen: 0.12,        // fährt der Bot direkt vor ihm (weniger als 1,5 s) einen Weg, so viel weniger Lust, ihm einfach zu folgen
+      sehen: 0.35,         // ein gesehenes Hindernis auf einem Weg der Gabelung: so viel weniger Lust auf diesen Weg
+    },
     vorausHindernis: 0.8,  // vor einem Hindernis zielen Bots kürzer voraus (Anteil), damit sie die Lücke genau treffen
     vorausZeit: 0.42,      // Bots zielen auf einen Punkt, der so viele Sekunden voraus liegt
     sichtweite: 75,        // so weit voraus beachten Bots Hindernisse (m)
@@ -871,7 +885,7 @@ const STRECKEN = {
   // ── Kiesgrube: enge Kehren, Sprung, Abzweigung, Brücke über den Baggersee ──
   kiesgrube: {
     name: 'Kiesgrube',
-    text: 'Zwei Kehren, eine Schanze und der Weg um den Baggersee.',
+    text: 'Zwei Kehren, die Gabelung über Schanze oder Kieshalden, die Schotter-Schikane unten in der Grube und vier lange Bögen um den Baggersee.',
     breite: 15,
     rand: 3.5,
     belag: 'asphalt',
@@ -882,53 +896,65 @@ const STRECKEN = {
       [106, 0, 1], [123, 7, 1.5], [130, 24, 2], [123, 41, 2.5], [106, 48, 3],   // Kehre 1 (links)
       [78, 48, 3.3],
       [48, 48, 3.6], [31, 55, 4], [24, 72, 4.4], [31, 89, 4.8], [48, 96, 5.2],  // Kehre 2 (rechts)
-      [82, 97, 5.5],
-      [120, 103, 5.8], [143, 124, 6], [150, 160, 6],                      // Bogen nach Norden
-      [150, 205, 6], [150, 250, 6],                                       // Ostgerade mit Schanze
-      [141, 286, 5.6], [106, 304, 5],                                     // Kurve nach Westen
-      [80, 306, 4.6], [60, 314, 4.5], [44, 330, 4.3], [28, 348, 4.1], [8, 360, 4], [-5, 362, 4],     // um den Baggersee
-      [-18, 360, 4], [-38, 348, 4], [-54, 330, 3.9], [-70, 314, 3.7], [-90, 306, 3.6],
+      [68, 98, 5.4, 12], [79.7, 104.5, 5.5, 11.5], [92.3, 104.9, 5.6, 11], [104, 99, 5.7, 11], [124, 104, 5.8, 13],   // neu: enge Gasse zwischen den Kieshalden
+      [143, 124, 6], [150, 150, 6],                                       // Bogen nach Norden, dann die Gabelung
+      [150, 180, 6], [150, 210, 6], [150, 240, 6], [150, 266, 5.9],      // Ostgerade mit Schanze (erster Weg der Gabelung)
+      [144, 292, 5.6], [128, 304, 5.3], [100, 304, 5],                    // enge Kurve nach Westen
+      // neu: um den Baggersee mit vier langen Bögen zum Driften (22 m Radius), oben ein schneller Knick über eine Kuppe
+      [96.0, 304.0, 4.96], [87.1, 305.9, 4.93], [79.7, 311.3, 4.89], [75.1, 319.2, 4.86], [74.1, 328.3, 4.82], [76.9, 337.0, 4.78], [80.4, 343.1, 4.75],
+      [83.9, 349.1, 4.71], [86.8, 357.8, 4.68], [85.8, 366.9, 4.64], [81.2, 374.8, 4.61], [73.8, 380.2, 4.57], [64.9, 382.1, 4.53], [54.6, 382.1, 4.50],
+      [44.4, 382.1, 4.54], [34.0, 383.5, 4.87], [24.4, 387.5, 5.36], [16.8, 390.9, 5.70], [8.6, 392.6, 5.89], [0.2, 392.6, 5.85], [-8.0, 390.9, 5.59],
+      [-15.6, 387.5, 5.18], [-25.3, 383.5, 4.62], [-35.6, 382.1, 4.21], [-45.9, 382.1, 4.10], [-56.1, 382.1, 4.07], [-65.1, 380.2, 4.03], [-72.5, 374.8, 3.99],
+      [-77.0, 366.9, 3.96], [-78.0, 357.8, 3.92], [-75.2, 349.1, 3.89], [-71.7, 343.1, 3.85], [-68.2, 337.0, 3.82], [-65.3, 328.3, 3.78], [-66.3, 319.2, 3.74],
+      [-70.9, 311.3, 3.71], [-78.3, 305.9, 3.67], [-87.2, 304.0, 3.64], [-91.2, 304.0, 3.60],
       [-115, 304, 3.2],
-      [-145, 286, 2.8], [-155, 251, 2.4],                                 // Kurve nach Süden
-      [-158, 221, 2], [-195, 191, 1.6], [-212, 156, 1.2], [-195, 121, 0.8], [-158, 91, 0.5],        // um die Grube
-      [-155, 60, 0.2], [-153, 38, 0],
-      [-150, 16, 0], [-134, 3, 0], [-105, 0, 0],                          // Schlusskurve
+      [-140, 292, 3.1], [-150.8, 278.8, 3.14], [-153.2, 262, 3.24], [-150.8, 258, 3.26], [-150.8, 241.2, 3.18], [-158, 228, 3.0],     // S-Kurven am Grubenrand
+      [-160, 218.1, 2.64], [-165.6, 209.6, 2.27], [-174.1, 204, 1.91], [-184, 202, 1.54], [-192, 202, 1.26],   // neu: hinunter in die Grube (Senke)
+      [-201.9, 200, 0.89], [-210.4, 194.4, 0.53], [-216, 185.9, 0.16], [-218, 176, -0.20],
+      [-218.7, 169.3, -0.24], [-220.9, 164.0, -0.28], [-223.6, 156.8, -0.33], [-223.6, 149.2, -0.37], [-220.9, 142.0, -0.42], [-218.7, 136.7, -0.46],   // Schikane auf dem Grubengrund
+      [-218, 130, -0.50], [-216, 120.1, -0.48], [-210.4, 111.6, -0.45], [-201.9, 106, -0.43], [-192, 104, -0.41],      // wieder hinauf
+      [-184, 104, -0.39], [-174.1, 102, -0.37], [-165.6, 96.4, -0.35], [-160, 87.9, -0.32], [-158, 78, -0.30],
+      [-158, 68, -0.5], [-150.8, 57.2, -0.86], [-150.4, 42.8, -0.98], [-152.6, 39.2, -0.92], [-154.2, 24.8, -0.64],               // Schikane durch die Mulde
+      [-150, 14, -0.4], [-134, 3, -0.1], [-105, 0, 0],                       // Schlusskurve
     ],
     schanzen: [{ pos: [150, 210], laenge: 12, hoehe: 2.0 }],
+    // Boost-Felder fest an den Stellen, die die Strecke bisher selbst gewählt hat: sonst hätte das Verschieben der Bauplätze (Fassung 1.4) auch die Felder verschoben
+    boostfelder: [{ pos: [45.6, 95.4], d: -2.59 }, { pos: [115.4, 305.1], d: 1.73 }, { pos: [-20.4, 385.3], d: 1.27 }, { pos: [-174.3, 203.9], d: -2.58 }, { pos: [-112.5, 0.3], d: 2.61 }],
     wege: [
-      { id: 'bruecke', art: 'abkuerzung', name: 'Notbrücke', breite: 8, rand: 0.6, belag: 'holz',
-        punkte: [[78, 306], [40, 306.5, 6], [-5, 306.5, 6.6], [-50, 306.5, 5.6], [-88, 306]] },
+      { id: 'halden', art: 'gabelung', name: 'Kieshalden', nameHaupt: 'Schanze', breite: 10, rand: 1.2, belag: 'sand', anteil: 0.5,
+        punkte: [[150, 150], [146, 166], [138, 182], [128, 200], [120, 220], [129, 240], [123, 260], [116, 280], [108, 296], [98, 304]] },
       { id: 'grube', art: 'abkuerzung', name: 'Grubenweg', breite: 8, rand: 1.2, belag: 'kies',
-        punkte: [[-157, 229], [-156, 194, -2.5], [-156, 156, -5], [-156, 118, -2.8], [-156, 84]] },
+        // in Schlangenlinien durch die Grube: gerade sparte sie 1,9 s pro Runde (Fassung 1.4)
+        punkte: [[-158, 229], [-152, 212, 2.5], [-141, 196, 1.6], [-140, 178, 1.0], [-152, 162, 0.5], [-166, 148, 0.2], [-168, 130, 0], [-158, 114, 0], [-152, 96, -0.2], [-158, 72]] },
       { id: 'werkhof', art: 'umleitung', name: 'Werkhof', breite: 12, rand: 1.5, belag: 'kies',
-        punkte: [[150, 158], [158, 176], [178, 190], [190, 212], [182, 236], [162, 252], [148, 264]] },
+        punkte: [[30, 0], [42, -12], [58, -19], [74, -19], [88, -12], [98, 0]] },
     ],
     slots: [
       { id: 'R1', art: 'rampe', pos: [5, 0] },
-      { id: 'R2', art: 'rampe', pos: [100, 99] },
+      { id: 'R2', art: 'rampe', pos: [-45, 382] },
       { id: 'R3', art: 'rampe', pos: [-107, 304.3] },
-      { id: 'A1', art: 'abkuerzung', weg: 'bruecke' },
       { id: 'A2', art: 'abkuerzung', weg: 'grube' },
-      { id: 'H1', art: 'hindernis', pos: [60, 0] },
+      { id: 'H1', art: 'hindernis', pos: [150, 262] },
       { id: 'H2', art: 'hindernis', pos: [78, 48] },
-      { id: 'H3', art: 'hindernis', pos: [66, 96.5] },
-      { id: 'H4', art: 'hindernis', pos: [143, 124] },
-      { id: 'H5', art: 'hindernis', pos: [128, 295] },
-      { id: 'H6', art: 'hindernis', pos: [-5, 362] },
-      { id: 'H7', art: 'hindernis', pos: [-132, 296] },
-      { id: 'H8', art: 'hindernis', pos: [-212, 156] },
-      { id: 'H9', art: 'hindernis', pos: [-153.5, 44] },
+      { id: 'H3', art: 'hindernis', pos: [143, 124] },
+      { id: 'H4', art: 'hindernis', pos: [17.3, 390.7] },   // auf der Kuppe statt am Ausgang der Seekurve (Fassung 1.4)
+      { id: 'H5', art: 'hindernis', pos: [-120.4, 302.4] },   // 20 m später, nicht mehr direkt nach der Seekurve
+      { id: 'H6', art: 'hindernis', pos: [-132, 296] },
+      { id: 'H7', art: 'hindernis', pos: [-220, 152] },
+      { id: 'H8', art: 'hindernis', pos: [-155, 14] },
+      { id: 'H9', art: 'hindernis', pos: [-127.5, 1.4] },   // auf der Zielgeraden statt in der Kurve aus der Grube
       { id: 'U1', art: 'umleitung', weg: 'werkhof' },
     ],
     // Senken und Hügel im Gelände: [x, z, höhe, radius]
-    gelaende: [[-182, 156, -7, 30], [-5, 331, -3, 28], [78, 24, 9, 22], [70, 72, 10, 18], [-60, 170, 14, 60], [40, 200, 11, 55]],
-    wasser: [{ x: -5, z: 330, r: 24, y: 2.2 }],
+    gelaende: [[-182, 156, -7, 30], [10, 348, -3, 20], [78, 24, 9, 22], [70, 72, 10, 18], [-60, 170, 14, 60], [40, 200, 11, 55]],
+    wasser: [{ x: 10, z: 348, r: 17, y: 2.2 }],
+    belaege: [{ von: [-216, 186], bis: [-216, 120], art: 'schotter' }],     // neu: Schotter auf dem Grubengrund
     deko: [
       { art: 'kran', x: -40, z: 34, dreh: 0.6 },
       { art: 'kran', x: 182, z: 60, dreh: 2.4 },
-      { art: 'silo', x: 172, z: 214, dreh: 0 },
-      { art: 'container', x: 176, z: 200, dreh: 1.2 },
-      { art: 'container', x: 170, z: 228, dreh: 0.3 },
+      { art: 'silo', x: 66, z: -42, dreh: 0 },
+      { art: 'container', x: 46, z: -36, dreh: 1.2 },
+      { art: 'container', x: 90, z: -38, dreh: 0.3 },
       { art: 'bagger', x: -182, z: 164, dreh: 1.9 },
       { art: 'bagger', x: 80, z: 24, dreh: 4.2 },
       { art: 'foerderband', x: -184, z: 138, dreh: 0.9 },
@@ -936,55 +962,68 @@ const STRECKEN = {
       { art: 'bogen', s: 0 },
     ],
   },
-  // ── Bergpass: drei Serpentinen hinauf, Brücke über die Schlucht, steile Abfahrt ──
+  // ── Bergpass: drei Serpentinen hinauf, Gabelung auf der Passhöhe, Brücke über die Schlucht, in Kehren hinunter ──
   bergpass: {
     name: 'Bergpass',
-    text: 'Drei Serpentinen hinauf, über die Schluchtbrücke und steil wieder ins Tal.',
+    text: 'Drei Serpentinen hinauf, Schikane auf Schotter, über die Kuppe und die Schluchtbrücke, durch die Felsgasse und in Kehren wieder ins Tal.',
     breite: 15,
     rand: 3.5,
     belag: 'asphalt',
     himmel: [0x9ccdf0, 0xeaf6fb],
     boden: { gras: 0x7d9a55, kies: 0xa9a08c, fels: 0x8a8580 },
     punkte: [
-      [-60, 0, 0], [0, 0, 0], [50, 0, 0.5],                                 // Start/Ziel-Gerade im Tal
-      [130,0,1.2], [147,7,2], [154,24,3], [147,41,4], [130,48,5],   // Serpentine 1 (links)
-      [50, 48, 7],
-      [-10,48,9.2], [-27,55,10], [-34,72,11], [-27,89,12], [-10,96,13],   // Serpentine 2 (rechts)
+      [-60, 0, 6], [0, 0, 6], [50, 0, 6.2],                                 // Start/Ziel-Gerade im Tal
+      [130,0,6.6], [147,7,7.2], [154,24,7.8], [147,41,8.4], [130,48,9],   // Serpentine 1 (links)
+      [120.3,48,9.1], [101,48,9.2], [81.7,48,9.3], [72,48,9.35],   // Baustellen-Schikane auf Schotter (links, rechts, links)
+      [62.4,46.1,9.4], [54.3,40.7,9.5], [46.2,35.3,9.6], [36.6,33.4,9.7], [27.1,35.3,9.8], [19,40.7,9.9], [10.9,46.1,10.0], [1.3,48,10.1],
+      [-10,48,10.3], [-27,55,10.9], [-34,72,11.6], [-27,89,12.3], [-10,96,13],   // Serpentine 2 (rechts)
       [50, 96, 15],
       [130,96,17], [147,103,17.8], [154,120,18.8], [147,137,19.8], [130,144,20.8],   // Serpentine 3 (links)
-      [40, 144, 23], [-20, 144, 25],                                        // Passhöhe
-      [-60, 144, 25.5], [-110, 144, 25],                                    // Brücke über die Schlucht
-      [-140, 144, 24.5], [-170, 136, 23.5], [-186, 114, 22],                // weite Linkskurve
-      [-190, 100, 20.5], [-216,84,18,17], [-228,60,15.5,18], [-216,36,13,18], [-190,20,10.5,17],   // Abfahrt um den Felskopf
-      [-172, 6, 8.5], [-150, 0, 7], [-110, 0, 4],                           // Schlusskurve und Zielhang
+      [114,144,21.8], [104,144,22.3], [96,144,22.6], [88,144,22.4], [78,144,22.1], [62,144,21.8],   // Kuppe auf der Passhöhe
+      [54,144,21.8], [44.4,142.1,21.8], [36.3,136.7,21.8], [28.2,131.3,21.75], [18.6,129.4,21.7], [9.1,131.3,21.65], [1,136.7,21.6], [-7.1,142.1,21.6], [-16.7,144,21.55],   // Passstrasse mit Schikane (Gabelung)
+      [-32, 144, 21.5], [-60, 144, 21.5], [-110, 144, 21.3],                  // Brücke über die Schlucht
+      [-126,144,21.2], [-142,144,21.1], [-150,144,21.0],
+      [-158.5,141.7,20.95], [-164.7,135.5,20.7], [-167,127,20.2], [-164.7,118.5,19.6], [-158.5,112.3,19.1], [-150,110,18.7],   // Kehre A (links)
+      [-139,110,18.25], [-128,110,17.8],
+      [-119.5,107.7,17.75], [-113.3,101.5,17.5], [-111,93,17.0], [-113.3,84.5,16.4], [-119.5,78.3,15.9], [-128,76,15.5,13],   // Kehre B (rechts)
+      [-136.7,76,15.2,11], [-145.3,76,14.9,11], [-154,76,14.6,11], [-162.7,76,14.3,11], [-171.3,76,14.0,12],   // Felsgasse (eng)
+      [-180,76,13.7,14], [-188.9,74.4,13.45], [-196.7,69.9,13.15], [-202.5,63,12.85], [-205.6,54.5,12.5], [-205.6,45.5,12.15], [-202.5,37,11.8], [-196.7,30.1,11.45], [-188.9,25.6,11.1], [-180,24,10.8],   // Felskehre
+      [-171.8,22.6,10.55], [-164.6,18.4,10.3], [-159.2,12,10.05], [-153.9,5.6,9.8], [-146.6,1.4,9.55], [-138.4,0,9.3],   // Zielkurve
+      [-110, 0, 8.1],                                                        // Zielhang
     ],
     bruecken: [{ von: [-52, 144], bis: [-118, 144] }],
-    schanzen: [{ pos: [-125, 0], laenge: 12, hoehe: 1.8 }],
+    belaege: [{ von: [72, 48], bis: [1.3, 48], art: 'schotter' }],
+    schanzen: [{ pos: [-127, 0], laenge: 12, hoehe: 1.8 }],
+    // Boost-Felder fest an den Stellen, die die Strecke bisher selbst gewählt hat: sonst hätte das Verschieben der Bauplätze (Fassung 1.4) auch die Felder verschoben
+    boostfelder: [{ pos: [119.3, 48], d: 2.5 }, { pos: [6.3, 97.2], d: -2.53 }, { pos: [106.6, 144], d: 2.43 }, { pos: [-59.9, 144], d: 2.54 }, { pos: [-92.5, 0], d: 2.42 }],
     wege: [
+      { id: 'alpweg', art: 'gabelung', name: 'Alpweg', nameHaupt: 'Passstrasse', breite: 12, rand: 2.5, belag: 'kies', anteil: 0.5,
+        punkte: [[62, 144], [50, 151, 21.9], [34, 159, 22.0], [14, 162, 22.1], [-6, 159, 21.9], [-20, 151, 21.7], [-32, 144]] },
       { id: 'steilhang', art: 'abkuerzung', name: 'Steilhang', breite: 8, rand: 1.2, belag: 'kies',
-        punkte: [[-190, 100], [-181, 80, 18.4], [-178, 60, 15.6], [-181, 40, 13], [-190, 20]] },
-      { id: 'alpweg', art: 'umleitung', name: 'Alpweg', breite: 12, rand: 1.5, belag: 'kies',
-        punkte: [[62, 144], [50, 153, 22.6], [34, 170, 23.6], [14, 178, 24.4], [-6, 170, 25], [-20, 153, 25.2], [-32, 144]] },
+        // mit einer Kehre im Hang: ohne sie sparte die Abkürzung 2,5 s pro Runde, so viel, dass «Ultra» oft verlor (Fassung 1.4)
+        punkte: [[-135, 144], [-150, 144, 21.0], [-165, 144, 20.95], [-180, 143, 20.3], [-198, 140, 19.1], [-216, 134, 17.9], [-228, 124, 16.95], [-231, 112, 16.2],
+          [-226, 102, 15.55], [-214, 98, 14.8], [-204, 96, 14.2], [-200, 86, 13.55], [-205.6, 63]] },
+      { id: 'talweg', art: 'umleitung', name: 'Talweg', breite: 12, rand: 1.5, belag: 'kies',
+        punkte: [[30, 0], [42, -12], [58, -19], [74, -19], [88, -12], [98, 0]] },
     ],
     slots: [
       { id: 'R1', art: 'rampe', pos: [15, 0] },
-      { id: 'R2', art: 'rampe', pos: [75, 48] },
+      { id: 'R2', art: 'rampe', pos: [100, 48] },
       { id: 'R3', art: 'rampe', pos: [25, 96] },
       { id: 'A1', art: 'abkuerzung', weg: 'steilhang' },
-      { id: 'H1', art: 'hindernis', pos: [60, 0] },
-      { id: 'H2', art: 'hindernis', pos: [112, 0] },
-      { id: 'H3', art: 'hindernis', pos: [30, 48] },
-      { id: 'H4', art: 'hindernis', pos: [100, 48] },
-      { id: 'H5', art: 'hindernis', pos: [72, 96] },
-      { id: 'H6', art: 'hindernis', pos: [108, 96] },
-      { id: 'H7', art: 'hindernis', pos: [-85, 144] },
-      { id: 'H8', art: 'hindernis', pos: [-175, 130] },
-      { id: 'H9', art: 'hindernis', pos: [-228, 60] },
-      { id: 'H10', art: 'hindernis', pos: [-165, 3] },
-      { id: 'U1', art: 'umleitung', weg: 'alpweg' },
+      { id: 'H1', art: 'hindernis', pos: [112, 0] },
+      { id: 'H2', art: 'hindernis', pos: [78, 48] },
+      { id: 'H3', art: 'hindernis', pos: [68, 96] },
+      { id: 'H4', art: 'hindernis', pos: [106, 96] },
+      { id: 'H5', art: 'hindernis', pos: [-16.7, 144] },
+      { id: 'H6', art: 'hindernis', pos: [-85, 144] },
+      { id: 'H7', art: 'hindernis', pos: [-109.8, 144] },   // auf der Geraden vor dem Steilhang statt zwischen zwei Kehren (Fassung 1.4)
+      { id: 'H8', art: 'hindernis', pos: [-179.3, 76] },   // nach der schmalen Felsgasse statt mittendrin
+      { id: 'H9', art: 'hindernis', pos: [-199.6, 33] },   // vor der Felskehre statt mittendrin
+      { id: 'U1', art: 'umleitung', weg: 'talweg' },
     ],
-    gelaende: [[-85, 152, -15, 24], [-85, 110, -12, 26], [-85, 190, -12, 26], [50, 72, 3, 26], [0, 240, 38, 70], [-130, 235, 30, 60], [150, 210, 30, 60], [-300, 70, 26, 60], [215,60,14,50], [-100, 60, 10, 45]],
-    wasser: [{ x: -85, z: 150, r: 22, y: 12.5 }],
+    gelaende: [[-85, 152, -15, 24], [-82, 120, -12, 22], [-85, 190, -12, 26], [50, 72, 3, 26], [0, 262, 38, 64], [-130, 235, 30, 60], [150, 210, 30, 60], [-300, 70, 26, 60], [215,60,14,50], [-120, 40, 6, 26]],
+    wasser: [{ x: -85, z: 150, r: 22, y: 9 }],
     deko: [
       { art: 'tribuene', x: -15, z: -22, dreh: 0 },
       { art: 'bogen', s: 0 },
@@ -992,14 +1031,14 @@ const STRECKEN = {
       { art: 'kran', x: -48, z: 178, dreh: 2.2 },
       { art: 'container', x: 138, z: 30, dreh: 0.4 },
       { art: 'container', x: 136, z: 118, dreh: 1.3 },
-      { art: 'silo', x: -150, z: 72, dreh: 0 },
-      { art: 'foerderband', x: -150, z: 46, dreh: 1.2 },
+      { art: 'silo', x: -152, z: 46, dreh: 0 },
+      { art: 'foerderband', x: -130, z: 44, dreh: 1.2 },
     ],
   },
-  // ── Paris am Abend: durch den Triumphbogen, am Fluss entlang, über zwei Brücken, unter dem Eisenturm hindurch, hinauf zum Hügel mit der Mühle ──
+  // ── Paris am Abend: durch den Triumphbogen, in Schlangenlinien am Fluss, über zwei Brücken, unter dem Eisenturm hindurch, in Kehren hinauf zum Hügel mit der Mühle ──
   paris: {
     name: 'Paris',
-    text: 'Abendrennen durch den Triumphbogen, über den Fluss und unter dem Eisenturm hindurch.',
+    text: 'Abendrennen durch den Triumphbogen, in Schlangenlinien am Fluss, unter dem Eisenturm hindurch und in Kehren hinauf zur Mühle.',
     breite: 15,
     rand: 3.5,
     belag: 'asphalt',
@@ -1014,15 +1053,21 @@ const STRECKEN = {
       [148, 0, 6], [182, 14, 5.6], [196, 48, 4.6],                                   // weite Linkskurve um die Glaspyramide
       [196, 95, 3], [196, 134, 2],                                                   // Boulevard hinunter zum Fluss
       [185.5, 159.5, 1.6], [160, 170, 1.5],                                          // links auf die Uferstrasse
-      [128, 164, 1.5], [98, 176, 1.5], [70, 166, 1.5],                               // schnelle S-Kurven am Wasser
-      [46, 170, 1.6], [27.6, 177.6, 1.8], [20, 196, 2.2],                            // rechts auf die Steinbrücke
+      [145, 170, 1.5], [130, 170, 1.5], [118, 170, 1.5], [110, 170, 1.5],
+      [103.1,168.6,1.5], [97.3,164.7,1.5], [93.4,158.9,1.5], [92,152,1.5],                                      // Schlaufe am Quai: links,
+      [90.6,145.1,1.5], [86.7,139.3,1.5], [80.9,135.4,1.5], [74,134,1.5], [67.1,135.4,1.5], [61.3,139.3,1.5], [57.4,145.1,1.5], [56,152,1.5],   // Kehre (rechts),
+      [54.6,158.9,1.5], [50.7,164.7,1.5], [44.9,168.6,1.5], [38,170,1.55],                                      // links
+      [31.1,171.4,1.6], [25.3,175.3,1.65], [21.4,181.1,1.75], [20,188,1.9], [20, 196, 2.2],                     // und rechts auf die Steinbrücke
       [20, 218, 4.4], [20, 240, 2.4],                                                // Buckel der Brücke
       [20, 262, 2], [12.4, 280.4, 2], [-6, 288, 2],                                  // links in den Park
-      [-40, 288, 2], [-80, 288, 2, 11], [-120, 288, 2], [-150, 288, 2],              // unter dem Eisenturm hindurch
+      [-12,286.4,2], [-16.4,282,2], [-18,276,2], [-19.6,270,2], [-24,265.6,2], [-30,264,2], [-36,265.6,2], [-40.4,270,2], [-42,276,2], [-43.6,282,2], [-48,286.4,2], [-54,288,2],   // Schlaufe am Marsfeld
+      [-80, 288, 2, 11], [-120, 288, 2], [-150, 288, 2],                             // unter dem Eisenturm hindurch
       [-170, 288, 2], [-188.4, 280.4, 2], [-196, 262, 2.2],                          // links zur Eisenbrücke
       [-196, 240, 2.6], [-196, 218, 3.4], [-196, 196, 2.6],
-      [-196, 172, 3], [-196, 150, 5], [-196, 126, 8],                                // Anstieg zum Hügel
-      [-188.4, 107.6, 10.5], [-170, 100, 12.5], [-140, 100, 14.5],
+      [-194.1,189,3.02,13], [-189,183.9,3.45,12], [-182,182,3.88,11.5], [-173.5,182,4.3,11.5], [-165,182,4.72,11.5], [-156.5,182,5.15,11.5], [-148,182,5.58,12],   // Gassen hinauf zum Hügel (eng)
+      [-140.5,180,6.0,13], [-135,174.5,6.43,13], [-133,167,6.85,13], [-135,159.5,7.28,13], [-140.5,154,7.7,12.5], [-148,152,8.12,11.5], [-156.5,152,8.55,11.5], [-165,152,8.97,12],   // Kehre am Weinberg (rechts)
+      [-173,150.7,9.4,13], [-180.3,147,9.83,14], [-186,141.3,10.25], [-189.7,134,10.67], [-191,126,11.1], [-189.7,118,11.53], [-186,110.7,11.95], [-180.3,105,12.38], [-173,101.3,12.8], [-165,100,13.22],   // Kehre an der Treppe (links)
+      [-156.7,100,13.65], [-148.3,100,14.07], [-140,100,14.5],
       [-123, 93, 15.3], [-116, 76, 16], [-123, 59, 16], [-140, 52, 15.5],            // Kehre um die Mühle (rechts)
       [-175, 52, 14],
       [-193.4, 44.4, 13], [-201, 26, 12], [-193.4, 7.6, 11], [-175, 0, 10],          // Kehre um den Obelisken (links)
@@ -1031,38 +1076,46 @@ const STRECKEN = {
     belaege: [
       { von: [72, 0], bis: [118, 0], art: 'pflaster' },                              // Platz am Triumphbogen
       { von: [185.5, 159.5], bis: [20, 240], art: 'pflaster' },                      // Uferstrasse und Steinbrücke
+      { von: [-6, 288], bis: [-110, 288], art: 'sand' },                             // Sandwege auf dem Marsfeld, unter dem Eisenturm hindurch
       { von: [-196, 238], bis: [-196, 198], art: 'holz' },                           // Eisenbrücke mit Bohlen
-      { von: [-196, 150], bis: [-175, 0], art: 'pflaster' },                         // Gassen am Hügel
+      { von: [-194.1, 189], bis: [-175, 0], art: 'pflaster' },                       // Gassen am Hügel
     ],
     raender: [{ von: [80, 0], bis: [110, 0], seite: 0, rand: 0.6 }, { von: [-62, 288], bis: [-98, 288], seite: 0, rand: 0.6 }],
     bruecken: [{ von: [20, 200], bis: [20, 236] }, { von: [-196, 236], bis: [-196, 200] }],
     brueckenArt: ['stein', 'eisen'],
     fluesse: [{ z: 218, breite: 40, y: -0.8, ufer: 1.3, x0: -440, x1: 436 }],
     schanzen: [{ pos: [-150, 0], laenge: 10, hoehe: 1.6 }],
+    boostfelder: [{ pos: [20, 198] }, { pos: [-196, 238] }, { pos: [-137, 53] }, { pos: [-117, 0] }],   // nicht auf einem Weg einer Gabelung
     wege: [
-      { id: 'passage', art: 'abkuerzung', name: 'Passage', breite: 8, rand: 1.2, belag: 'pflaster',
-        punkte: [[196, 112], [176, 127, 2.3], [158, 143, 1.9], [143, 157, 1.6], [130, 164.4]] },
+      { id: 'passage', art: 'gabelung', name: 'Passage', nameHaupt: 'Boulevard', breite: 9, rand: 1.2, belag: 'pflaster', anteil: 0.5,
+        // zweigt zuerst sanft ab (27°, bisher 54°): sonst verpasste jeder neunte Bot die Einfahrt und prallte an die Ecke; in der Mitte
+        // ein leichter Knick um ein Haus: gerade war sie 0,27 s schneller als der Boulevard (Fassung 1.4)
+        punkte: [[196, 112], [191, 122, 2.4], [182, 132, 2.1], [170, 141, 1.9], [163, 152, 1.8], [152, 157, 1.7], [140, 166, 1.6], [126, 170]] },
+      { id: 'park', art: 'gabelung', name: 'Parkweg', nameHaupt: 'Eisenturm', breite: 12, rand: 1.2, belag: 'kies', anteil: 0.5,
+        // 7 m flacher als im ersten Entwurf: sonst war er 0,25 s langsamer als der Weg unter dem Eisenturm (Fassung 1.4)
+        punkte: [[-6, 288], [-20, 299], [-38, 312], [-58, 322], [-80, 325], [-102, 322], [-120, 311], [-132, 299], [-142, 288]] },
       { id: 'gasse', art: 'abkuerzung', name: 'Treppengasse', breite: 8, rand: 1.2, belag: 'pflaster',
-        punkte: [[-152, 100], [-160, 88, 14.5], [-163, 76, 15], [-160, 64, 15.2], [-152, 52]] },
-      { id: 'park', art: 'umleitung', name: 'Parkweg', breite: 12, rand: 1.5, belag: 'kies',
-        punkte: [[-22, 288], [-34, 304], [-46, 324], [-62, 338], [-80, 342], [-98, 338], [-114, 324], [-126, 304], [-138, 288]] },
+        // fast gerade hinter der Mühle durch: mit zwei spitzen Ecken war sie 2,7 s langsamer als die Strasse; zweigt im Bogen ab,
+        // rechtwinklig verpasste jeder dritte Bot mit vollem Tempo die Einfahrt (Fassung 1.4)
+        punkte: [[-163, 100], [-156, 98, 13.8], [-151, 93, 13.9], [-149, 85, 14.4], [-149, 76, 14.9], [-150, 62, 15.1], [-152, 52]] },
+      { id: 'kreisel', art: 'umleitung', name: 'Kreisel', breite: 12, rand: 1.5, belag: 'pflaster',
+        punkte: [[64, 0], [74, -14], [88, -24], [104, -24], [116, -14], [126, 0]] },
     ],
     slots: [
       { id: 'R1', art: 'rampe', pos: [30, 0] },
       { id: 'R2', art: 'rampe', pos: [196, 80] },
       { id: 'R3', art: 'rampe', pos: [-150, 288] },
-      { id: 'A1', art: 'abkuerzung', weg: 'passage' },
       { id: 'A2', art: 'abkuerzung', weg: 'gasse' },
-      { id: 'H1', art: 'hindernis', pos: [60, 0] },
+      { id: 'H1', art: 'hindernis', pos: [46, 0] },
       { id: 'H2', art: 'hindernis', pos: [182, 14] },
-      { id: 'H3', art: 'hindernis', pos: [98, 176] },
+      { id: 'H3', art: 'hindernis', pos: [140, 170] },
       { id: 'H4', art: 'hindernis', pos: [20, 218] },
-      { id: 'H5', art: 'hindernis', pos: [-10, 288] },
+      { id: 'H5', art: 'hindernis', pos: [-110, 288] },
       { id: 'H6', art: 'hindernis', pos: [-196, 218] },
-      { id: 'H7', art: 'hindernis', pos: [-196, 150] },
-      { id: 'H8', art: 'hindernis', pos: [-116, 76] },
-      { id: 'H9', art: 'hindernis', pos: [-201, 26] },
-      { id: 'U1', art: 'umleitung', weg: 'park' },
+      { id: 'H7', art: 'hindernis', pos: [-189.6, 134.4] },   // im Bogen nach der Treppe statt zwischen zwei Kehren (Fassung 1.4)
+      { id: 'H8', art: 'hindernis', pos: [-170.7, 52.5] },   // nach der Mühle statt in der Kehre
+      { id: 'H9', art: 'hindernis', pos: [-105.4, 0] },   // auf der Zielgeraden statt in der Kehre um den Obelisken
+      { id: 'U1', art: 'umleitung', weg: 'kreisel' },
     ],
     frei: [[-80, 304, 66, 1], [-80, 288, 36], [95, 0, 27], [148, 50, 30], [-140, 76, 11], [-175, 26, 12], [-80, 88, 30], [96, 282, 36], [24, 72, 36], [-20, -24, 20]],
     gelaende: [[-150, 70, 8, 60], [-80, 90, 10, 34]],
@@ -1551,7 +1604,9 @@ class Strecke {
     sperre(0, 30, 80);                                                     // Start und Ziel
     for (const sl of this.slots) if (sl.art === 'hindernis' || sl.art === 'rampe') sperre(sl.s, 20, 20);   // Bau-Slots (Rampen und Hindernisse)
     for (const sch of this.schanzen) sperre(sch.s, 45, 30);                // feste Schanzen
-    for (const w of this.wege) { sperre(w.von, 35, 20); sperre(w.bis, 15, 25); }   // Abzweigungen und Einmündungen
+    // Abzweigungen und Einmündungen; auf umgebauten Strecken (mit Gabelung, ab Etappe 4) auch nicht auf dem Stück, das eine Umleitung sperrt
+    const umgebaut = this.wege.some((w) => w.art === 'gabelung');
+    for (const w of this.wege) { sperre(w.von, 35, 20); sperre(w.bis, 15, 25); if (umgebaut && w.art === 'umleitung') sperre(w.von, 0, w.spanne); }
     const kr = this.idealKr, wert = new Float64Array(n), weit = (m) => Math.round(m / H.ds);
     for (let i = 0; i < n; i++) {
       if (zu[i]) continue;
@@ -1626,6 +1681,12 @@ class Strecke {
       if (Math.abs(p.d) > H.hb[p.i] + rand + 0.2) { weg.nase = { x: ex, z: ez, s: p.s, j }; break; }
     }
     if (!weg.nase) weg.nase = { x: pfad.x[pfad.n >> 1], z: pfad.z[pfad.n >> 1], s: von + 30, j: pfad.n >> 1 };
+    // Gabelung: fester zweiter Weg für alle, etwa gleich schnell wie der erste Weg (die Hauptstrecke). Die Bots fahren ihn auf einer eigenen Ideallinie.
+    if (w.art === 'gabelung') {
+      const id = this.idealWeg(pfad);
+      weg.ideal = id.o; weg.idealKr = id.kr; weg.anteil = w.anteil != null ? w.anteil : 0.5;
+      weg.nameHaupt = w.nameHaupt || 'Hauptstrecke';
+    }
     // Umleitung: schräge Leitwand, die den kurzen (Haupt-)Weg sperrt und auf den Nebenweg lenkt
     if (w.art === 'umleitung') {
       const sA = (weg.nase.s - CONFIG.wirkung.umleitungLaenge + this.laenge) % this.laenge;
@@ -1635,6 +1696,50 @@ class Strecke {
       weg.sperre = { ax: H.x[iA] + H.nx[iA] * dA, az: H.z[iA] + H.nz[iA] * dA, bx: weg.nase.x, bz: weg.nase.z, sA, sB: weg.nase.s };
     }
     return weg;
+  }
+
+  // Ideallinie eines offenen Weges (Gabelung): wie die der Hauptstrecke, an beiden Enden in der Mitte des Weges
+  idealWeg(P) {
+    const n = P.n, o = new Float64Array(n), sicherheit = 1.7;
+    for (const K of [14, 9, 6, 4, 2]) {
+      for (let iter = 0; iter < 160; iter++) {
+        for (let i = 3; i < n - 3; i++) {
+          const a = Math.max(0, i - K), b = Math.min(n - 1, i + K);
+          const mx = (P.x[a] + P.nx[a] * o[a] + P.x[b] + P.nx[b] * o[b]) / 2, mz = (P.z[a] + P.nz[a] * o[a] + P.z[b] + P.nz[b] * o[b]) / 2;
+          const lim = Math.max(0, P.hb[i] - sicherheit) * Math.min(1, i / 8, (n - 1 - i) / 8);
+          o[i] += (clamp((mx - P.x[i]) * P.nx[i] + (mz - P.z[i]) * P.nz[i], -lim, lim) - o[i]) * 0.5;
+        }
+      }
+    }
+    const kr = new Float64Array(n), M = 3;
+    for (let i = 0; i < n; i++) {
+      const a = Math.max(0, i - M), c = Math.min(n - 1, i + M);
+      if (c - a < 2) continue;
+      const ax = P.x[a] + P.nx[a] * o[a], az = P.z[a] + P.nz[a] * o[a], bx = P.x[i] + P.nx[i] * o[i], bz = P.z[i] + P.nz[i] * o[i], cx = P.x[c] + P.nx[c] * o[c], cz = P.z[c] + P.nz[c] * o[c];
+      const kreuz = (bx - ax) * (cz - bz) - (bz - az) * (cx - bx), l = hyp(bx - ax, bz - az) * hyp(cx - bx, cz - bz) * hyp(cx - ax, cz - az);
+      kr[i] = l > 1e-9 ? (2 * kreuz) / l : 0;
+    }
+    return { o, kr };
+  }
+
+  // Kurven mit weniger als 60 m Radius (für den Steckbrief; dieselbe Zählung wie tools/streckenmass.js): zusammenhängende Stücke der
+  // Mittellinie mit Krümmung über 1/60 (über ±4 m geglättet), mindestens 6 m lang; ein Richtungswechsel beginnt eine neue Kurve,
+  // Stücke gleicher Richtung mit weniger als 10 m Abstand zählen als eine
+  kurvenZahl() {
+    if (this._kurven != null) return this._kurven;
+    const P = this.haupt, n = P.n, ds = P.ds, M = Math.max(1, Math.round(4 / ds)), g = new Float64Array(n), grenze = 1 / 60;
+    for (let i = 0; i < n; i++) { let s = 0; for (let j = -M; j <= M; j++) s += P.kr[(i + j + n) % n]; g[i] = s / (2 * M + 1); }
+    let start = 0; while (start < n && Math.abs(g[start]) > grenze) start++;
+    const st = [];
+    let an0 = false;
+    for (let q = 0; q <= n; q++) {
+      const i = (start + q) % n, an = q < n && Math.abs(g[i]) > grenze, vz = an ? Math.sign(g[i]) : 0, l = st[st.length - 1];
+      if (an0 && (!an || vz !== l.vz)) { l.ende = q; an0 = false; }
+      if (an && !an0) { st.push({ start: q, ende: q, vz }); an0 = true; }
+    }
+    const k = [];
+    for (const s of st) { const l = k[k.length - 1]; if (l && l.vz === s.vz && (s.start - l.ende) * ds < 10) l.ende = s.ende; else k.push(Object.assign({}, s)); }
+    return (this._kurven = k.filter((s) => (s.ende - s.start) * ds >= 6).length);
   }
 
   // Ideallinie: seitlicher Versatz pro Abtastpunkt, per «Gummiband» geglättet (kürzester, runder Weg)
@@ -1970,7 +2075,10 @@ class Rennen {
       }
       k.wi = pw.i;
       P = Q; i = pw.i; t = pw.t; s = pw.s; d = pw.d; hb = Q.hb[i]; rand = w.rand;
-      sHaupt = (w.von + (s / w.laenge) * w.spanne) % L;
+      // Stand auf der Hauptstrecke: weit weg von ihr anteilig zwischen Abzweigung und Einmündung, nahe an ihr wie dort gemessen,
+      // dazwischen fliessend. So springen Platz und Abstände beim Wechsel zwischen Hauptstrecke und Weg nicht (Fassung 1.4).
+      const anteilig = (w.von + (s / w.laenge) * w.spanne) % L, weit = clamp((Math.abs(pm.d) - H.hb[pm.i] - 2) / 10, 0, 1);
+      sHaupt = (anteilig + (1 - weit) * rundenDiff(pm.s, anteilig, L) + L) % L;
       aufStrasse = Math.abs(d) <= hb + 0.25 || aufHauptbahn;
       const aussen = Math.abs(d) - (hb + rand);
       if (aussen > 0 && !nurOrten) {
@@ -2003,7 +2111,7 @@ class Rennen {
         // Wechsel auf den Nebenweg
         k.pfad = wegW.idx + 1; k.wi = wegI;
         P = wegW.pfad; i = wegI; t = wegT; s = wegS; d = wegD; hb = P.hb[i]; rand = wegW.rand;
-        sHaupt = (wegW.von + (s / wegW.laenge) * wegW.spanne) % L;
+        // sHaupt bleibt in diesem Schritt der Stand auf der Hauptstrecke (das Auto ist noch direkt neben ihr)
       } else {
         const aussen = Math.abs(d) - (hb + rand);
         if (aussen > 0 && wegAussen > 0) {
@@ -2294,7 +2402,7 @@ class Rennen {
 
   // Darf das Fahrzeug diesen Nebenweg befahren?
   wegOffen(k, w) {
-    if (w.art === 'umleitung') return true;
+    if (w.art === 'umleitung' || w.art === 'gabelung') return true;      // Gabelungen sind immer für alle offen
     if (k.pfad === w.idx + 1) return true;
     for (const bw of this.bauwerke) {
       if (bw.art === 'abkuerzung' && bw.besitzer === k.idx && bw.fertig && !bw.benutzt && this.S.slots[bw.slot].weg === w.idx) return true;
@@ -2685,6 +2793,9 @@ class Bot {
     this.bauUhr = 1 + z() * 2;
     this.gesehen = {};          // Hindernis-Nummer → rechtzeitig gesehen?
     this.weg = -1;              // geplanter Nebenweg (−1 = Hauptstrecke)
+    this.gabel = {};            // Gabelung → Entscheidung bei dieser Durchfahrt { strecke, nimmt }
+    this.gabelLetzt = {};       // Gabelung → zuletzt den zweiten Weg genommen?
+    this.gabelLieb = {};        // Gabelung → eigene Vorliebe in diesem Rennen (− erster Weg … + zweiter Weg)
     this.frei = null;           // freie Lücke neben einem Hindernis voraus: { a, b }
     this.e = { lenk: 0, gas: 0, bremse: 0, drift: false, wahl: 0, bauWechsel: 0, slotWechsel: 0, bauen: false, reset: false, bauArt: null, bauSlot: -1 };
     // Der Bot kennt sein Auto (k.w, aus den Fähigkeiten): Stärken nutzen, Risiken meiden (CONFIG.bots.auto)
@@ -2797,11 +2908,7 @@ class Bot {
     if (k.pfad > 0) {
       const w = S.wege[k.pfad - 1];
       const sz = k.s + voraus;
-      if (sz < w.laenge) {
-        const lim = Math.max(0, w.pfad.hb[0] - 1.6);
-        w.pfad.ort(sz, clamp(versatz * 0.4, -lim, lim), aus);
-        return w.pfad.bei(w.pfad.kr, sz);
-      }
+      if (sz < w.laenge) return this.wegPunkt(w, sz, versatz, aus);
       sm = (w.bis + sz - w.laenge) % L;
     } else {
       sm = (k.s + voraus) % L;
@@ -2811,7 +2918,7 @@ class Bot {
         if (bis > L / 2) bis -= L;                 // negativ: Einfahrt liegt schon hinter uns
         if (voraus > bis) {
           const sz = voraus - bis;
-          if (sz < w.laenge) { w.pfad.ort(sz, 0, aus); return w.pfad.bei(w.pfad.kr, sz); }
+          if (sz < w.laenge) { if (w.ideal) return this.wegPunkt(w, sz, versatz, aus); w.pfad.ort(sz, 0, aus); return w.pfad.bei(w.pfad.kr, sz); }
           sm = (w.bis + sz - w.laenge) % L;
         } else if (this.p.umsichtig) { seite = w.seite; seiteW = clamp((60 - (bis - voraus)) / 40, 0, 1); }      // «Ultra»: schon vorher auf die Seite des Nebenwegs (an der Leitwand vorbei)
       }
@@ -2850,6 +2957,72 @@ class Bot {
     return S.idealKr[i];
   }
 
+  // Punkt auf einem Nebenweg: auf Gabelungs-Wegen der Ideallinie entlang, sonst nahe der Mitte
+  wegPunkt(w, sz, versatz, aus) {
+    const lim = Math.max(0, w.pfad.bei(w.pfad.hb, sz) - 1.6);
+    if (!w.ideal) { w.pfad.ort(sz, clamp(versatz * 0.4, -lim, lim), aus); return w.pfad.bei(w.pfad.kr, sz); }
+    w.pfad.ort(sz, clamp(w.pfad.bei(w.ideal, sz) + versatz * 0.4, -lim, lim), aus);
+    return w.pfad.bei(w.idealKr, sz);
+  }
+
+  // Wie sich die beiden Wege einer Gabelung fahren (einmal pro Strecke): lose = zweiter Weg mit losem Belag (Kies, Schotter, Schnee),
+  // eng = zweiter Weg kurviger als der erste (−1 … 1), schub = Schanze oder Boost-Feld auf dem ersten Weg (−1) oder keines (0),
+  // wild = welcher Weg der wildere ist (+1 der zweite, −1 der erste): loser Belag oder Schanze
+  static gabelArt(S, w) {
+    const C = S._gabelArt || (S._gabelArt = {});
+    if (C[w.idx]) return C[w.idx];
+    const H = S.haupt, L = S.laenge, P = w.pfad, B = CONFIG.belag;
+    let k1 = 0, k2 = 0, lose1 = 0, n1 = 0;
+    for (let q = 0; q <= w.spanne; q += H.ds) { const i = Math.floor(((w.von + q) % L) / H.ds) % H.n; k1 += Math.abs(S.idealKr[i]) * H.ds; lose1 += B[S.belagArt[i]] && B[S.belagArt[i]].gelaende ? 1 : 0; n1++; }
+    for (let i = 0; i < P.n; i++) k2 += Math.abs(w.idealKr ? w.idealKr[i] : P.kr[i]) * P.ds;
+    const lose = (B[w.belag] && B[w.belag].gelaende ? 1 : 0) - lose1 / Math.max(1, n1);
+    const schub = S.schanzen.some((x) => S.imBereich(x.s, w.von, w.bis)) || S.boostfelder.some((f) => S.imBereich(f.s, w.von, w.bis)) ? -1 : 0;
+    const sprung = S.schanzen.some((x) => S.imBereich(x.s, w.von, w.bis)) ? 1 : 0;
+    return (C[w.idx] = { lose, eng: clamp((k2 - k1) / Math.max(0.5, Math.max(k1, k2)), -1, 1), schub, wild: clamp(lose - sprung, -1, 1) });
+  }
+
+  // Gabelung: welchen Weg nimmt der Bot bei dieser Durchfahrt? true = den zweiten Weg. Jeder Bot entscheidet jedes Mal neu
+  // (CONFIG.bots.gabel): nach seinem Auto, seiner Vorliebe in diesem Rennen, dem Verkehr auf beiden Wegen, Hindernissen,
+  // seiner Lage im Rennen, dem Weg vom letzten Mal und dem Bot direkt vor ihm (dem folgt er nicht einfach).
+  waehleGabel(R, k, w) {
+    const zw = CONFIG.bots.gabelZwang;                                                // nur für Messungen (Optimierer pro Weg)
+    if (zw != null) return typeof zw === 'object' ? zw[w.id] === 1 : zw === 1;
+    const G = CONFIG.bots.gabel, S = R.S, L = S.laenge, a = k.w, art = Bot.gabelArt(S, w);
+    let p = w.anteil;
+    // Auto: Geländewagen auf losem Belag, kurvenstarke und turbostarke Autos auf dem engeren Weg, starker Schub auf dem Weg mit Schanze oder Boost-Feld
+    const auto = art.lose * clamp((1 - a.gelaende) / 0.65, -0.5, 1) + art.eng * clamp(((1 - a.kurve) / 0.3 + (a.turbo - 1) / 0.2) / 2, -1, 1) + art.schub * clamp((a.rampe - 1) / 0.25, -1, 1);
+    p += G.auto * clamp(auto, -1, 1);
+    if (this.gabelLieb[w.idx] === undefined) this.gabelLieb[w.idx] = (R.zufall() * 2 - 1) * G.lieb;
+    p += this.gabelLieb[w.idx];
+    // Lage im Rennen: wer hinten liegt, wagt mehr (der wildere Weg)
+    const platz = R.reihenfolge.indexOf(k.idx) / Math.max(1, R.karts.length - 1);
+    p += G.hinten * (platz - 0.5) * 2 * art.wild;
+    // Abwechslung: lieber den Weg vom letzten Mal nicht
+    if (this.gabelLetzt[w.idx] !== undefined) p += this.gabelLetzt[w.idx] ? -G.wechsel : G.wechsel;
+    // Verkehr: Autos bis 50 m vor ihm auf einem der beiden Wege oder auf dem Weg dorthin (mit ihrer Wahl); dazu der Bot direkt vor ihm
+    let n1 = 0, n2 = 0, vorne = null, vorneAb = Infinity;
+    for (const o of R.karts) {
+      if (o === k || o.zielZeit != null) continue;
+      const dv = rundenDiff(o.sHaupt, k.sHaupt, L);
+      if (dv <= 0 || dv > 50 + w.spanne) continue;
+      let zweiter = null;
+      if (o.pfad === w.idx + 1) zweiter = true;
+      else if (o.pfad === 0 && S.imBereich(o.sHaupt, w.von, w.bis)) zweiter = false;
+      else if (o.pfad === 0 && dv <= 50 && o.bot && o.bot.gabel[w.idx] && o.bot.gabel[w.idx].strecke > k.strecke - L / 2) zweiter = o.bot.gabel[w.idx].nimmt;
+      if (zweiter === null) continue;
+      if (dv <= 50) { if (zweiter) n2++; else n1++; }
+      if (dv < vorneAb && dv < 1.5 * Math.max(8, k.v)) { vorneAb = dv; vorne = zweiter; }
+    }
+    p -= G.verkehr * (n2 - n1);
+    if (vorne !== null) p += vorne ? -G.folgen : G.folgen;
+    // Hindernis auf dem ersten Weg (zwischen Abzweigung und Einmündung), das er gesehen hat: lieber der zweite Weg
+    for (const bw of R.bauwerke) {
+      if (bw.eigen || bw.art === 'rampe' || bw.art === 'abkuerzung' || !(bw.betroffen & (1 << k.idx))) continue;
+      if (S.imBereich(bw.s, w.von, w.bis) && R.zufall() < this.p.sehen) { p += G.sehen; break; }
+    }
+    return R.zufall() < clamp(p, 0.08, 0.92);
+  }
+
   // Soll der Bot an der nächsten Abzweigung einen Nebenweg nehmen?
   planeWeg(R, k) {
     const S = R.S, L = S.laenge, vorher = this.weg;
@@ -2859,7 +3032,21 @@ class Bot {
       let bis = wegVor(k.s, w.von, L);
       if (bis > L / 2) bis -= L;
       if (bis > 90 || bis < -70) continue;
-      if (this.p.umsichtig && bis < 0 && vorher !== w.idx) continue;      // «Ultra»: nicht mehr in eine Einfahrt lenken, die schon hinter ihm liegt
+      if (w.art === 'gabelung') {
+        // einmal pro Durchfahrt entscheiden, sobald die Abzweigung höchstens 90 m voraus liegt
+        const g = this.gabel[w.idx];
+        if (bis > 0 && (!g || g.strecke < k.strecke - L / 2)) {
+          const nimmt = this.waehleGabel(R, k, w);
+          this.gabel[w.idx] = { strecke: k.strecke, nimmt };
+          this.gabelLetzt[w.idx] = nimmt;
+        }
+        // den zweiten Weg ansteuern, solange die Einfahrt nicht schon verpasst ist (Wege noch nicht ganz getrennt)
+        if (this.gabel[w.idx] && this.gabel[w.idx].nimmt && bis > -wegVor(w.von, w.nase.s, L)) this.weg = w.idx;
+        continue;
+      }
+      // Nie mehr in eine Einfahrt lenken, die schon hinter ihm liegt (seit Fassung 1.4 alle Bots, vorher nur «Ultra»): Wer von einer kurzen
+      // Umleitung zurückkommt, ist sonst noch keine 70 m nach der Einfahrt, will wieder hinein und fährt einen Kreis (bis 7 s verloren)
+      if (bis < 0 && vorher !== w.idx) continue;
       for (const bw of R.bauwerke) {
         if (bw.weg || R.S.slots[bw.slot].weg !== w.idx) continue;
         if (bw.art === 'abkuerzung' && bw.besitzer === k.idx && !bw.benutzt) this.weg = w.idx;       // eigene Abkürzung
@@ -3540,7 +3727,10 @@ const Grafik = {
         if (wurf < (berg ? 0.36 : 0.2)) Deko.baum(deko, x, y, -z, zuf);
         else if (wurf < (berg ? 0.44 : 0.34)) Deko.laubbaum(deko, x, y, -z, zuf);
         else if (wurf < (berg ? 0.54 : 0.44)) Deko.busch(deko, x, y, -z, zuf);
-        else if (wurf < 0.58) Deko.haufen(deko, x, y, -z, zuf, B.kies || 0xb9a886);
+        else if (wurf < 0.58) {                                                    // Kieshaufen: nur so gross, dass er nicht auf den Seitenstreifen reicht
+          let rMax = 6.5; while (rMax > 2.2 && imKorridor(x, z, null, rMax + 0.3)) rMax -= 1;
+          Deko.haufen(deko, x, y, -z, zuf, B.kies || 0xb9a886, Math.max(2.2, rMax));
+        }
         else if (wurf < (berg ? 0.78 : 0.68)) Deko.fels(deko, x, y, -z, zuf);
         else if (wurf < 0.84) { if (nah) Deko.zaun(deko, x, y, -z, dreh); else if (!imKorridor(x, z, null, 8)) Deko.haus(deko, x, y, -z, dreh + (s > 0 ? 0 : Math.PI), zuf); else Deko.busch(deko, x, y, -z, zuf); }
         else if (wurf < 0.9) { if (nah) Deko.laterne(deko, x, y, -z, dreh + (s > 0 ? Math.PI : 0)); else Deko.tafel(deko, x, y, -z, dreh, zuf); }
@@ -3571,6 +3761,34 @@ const Grafik = {
       schild.box(o[0], o[1] + 1.95, o[2], 0.1, 0.7, 0.7, F(sf[sl.art]), dreh, 0, Math.PI / 4);
     }
     W.add(schild.netz(this.mat));
+    // 7. Wegweiser vor jeder Gabelung: blaue Tafel über der Strasse mit Pfeilen und den Namen beider Wege
+    for (const w of S.wege) if (w.art === 'gabelung') this.wegweiser(W, S, w);
+  },
+
+  wegweiser(W, S, w) {
+    const H = S.haupt, L = S.laenge, F = Geo.farbe, s = (w.von - 55 + L) % L, i = Math.floor(s / H.ds) % H.n, o = {};
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 256;
+    const x = c.getContext('2d'), links = w.seite > 0 ? w.name : w.nameHaupt, rechts = w.seite > 0 ? w.nameHaupt : w.name;
+    x.fillStyle = '#1560a8'; x.fillRect(0, 0, 1024, 256); x.strokeStyle = '#fff'; x.lineWidth = 10; x.strokeRect(14, 14, 996, 228);
+    x.fillStyle = '#fff'; x.fillRect(509, 40, 6, 176);
+    const pfeil = (cx, r) => { x.save(); x.translate(cx, 128); x.rotate(r); x.beginPath(); x.moveTo(0, -58); x.lineTo(40, -10); x.lineTo(14, -10); x.lineTo(14, 52); x.lineTo(-14, 52); x.lineTo(-14, -10); x.lineTo(-40, -10); x.closePath(); x.fill(); x.restore(); };
+    pfeil(84, -0.6); pfeil(940, 0.6);
+    x.font = '700 64px system-ui, sans-serif'; x.textBaseline = 'middle';
+    x.textAlign = 'left'; x.fillText(links, 146, 130, 350);
+    x.textAlign = 'right'; x.fillText(rechts, 878, 130, 350);
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+    // Unterkante der Tafel 5,2 m über der Strasse (auch hohe Autos und Sprünge passen darunter), Pfosten bis über den oberen Balken
+    const hb = H.hb[i] + 1.4, b = Math.min(2 * hb - 1.5, 13), hoch = 5.2 + b / 8, pfosten = hoch + b / 8 + 0.4;
+    H.ort(s, 0, o);
+    const tafel = new THREE.Mesh(new THREE.PlaneGeometry(b, b / 4), new THREE.MeshLambertMaterial({ map: tex }));
+    tafel.position.set(o.x, o.y + hoch, -o.z);
+    tafel.rotation.y = Math.atan2(-H.tx[i], H.tz[i]);                       // zeigt den Ankommenden entgegen (Grafik: z gespiegelt)
+    W.add(tafel);
+    const g = new Geo(), stahl = F(0x8d949a), dreh = Math.atan2(H.tz[i], H.tx[i]);
+    for (const sd of [1, -1]) { H.ort(s, sd * hb, o); g.box(o.x, o.y + pfosten / 2, -o.z, 0.32, pfosten, 0.32, stahl); }
+    H.ort(s + 0.25, 0, o); g.box(o.x, o.y + hoch + b / 8 + 0.15, -o.z, 0.22, 0.22, 2 * hb, stahl, dreh);
+    H.ort(s + 0.25, 0, o); g.box(o.x, o.y + hoch - b / 8 - 0.15, -o.z, 0.22, 0.22, 2 * hb, stahl, dreh);
+    W.add(g.netz(this.mat, true));
   },
 };
 
@@ -3584,8 +3802,8 @@ const Deko = {
     g.zyl(x, y + h * 0.5, z, h * 0.34, 0, h * 0.55, 6, f(gruen), null, zuf() * 3);
     g.zyl(x, y + h * 0.82, z, h * 0.24, 0, h * 0.45, 6, f(gruen, 1.12), null, zuf() * 3);
   },
-  haufen(g, x, y, z, zuf, farbe) {
-    const r = 2.5 + zuf() * 4;
+  haufen(g, x, y, z, zuf, farbe, rMax) {
+    const r = Math.min(2.5 + zuf() * 4, rMax || 9);
     g.zyl(x, y + r * 0.3, z, r, r * 0.12, r * 0.62, 7, Geo.farbe(farbe, 0.9 + zuf() * 0.2), null, zuf() * 3);
   },
   fels(g, x, y, z, zuf) {
@@ -3849,11 +4067,25 @@ const Schauraum = {
     };
     this.lauf = requestAnimationFrame(bild);
   },
-  // Shader übersetzen, ohne zu warten (wo der Browser das kann), dann einblenden
+  // Shader übersetzen, ohne zu warten (wo der Browser das kann), dann einblenden. Eigene Abfrage statt R.compileAsync: three.js bricht
+  // dort mit einem Fehler ab, wenn ein Material während des Übersetzens freigegeben wird (Auto gewechselt, Rennen gestartet), und das
+  // Bild blieb dann unsichtbar (Fassung 1.4)
   vorbereiten() {
     const R = this.r, fertig = () => { if (this.r !== R) return; this.bereit = true; this.canvas.style.opacity = '1'; };
     this.bereit = false;
-    try { if (R.compileAsync) { R.compileAsync(this.szene, this.kam).then(fertig, fertig); return; } } catch (e) { /* dann sofort */ }
+    try {
+      const mats = R.compileAsync ? R.compile(this.szene, this.kam) : null, P = R.properties;
+      if (mats && mats.forEach && P && P.get) {
+        let n = 0;
+        const pruefe = () => {
+          if (this.r !== R) return;
+          mats.forEach((m) => { const pr = P.get(m).currentProgram; if (!pr || !pr.isReady || pr.isReady()) mats.delete(m); });   // freigegeben oder fertig
+          if (mats.size === 0 || ++n > 3000) fertig(); else setTimeout(pruefe, 10);
+        };
+        setTimeout(pruefe, 10);
+        return;
+      }
+    } catch (e) { /* dann sofort */ }
     fertig();
   },
   zeige(typ, farbe) {
@@ -6044,8 +6276,9 @@ Object.assign(Grafik, {
       }
       // Betonelemente an den Baustellen, abwechselnd rot und weiss
       for (let q = 0; q < n; q += 2) if (seg[e][q] === 2 || seg[e][(q + 1) % n] === 2) {
-        const f = (q >> 1) & 1 ? rot : F(0xeeeae0);
-        for (const p of [[-0.34, 0, -0.14, 0.26], [-0.14, 0.26, -0.07, 0.84], [-0.07, 0.84, 0.1, 0.84], [0.1, 0.84, 0.2, -0.4]]) band(beton, H, q, q + 2, (i) => [s * (D(i, s) + p[0]), p[1], s * (D(i, s) + p[2]), p[3], f], 2);
+        // nur die Abschnitte mit Betonelementen: nie einen Abschnitt weiter, sonst ragt das Ende in einen Weg hinein (Fassung 1.4)
+        const f = (q >> 1) & 1 ? rot : F(0xeeeae0), q0 = seg[e][q] === 2 ? q : q + 1, q1 = seg[e][(q + 1) % n] === 2 ? q + 2 : q + 1;
+        for (const p of [[-0.34, 0, -0.14, 0.26], [-0.14, 0.26, -0.07, 0.84], [-0.07, 0.84, 0.1, 0.84], [0.1, 0.84, 0.2, -0.4]]) band(beton, H, q0, q1, (i) => [s * (D(i, s) + p[0]), p[1], s * (D(i, s) + p[2]), p[3], f], 2);
       }
       for (let i = 0; i < n; i++) {
         const j = (i + 1) % n, t = seg[e][i];
@@ -6090,7 +6323,10 @@ Object.assign(Grafik, {
     }
     // 5. Nebenwege: Holzbohlen oder Schotter
     for (const w of S.wege) {
-      const P = w.pfad, holz = w.belag === 'holz', art = holz ? 'holz' : w.belag === 'pflaster' || w.belag === 'schnee' || w.belag === 'eis' ? w.belag : 'schotter', fw = art === 'schotter' ? F(def.wegFarbe || 0xb59c6c, 2.2) : WEISS3, fg = holz ? F(0x6b4424) : F(0x8f8a7c);
+      // Gabelungen sind feste Strassen: ihr eigener Belag (Kies als Schotter), graue Leitwand statt Baustellenwand
+      const gabel = w.art === 'gabelung', P = w.pfad, holz = w.belag === 'holz';
+      const art = holz ? 'holz' : gabel ? (w.belag === 'kies' ? 'schotter' : w.belag) : w.belag === 'pflaster' || w.belag === 'schnee' || w.belag === 'eis' ? w.belag : 'schotter';
+      const fw = art === 'schotter' ? F(def.wegFarbe || 0xb59c6c, 2.2) : WEISS3, fg = holz ? F(0x6b4424) : gabel ? F(0xa4a8ab) : F(0x8f8a7c), fs = gabel ? F(0xc8ccce) : F(0xff7a1a);
       // an den Enden nur zeichnen, was neben der Fahrbahn der Hauptstrecke liegt (sonst läge der Weg wie ein Teppich auf der Strasse)
       const aufBahn = (i, o) => { const p = H.projiziere(P.x[i] + P.nx[i] * o, P.z[i] + P.nz[i] * o, -1, 0); return Math.abs(p.d) < H.hb[p.i] - 0.3; };
       band(form(art), P, 0, P.n - 1, (i) => {
@@ -6107,7 +6343,7 @@ Object.assign(Grafik, {
         for (const s of [1, -1]) {
           const mx = (P.x[i] + P.x[j]) / 2 + P.nx[i] * s * (hb + w.rand + 0.2), mz = (P.z[i] + P.z[j]) / 2 + P.nz[i] * s * (hb + w.rand + 0.2);
           if (imKorridor(mx, mz, pfade[w.idx + 1], -0.4)) continue;
-          wandStueck(fest, P, i, j, s * (hb + w.rand), s * (hb2 + w.rand), holz ? 1.0 : 0.8, i % 4 === 0 ? F(0xff7a1a) : fg, holz ? 0.5 : 1.4);
+          wandStueck(fest, P, i, j, s * (hb + w.rand), s * (hb2 + w.rand), holz ? 1.0 : 0.8, i % 4 === 0 ? fs : fg, holz ? 0.5 : 1.4);
         }
         if (holz && i % 8 === 4) { const bo = hoehe(P.x[i], P.z[i]).y; fest.box(P.x[i], (P.y[i] + bo) / 2 - 0.3, -P.z[i], 1.0, Math.max(0.5, P.y[i] - bo), hb * 2 + 1, F(0x5a5d62), Math.atan2(P.tz[i], P.tx[i])); }
       }
@@ -6542,7 +6778,8 @@ const Bauten = {
     const G = b.f('gitter'), F = b.f('stein'), L = b.f('licht'), gold = (h) => Geo.farbe(0xffc978, 1.3 - 0.5 * clamp(h / 150, 0, 1)), Q = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
     G.lage(x, y, z, dreh); F.lage(x, y, z, dreh); L.lage(x, y, z, dreh);
     const feld = (p0, p1, p2, p3, nu) => G.vier(G.pkt(p0[0], p0[1], p0[2], gold(p0[1]), 0, p0[1] / 8), G.pkt(p1[0], p1[1], p1[2], gold(p1[1]), nu, p1[1] / 8), G.pkt(p2[0], p2[1], p2[2], gold(p2[1]), nu, p2[1] / 8), G.pkt(p3[0], p3[1], p3[2], gold(p3[1]), 0, p3[1] / 8));
-    const E = [[0, 21, 7], [32, 12.5, 4.6], [64, 6, 3.2]];                 // Höhe, Abstand der Beinmitte, halbe Beinbreite
+    // Höhe, Abstand der Beinmitte, halbe Beinbreite. Unten 18,5 statt 21 m und 6 statt 7 m (Fassung 1.4): sonst standen die Beine auf dem Seitenstreifen des Parkwegs
+    const E = [[0, 18.5, 6], [32, 12.5, 4.6], [64, 6, 3.2]];
     for (let e = 0; e < 2; e++) for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
       const ecke = (A, i) => [sx * A[1] + Q[i][0] * A[2], A[0], sz * A[1] + Q[i][1] * A[2]];
       for (let i = 0; i < 4; i++) feld(ecke(E[e], i), ecke(E[e], (i + 1) % 4), ecke(E[e + 1], (i + 1) % 4), ecke(E[e + 1], i), e ? 1 : 2);
@@ -6553,7 +6790,7 @@ const Bauten = {
       feld([q[0] * A[1], A[0], q[1] * A[1]], [r[0] * A[1], A[0], r[1] * A[1]], [r[0] * B2[1], B2[0], r[1] * B2[1]], [q[0] * B2[1], B2[0], q[1] * B2[1]], e ? 1 : 2);
     }
     for (let seite = 0; seite < 4; seite++) for (let k = 0; k < 10; k++) {      // Bögen zwischen den Beinen
-      const P = (t, dy) => { const u = -14 * Math.cos(t), h = 7 + 19 * Math.sin(t) + dy; return seite === 0 ? [u, h, -28] : seite === 1 ? [u, h, 28] : seite === 2 ? [-28, h, u] : [28, h, u]; };
+      const P = (t, dy) => { const u = -12.5 * Math.cos(t), h = 7 + 19 * Math.sin(t) + dy; return seite === 0 ? [u, h, -24.5] : seite === 1 ? [u, h, 24.5] : seite === 2 ? [-24.5, h, u] : [24.5, h, u]; };
       const t0 = (k / 10) * Math.PI, t1 = ((k + 1) / 10) * Math.PI;
       feld(P(t0, 0), P(t1, 0), P(t1, 3.4), P(t0, 3.4), 1);
     }
@@ -6567,7 +6804,7 @@ const Bauten = {
     }
     for (let h = 72; h < 140; h += 9) { const w = lerp(8, 1.9, (h - 64) / 76); for (const q of Q) b.lichtLokal(F, q[0] * w, h, q[1] * w, 1.3, 0xfff0c8, 0.85); }
     b.lichtLokal(F, 0, 157, 0, 7, 0xffffff, 0.95);
-    for (const q of Q) b.lichtLokal(F, q[0] * 21, 3, q[1] * 21, 12, 0xffc070, 0.3);
+    for (const q of Q) b.lichtLokal(F, q[0] * 18.5, 3, q[1] * 18.5, 12, 0xffc070, 0.3);
     G.lage(); F.lage(); L.lage();
   },
   // Weisse Kuppelkirche auf dem Hügel
@@ -9719,9 +9956,10 @@ const Hud = {
     for (const w of S.wege) linie(w.pfad, false, 6, 'rgba(0,0,0,.3)');
     linie(H, true, 9, 'rgba(0,0,0,.3)');
     x.restore();
-    for (const w of S.wege) linie(w.pfad, false, 6, 'rgba(0,0,0,.8)');
+    for (const w of S.wege) linie(w.pfad, false, w.art === 'gabelung' ? 9 : 6, 'rgba(0,0,0,.8)');
     linie(H, true, 9, 'rgba(0,0,0,.85)');
-    for (const w of S.wege) linie(w.pfad, false, 3, w.art === 'abkuerzung' ? '#7ad67f' : '#c9c5b8');
+    // Gabelungen wie die Strasse selbst (hell und breit), Abkürzungen grün, Umleitungen grau
+    for (const w of S.wege) linie(w.pfad, false, w.art === 'gabelung' ? 5 : 3, w.art === 'abkuerzung' ? '#7ad67f' : w.art === 'gabelung' ? '#ebe7dc' : '#c9c5b8');
     // Hauptstrecke: Die Höhe zeigt sich als Helligkeit (tief = dunkler, hoch = heller)
     let y0 = 1e9, y1 = -1e9;
     for (let i = 0; i < H.n; i++) { y0 = Math.min(y0, H.y[i]); y1 = Math.max(y1, H.y[i]); }
@@ -9867,7 +10105,19 @@ const Hud = {
         setze(t.warnung, 'warn', '<span class="pf">' + pf + '</span> Baustelle in ' + Math.max(10, Math.round(wd / 10) * 10) + ' m! <span class="pf">' + pf + '</span>');
         if (t.warnBw !== warn.id) { t.warnBw = warn.id; Ton.spiele('warnung'); }
       }
-      zeige(t.warnung, 'warnAn', !!warn);
+      // Hinweis vor einer Gabelung (blau, blinkt nicht): welcher Weg links und welcher rechts abgeht
+      let gabel = null, gd = 150;
+      if (!warn && k.zielZeit == null && k.pfad === 0) for (const w of R.S.wege) {
+        if (w.art !== 'gabelung') continue;
+        const d = wegVor(k.sHaupt, w.von, R.L);
+        if (d > 4 && d < gd) { gd = d; gabel = w; }
+      }
+      if (gabel) {
+        const li = gabel.seite > 0 ? gabel.name : gabel.nameHaupt, re = gabel.seite > 0 ? gabel.nameHaupt : gabel.name;
+        setze(t.warnung, 'warn', '<span class="pf">↖</span> ' + li + ' · Gabelung in ' + Math.max(10, Math.round(gd / 10) * 10) + ' m · ' + re + ' <span class="pf">↗</span>');
+      }
+      if (a.gabelAn !== !!gabel) { a.gabelAn = !!gabel; t.warnung.classList.toggle('gabel', !!gabel); }
+      zeige(t.warnung, 'warnAn', !!warn || !!gabel);
       zeige(t.falsch, 'falsch', k.falschZeit > 1 && k.zielZeit == null);
       if (t.meldZeit > 0) { t.meldZeit -= dt; if (t.meldZeit <= 0) t.meldung.textContent = ''; }
       // Countdown und grosse Einblendungen
@@ -10131,6 +10381,8 @@ const SYMBOL = {
   nacht: '<path d="M11.5 10.5A5 5 0 0 1 5.5 3a5 5 0 1 0 6 7.5z"/>',
   abkuerzung: '<path d="M4 14V8.5C4 6 6 4.5 8.5 4.5H13M10.5 2l2.5 2.5L10.5 7M4 9.5c0 2 1.5 3.5 4 4"/>',
   boost: '<path d="M9 1.5 3.5 9H8l-1 5.5L12.5 7H8z"/>',
+  kurven: '<path d="M2.5 13.5c3 0 3-4 5.5-4s2.5-4 5.5-4M11 3.5l2.5 2-2.5 2"/>',
+  gabelung: '<path d="M8 14.5V9M8 9 3.5 3.5M8 9l4.5-5.5M3 6.5V3h3.5M13 6.5V3H9.5"/>',
 };
 const symbol = (n) => '<svg viewBox="0 0 16 16" aria-hidden="true">' + SYMBOL[n] + '</svg>';
 function zahlen(von, bis) { const l = []; for (let i = von; i <= bis; i++) l.push({ wert: i, text: String(i) }); return l; }
@@ -10183,10 +10435,12 @@ const Menue = {
     if (!el || !STRECKEN[id]) return;
     const S = holeStrecke(id), def = STRECKEN[id], arten = [];
     for (const a of S.belagArt.concat((def.wege || []).map((w) => w.belag || 'kies'))) if (!arten.includes(a)) arten.push(a);
-    const abk = (def.wege || []).filter((w) => w.art === 'abkuerzung').length, boost = (S.boostfelder || []).length, tz = TAGESZEIT[id] || ['tag', 'Tag'];
+    const abk = (def.wege || []).filter((w) => w.art === 'abkuerzung').length, gab = (def.wege || []).filter((w) => w.art === 'gabelung').length;
+    const boost = (S.boostfelder || []).length, tz = TAGESZEIT[id] || ['tag', 'Tag'];
     const fakt = (sym, text) => '<li>' + symbol(sym) + '<span>' + text + '</span></li>';
     el.innerHTML = '<canvas width="236" height="236" aria-label="Karte der Strecke ' + esc(def.name) + '"></canvas><div class="sk-text"><b>' + esc(def.name) + '</b><span>' + esc(def.text || '') + '</span><ul>' +
-      fakt('laenge', (S.laenge / 1000).toFixed(2).replace('.', ',') + ' km') + fakt(tz[0], tz[1]) + fakt('belag', arten.map((a) => BELAG_NAMEN[a] || a).join(', ')) +
+      fakt('laenge', (S.laenge / 1000).toFixed(2).replace('.', ',') + ' km') + fakt('kurven', S.kurvenZahl() + ' Kurven') + fakt(tz[0], tz[1]) + fakt('belag', arten.map((a) => BELAG_NAMEN[a] || a).join(', ')) +
+      (gab ? fakt('gabelung', gab + (gab > 1 ? ' Gabelungen' : ' Gabelung')) : '') +
       (abk ? fakt('abkuerzung', abk + (abk > 1 ? ' Abkürzungen' : ' Abkürzung')) : '') + (boost ? fakt('boost', boost + ' Boost-Felder') : '') + '</ul>' + Bestenliste.steckbrief(id) + '</div>';
     const k = {}; Hud.zeichneKartenGrund.call(k, S);                // eigene Leinwand: die Karte im Rennen bleibt unberührt
     el.querySelector('canvas').getContext('2d').drawImage(k.grund, 0, 0, 236, 236);

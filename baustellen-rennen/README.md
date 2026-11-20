@@ -67,7 +67,7 @@ Fett: in dieser Fähigkeit allein das beste Auto. Was ein Wert genau bewirkt, st
 - **Bild:** Himmel mit Haufen- und Schleierwolken und einer Sonne, die blendet, Dunst in der Ferne, weiche Schatten, Spiegelungen auf Lack und Glas. Lampen, Fenster, Rücklichter und Boost-Felder leuchten und strahlen (siehe «Grafik-Stufen»). Jede Strecke hat ihre Stimmung und Farbabstimmung: die Kiesgrube liegt im Abendlicht, der Bergpass im klaren Morgen. Am Streckenrand stehen Fichten mit gezackten Astschichten und Laubbäume mit Kronen aus Blätterbüscheln, die sich im Wind wiegen, dazu Gras, Blumen und Steine, Büsche, Felsen, Häuser, Laternen und Tafeln. Auf den Baustellen schwenken Baukräne mit Gittermast langsam ihren Ausleger mit der Last, Bagger mit Raupen graben im Takt, Bauarbeiter mit Helm und Warnweste schaufeln. Auf den Tribünen jubeln die Zuschauer. Über der Strecke kreisen Vögel, Seen haben Wellen und einen Schaumrand. Auf dem Start/Ziel-Bogen wehen Zielflaggen, hinter den Tribünen bunte Fahnen, in Paris und New York gehen Passanten auf den Gehsteigen. Nachts blenden die Scheinwerfer, der Fahrer dreht den Kopf in die Kurve. Stösse an Wänden, Bauwerken und anderen Autos hinterlassen Kratzer und Dellen in der Karosserie. In den Kurven liegen Reifenspuren.
 - **Berühmte Orte:** In «Paris» fährt man am Abend durch den Triumphbogen, an der Glaspyramide vorbei, über Pflaster am Fluss, über eine Stein- und eine Eisenbrücke und unter dem beleuchteten Eisenturm hindurch, dann hinauf zur Mühle und zur weissen Kuppelkirche. Die Fenster und Laternen leuchten, die Scheinwerfer werfen Licht auf die Strasse. Im «Himalaya» beginnt das Rennen im Bergdorf unter Gebetsfahnen, führt auf Schotter und Schnee in Kehren zum Kloster, über eine Hängebrücke und einen gefrorenen See und steil hinunter, während Schnee fällt. In «Ägypten» startet das Rennen zur Mittagszeit an der Uferstrasse am Nil zwischen Palmen, Lehmhäusern und Marktständen, führt durch ein Tempeltor mit Reliefs, eine Allee mit liegenden Löwen und eine Säulenhalle, an Sphinx und Pyramiden vorbei hinauf auf das Plateau und über Sanddünen mit einem Sprung. In «New York» fährt man nachts auf nassen Strassen durch Häuserschluchten mit beleuchteten Fenstern, über einen Platz voller Leuchtreklamen, über eine Hängebrücke mit Lichterketten, an alten Lagerhäusern am Hafen entlang mit Blick auf die Skyline, über eine Stahlbrücke mit Gitterrost an der Statue mit der Fackel vorbei und durch den Park zurück. Am Strassenrand stehen Taxis, aus Rohren steigt Dampf. Alle Bauwerke sind eigene, vereinfachte Nachbauten aus Grundformen, die Reklamen zeigen nur Farben und Formen.
 - **Beläge:** Asphalt, nasser Asphalt, Kopfsteinpflaster, Steinplatten, Schotter, Sand, Schnee, Eis, Holzbohlen und Stahlgitter fahren sich verschieden. Auf Eis dreht das Auto nur zögernd ein, auf nassem Asphalt hält es in Kurven weniger, im Sand, auf Schnee und Schotter ist es etwas langsamer, auf Pflaster, Bohlen und Gitter rüttelt die Federung. Die Bots bremsen vor glatten Stellen früher. Die Werte stehen kommentiert in `CONFIG.belag`.
-- **Boost-Felder:** Auf jeder Strecke liegen fünf leuchtende Felder mit wandernden Pfeilen, meist am Ausgang einer Kurve. Wer darüber fährt, bekommt 1 s lang Schub. Auch die Bots steuern sie an. Anzahl, Dauer und Stärke stehen kommentiert in `CONFIG.boostfeld`; eine Strecke kann ihre Felder auch selbst festlegen (`boostfelder`).
+- **Boost-Felder:** Auf jeder Strecke liegen fünf leuchtende Felder (in Paris vier) mit wandernden Pfeilen, meist am Ausgang einer Kurve. Wer darüber fährt, bekommt 1 s lang Schub. Auch die Bots steuern sie an. Anzahl, Dauer und Stärke stehen kommentiert in `CONFIG.boostfeld`; eine Strecke kann ihre Felder auch selbst festlegen (`boostfelder`).
 - **Grafik-Einstellung:** «Niedrig», «Mittel», «Hoch» oder «Ultra». Beim ersten Start wählt das Spiel selbst, siehe «Grafik-Stufen».
 - **Streckenwahl und Ergebnis:** Unter der Streckenwahl steht ein Steckbrief mit einer kleinen Karte (Höhenschatten, Abkürzungen, Boost-Felder, Sehenswürdigkeiten), Beschreibung, Länge, Belägen, Tageszeit und der Zahl der Abkürzungen und Boost-Felder; dahinter fährt die Strecke selbst in 3D vor. Nach dem Rennen stehen die drei Ersten mit ihren echten Autos und Lackfarben auf dem Siegerpodest.
 
@@ -124,11 +124,11 @@ Baupunkte gibt es nur fürs Aufholen: +3 pro überholtem Fahrer und +1 pro 15 m,
 | Bauwerk | Preis | Wirkung |
 |---|---|---|
 | Sprungrampe | 3 BP | Sprung und 1,5 s Schub, nur für dich |
-| Abkürzung | 6 BP | öffnet einen kurzen Weg nur für dich, spart rund 2 s |
+| Abkürzung | 6 BP | öffnet einen kurzen Weg nur für dich (in der Kiesgrube, am Bergpass und in Paris spart er 0,5 bis 1,2 s pro Runde) |
 | Pylonen | 3 BP | Slalom für alle Fahrer vor dir |
 | Schlammloch | 3 BP | bremst auf der halben Fahrbahn |
 | Absperrung | 4 BP | sperrt rund 60 % der Breite |
-| Umleitung | 6 BP | sperrt an einer Gabelung 20 s lang den kurzen Weg |
+| Umleitung | 6 BP | sperrt an einer Abzweigung 20 s lang den kurzen Weg |
 
 Baustellen gelten nur für Fahrer, die beim Bauen vor dir lagen. Für alle anderen sind sie durchsichtig. Sie bauen sich 2 s lang sichtbar auf, stehen nie näher als 3 s Fahrzeit vor einem Betroffenen und lassen immer eine Lücke. Ein Treffer bremst, hält aber nie an, danach ist man 3 s geschützt.
 
@@ -399,7 +399,7 @@ Mit seinem Tempo-Vorteil ist der «Schwer»-Bot also auf jeder Strecke schneller
 
 ## «Ultra»-Bots
 
-«Ultra» ist die Stufe über «Schwer», wählbar gegen Bots, im Split-Screen und online («Ultra · unschlagbar»). Ein «Ultra»-Bot fährt mit derselben Fahrphysik wie der Spieler, so gut es diese erlaubt: Kurventempo, Bremspunkte und Drift sind pro Strecke mit dem Optimierer gesucht (`tools/ultra.js`, mit vier verschiedenen Autos geprüft, damit sie für jedes Auto passen). Er macht keine Fehler, nimmt jedes Boost-Feld mit, sieht jedes Hindernis und hat 8 % mehr Höchsttempo (`CONFIG.bots.stufen.ultra.tempo`), am Himalaya 12 % (`CONFIG.bots.stufen.ultra.strecken.himalaya.tempo`, siehe unten). Er holt nicht künstlich auf. Seine Baupunkte gibt er vor allem für sich selbst aus (Abkürzung, Rampe), Hindernisse baut er selten und Pylonen nie. Wie «Schwer» fährt er seit Fassung 1.3 allein die Ideallinie und im Verkehr seine eigene Spur.
+«Ultra» ist die Stufe über «Schwer», wählbar gegen Bots, im Split-Screen und online («Ultra · unschlagbar»). Ein «Ultra»-Bot fährt mit derselben Fahrphysik wie der Spieler, so gut es diese erlaubt: Kurventempo, Bremspunkte und Drift sind pro Strecke mit dem Optimierer gesucht (`tools/ultra.js`, mit vier verschiedenen Autos geprüft, damit sie für jedes Auto passen). Er macht keine Fehler, nimmt jedes Boost-Feld mit, sieht jedes Hindernis und hat 8 % mehr Höchsttempo (`CONFIG.bots.stufen.ultra.tempo`), am Himalaya und in Paris 12 % (`CONFIG.bots.stufen.ultra.strecken.himalaya.tempo` und `.paris.tempo`, siehe unten und «Neue Strecken»). Er holt nicht künstlich auf. Seine Baupunkte gibt er vor allem für sich selbst aus (Abkürzung, Rampe), Hindernisse baut er selten und Pylonen nie. Wie «Schwer» fährt er seit Fassung 1.3 allein die Ideallinie und im Verkehr seine eigene Spur.
 
 **Schnellste Runde** (Sportwagen, beste fliegende Runde ohne andere Fahrer; der Optimierer hat hier 200 Versuche, darum weichen seine Zeiten leicht von der Tabelle bei «Schwer» ab):
 
@@ -953,7 +953,265 @@ Pro Strecke gewinnt «Schwer» Kiesgrube 99 %, Bergpass 96 %, Paris 100 %, Himal
 | «Ultra» gewinnt mindestens 99 % gegen 7 «Schwer» | 99,5 % | erreicht |
 | «Ultra» mindestens 4 % schneller als der Optimierer | kleinster Vorsprung 4,8 % | erreicht |
 | Bilder vom Start und von einer Geraden, vorher und nachher | im Projektordner unter `leistung/` | erreicht |
-| Wege an Gabelungen, Minikarte mit Bots auf verschiedenen Wegen | Gabelungen kommen mit Etappe 4 und 5 | offen |
+| Wege an Gabelungen, Minikarte mit Bots auf verschiedenen Wegen | Kiesgrube, Bergpass und Paris seit Etappe 4 (siehe «Neue Strecken»), die anderen drei Strecken folgen in Etappe 5 | zum Teil erreicht |
+
+## Neue Strecken: Kiesgrube, Bergpass und Paris
+
+Stand 20.11.2026, Version 1.4 (Etappe 4 des Auftrags «Auto-Fähigkeiten, Bots, Leistung, Strecken»). Die Kiesgrube, der Bergpass und Paris sind neu gebaut, mit mehr Kurven, mehr Stellen zum Driften und Gabelungen mit zwei etwa gleich schnellen Wegen. Himalaya, Ägypten und New York folgen in Etappe 5. Die Fahrphysik und die Autos sind unverändert. Die Bestenliste behält auf allen Strecken ihre Kennung, die alten Zeiten bleiben also sichtbar (so am 18.11.2026 entschieden, siehe «Grenzen»).
+
+### Gabelungen
+
+- **Zwei Wege, beide immer offen:** An einer Gabelung teilt sich die Strasse in zwei Wege, die sich verschieden fahren und etwa gleich schnell sind. Anders als eine Abkürzung muss man nichts bauen, und anders als eine Umleitung schickt sie niemanden auf einen bestimmten Weg.
+- **Früh zu sehen:** Ein blaues Schild über der Strasse 55 m vor der Gabelung zeigt beide Wege mit Pfeilen und Namen. Ab 150 m vor der Gabelung steht im Hinweisfeld, welcher Weg links und welcher rechts abgeht, in der Kiesgrube zum Beispiel «↖ Kieshalden · Gabelung in 120 m · Schanze ↗» (blau, damit man es nicht mit einer Warnung verwechselt; eine Baustellen-Warnung hat Vorrang). Auf der Minikarte und im Steckbrief ist der zweite Weg hell und so breit wie die Strasse eingezeichnet, die Wände am Weg sind grau statt orange.
+- **Steckbrief:** zeigt neu die Zahl der Kurven und der Gabelungen.
+- **Bots:** Jeder Bot entscheidet bei jeder Durchfahrt neu, nach seinem Auto (der Geländewagen eher auf losem Belag, kurvenstarke Autos eher auf dem engeren Weg, Autos mit starkem Schub eher dort, wo eine Schanze oder ein Boost-Feld liegt), nach seiner Vorliebe in diesem Rennen, nach dem Verkehr (volle Wege meidet er) und nach seiner Lage im Rennen (wer hinten liegt, wagt eher den wilderen Weg). Er nimmt gern den Weg, den er beim letzten Mal nicht genommen hat, und folgt nicht einfach dem Bot direkt vor ihm.
+- **Auf jedem Weg höchstens ein Bauplatz:** Die Bauplätze liegen auf dem ersten Weg, der zweite ist frei. Wer ein Hindernis auf dem ersten Weg sieht, nimmt eher den zweiten.
+- Platz, Abstände, Zurücksetzen und «Falsche Richtung» rechnen auf beiden Wegen richtig (im Browser über jeden Weg geprüft, siehe unten).
+
+### Die drei Strecken
+
+**Kiesgrube** (1393 → 1558 m):
+- Neu nach der zweiten Kehre: eine enge Gasse zwischen den Kieshalden (11 bis 13 statt 15 m breit) mit drei Knicken.
+- Neu: Gabelung «Schanze» oder «Kieshalden». Geradeaus über die Schanze und durch eine enge Kurve, oder links durch Sandkurven zwischen den Halden (10 m breit; im Sand ist man langsamer und das Heck schwimmt, dem Geländewagen macht das wenig aus).
+- Neu: um den Baggersee vier lange Bögen zum Driften (22 m Radius) und oben ein schneller Knick über eine Kuppe.
+- Neu: S-Kurven am Grubenrand, hinunter in die Grube (Senke), eine Schikane auf Schotter auf dem Grubengrund, wieder hinauf und durch eine Schikane in der Mulde.
+- Abkürzung «Grubenweg» neu gelegt, in Schlangenlinien durch die Grube, und Umleitung «Werkhof» neu. Die Abkürzung «Notbrücke» über den See fällt weg, weil sie die ganze neue Seeschlaufe abgeschnitten hätte (15 → 14 Bauplätze).
+
+**Bergpass** (1291 → 1381 m):
+- Drei Serpentinen hinauf wie bisher, dazwischen neu eine Baustellen-Schikane auf Schotter (links, rechts, links).
+- Neu: eine Kuppe auf der Passhöhe, dann die Gabelung «Passstrasse» (Schikane) oder «Alpweg» (Kiesweg im Bogen über die Alp, bisher eine Umleitung).
+- Über die Schluchtbrücke wie bisher, danach neu zwei Kehren hinunter, die enge Felsgasse (11 bis 12 m breit) und die Felskehre, dann die Zielkurve mit der Schanze.
+- Abkürzung «Steilhang» neu gelegt (von der Brücke den Hang hinunter, mit einer Kehre), neue Umleitung «Talweg» an der Start-Geraden.
+
+**Paris** (1409 → 1560 m):
+- Start durch den Triumphbogen wie bisher, neu mit der Umleitung «Kreisel».
+- Neu: Gabelung «Boulevard» oder «Passage» (schmal, Pflaster, schräg durch die Häuser hinunter zum Fluss; bisher eine Abkürzung). Die Passage zweigt zuerst sanft ab, damit man sie auch mit vollem Tempo erwischt, und macht in der Mitte einen leichten Knick um ein Haus.
+- Neu: eine Schlaufe am Quai auf Pflaster (links, Kehre rechts, links) statt der schnellen S-Kurven, dann über die Steinbrücke mit dem Buckel.
+- Neu: Gabelung «Eisenturm» oder «Parkweg» (Kiesweg im Bogen durch den Park, bisher eine Umleitung). Vor dem Eisenturm neu eine Schlaufe auf den Sandwegen des Marsfelds.
+- Neu: nach der Eisenbrücke enge Gassen hinauf zum Hügel (11,5 bis 13 m breit, Pflaster) mit Kehren am Weinberg und an der Treppe statt des geraden Anstiegs. Danach wie bisher die Kehre um die Mühle, die Kehre um den Obelisken und der Zielhang mit der Schanze. Die Abkürzung «Treppengasse» zweigt jetzt im Bogen ab und führt fast gerade hinter der Mühle durch.
+
+Alles, was an einer Strecke hängt, ist neu eingerichtet: Bauplätze, Nebenwege, Boost-Felder (Paris legt seine vier Felder selbst fest, damit keines auf einem Weg einer Gabelung liegt), Startaufstellung (auch mit 33 Autos), Ideallinie, «Ultra»-Einstellungen und Optimierer-Zeiten. Draufsichten vorher und nachher: `e4-plan-<strecke>-vorher.png` und `-nachher.png` im Projektordner unter `leistung/` (rot: Kurven unter 25 m Radius, orange: unter 60 m, violett: Gabelung, grün: Abkürzung, blau: Umleitung).
+
+### Messungen vorher und nachher
+
+**Strecken** (`node tools/streckenmass.js`, vorher Fassung 1.3, nachher 1.4). Kurven: Stücke der Mittellinie mit weniger als 60 m Radius, mindestens 6 m lang. Drift-Kurven: wo «Ultra» allein mit dem Sportwagen einen Drift mit Mini-Turbo fährt, Mittel aus Runde 2 und 3, an jeder Gabelung auf dem ersten Weg (auf dem zweiten Weg: Kiesgrube 7, Bergpass 6, Paris 8). Vorher hing die Zahl davon ab, welchen Weg der Bot zufällig nahm.
+
+| Strecke | Länge (Ziel: höchstens) | Kurven (Ziel: mindestens) | davon enger als 25 m | Drift-Kurven pro Runde (Ziel: mindestens) | Gabelungen | Abkürzungen / Umleitungen | Boost-Felder | Bauplätze | «Ultra» allein, schnellste Runde |
+|---|---|---|---|---|---|---|---|---|---|
+| Kiesgrube | 1393 → 1558 m (1601) ✓ | 17 → 27 (24) ✓ | 5 → 17 | 6 → 9 (9) ✓ | 0 → 1 | 2 / 1 → 1 / 1 | 5 → 5 | 15 → 14 | 39,9 → 44,3 s |
+| Bergpass | 1291 → 1381 m (1484) ✓ | 9 → 14 (13) ✓ | 5 → 14 | 4 → 6 (6) ✓ | 0 → 1 | 1 / 1 → 1 / 1 | 5 → 5 | 15 → 14 | 38,9 → 40,9 s |
+| Paris | 1409 → 1560 m (1620) ✓ | 12 → 17 (17) ✓ | 8 → 13 | 6 → 9 (9) ✓ | 0 → 2 | 2 / 1 → 1 / 1 | 5 → 4 | 15 → 14 | 41,5 → 46,4 s (12 %) |
+
+Eine gute Runde dauert damit 41 bis 47 s («Ultra» mit Tempo-Vorteil) oder 43 bis 50 s (Optimierer ohne Tempo-Vorteil), also unter einer Minute.
+
+**Gabelungen** (`SAATEN=99,98,97,96 node tools/gabeltest.js <strecke> 300 30`): Optimierer mit vier Suchen zu je 300 Versuchen pro Weg (pro Weg zählt die beste Runde; eine einzelne Suche streut um bis zu 0,3 s) (Sportwagen, ohne Tempo-Vorteil, alle Gabelungen auf denselben Weg), dazu 30 Rennen mit 11 Bots (3 «Leicht», 4 «Mittel», 3 «Schwer», 1 «Ultra», Autos gemischt, mit Bauen, 3 Runden). «Gleicher Weg wie der Bot davor» zählt nur Paare, die weniger als 1,5 s hintereinander an die Abzweigung kommen.
+
+| Gabelung (erster / zweiter Weg) | Optimierer erster / zweiter Weg | Unterschied (Ziel: höchstens 0,2 s) | zweiter Weg (Ziel: 30 bis 70 %) | Bots, die beide Wege nehmen (Ziel: mindestens 50 %) | gleicher Weg wie der Bot davor (Ziel: höchstens 65 %) |
+|---|---|---|---|---|---|
+| Kiesgrube: «Schanze» / «Kieshalden» | 46,48 / 46,37 s | 0,11 s ✓ | 57,9 % ✓ | 76,1 % ✓ | 39,9 % ✓ |
+| Bergpass: «Passstrasse» / «Alpweg» | 42,93 / 43,05 s | 0,12 s ✓ | 60,2 % ✓ | 77,6 % ✓ | 42,1 % ✓ |
+| Paris: «Boulevard» / «Passage» | 49,31 / 49,15 s | 0,16 s ✓ | 58,6 % ✓ | 78,8 % ✓ | 42,1 % ✓ |
+| Paris: «Eisenturm» / «Parkweg» | 49,31 / 49,16 s | 0,15 s ✓ | 58,9 % ✓ | 75,5 % ✓ | 43,6 % ✓ |
+
+Nach Stufe nehmen den zweiten Weg: «Leicht» 52 %, «Mittel» 58 %, «Schwer» 63 %, «Ultra» 71 % (alle vier Gabelungen zusammen). Die starken Bots nehmen ihn öfter. Das passt dazu, dass Hindernisse nur auf dem ersten Weg stehen können und die starken Bots sie früher sehen.
+
+**Bots auf Spuren** (`STRECKEN=kiesgrube,bergpass,paris node tools/spuren.js 40`, wie in Etappe 3: 11 Bots, Stufen gemischt, Autos und Startplätze zugelost, mit Bauen, 3 Runden, 40 Rennen pro Strecke, mit `VORHER=` für die alten Fassungen, gleicher Zufall). Die Ziele aus Teil 3 gelten gegenüber dem Stand vor Etappe 3 (Fassung 1.2).
+
+| Messung (Kiesgrube, Bergpass, Paris; 120 Rennen) | Fassung 1.2 (vor Etappe 3) | 1.3 (alte Strecken) | 1.4 (neue Strecken) | Ziel (gegenüber 1.2) |
+|---|---|---|---|---|
+| Seitliche Streuung auf Geraden | 1,17 m | 3,07 m | 3,12 m (2,7-mal) | mindestens doppelt ✓ |
+| Rechts / Mitte / links auf Geraden | 1,5 / 18,0 / 80,5 % | 22,0 / 45,7 / 32,3 % | 21,3 / 44,4 / 34,3 % | jedes Drittel mindestens 20 % ✓ |
+| Gänsemarsch auf Geraden | 34,0 % | 16,5 % | 15,7 % (−54 %) | −60 % ✗ |
+| Gänsemarsch auf Geraden ab 12 s nach dem Start | 23,7 % | 8,5 % | 5,0 % (−79 %) | |
+| Gänsemarsch überall | 27,5 % | 18,1 % | 14,9 % (−46 %) | |
+| Seitliche Streuung in Kurven | 1,11 m | 1,28 m | 1,19 m | |
+| Boost-Felder: Durchfahrten mit Schub | 89,2 % | 86,0 % | 91,1 % | |
+| Eigene Abkürzung genommen (Fahrten pro Rennen) | 98,0 % (1,7) | 99,1 % (1,8) | 100,0 % (1,8) | |
+| Berührungen zwischen Bots pro Rennen | 89,3 | 79,1 | 71,0 (−20 %) | höchstens +10 % ✓ |
+| Zurücksetzen | 1 Mal in 120 Rennen | 1 Mal in 120 Rennen | 0 Mal in 120 Rennen | höchstens +10 % ✓ |
+| Stillstand pro Rennen (alle Bots zusammen) | 0,11 s | 0,11 s | 0,01 s | höchstens +10 % ✓ |
+
+**Pro Strecke auf Geraden** (Streuung · rechts / Mitte / links · Gänsemarsch):
+
+| Strecke, auf Geraden | 1.2 | 1.3 | 1.4 |
+|---|---|---|---|
+| Kiesgrube | 1,07 m · 0 / 12 / 88 % · 39,5 % | 3,01 m · 19 / 46 / 34 % · 22,9 % | 3,43 m · 26 / 40 / 34 % · 17,5 % |
+| Bergpass | 1,35 m · 3 / 24 / 73 % · 33,4 % | 3,24 m · 25 / 44 / 31 % · 14,7 % | 2,99 m · 21 / 48 / 31 % · 14,9 % |
+| Paris | 0,94 m · 0 / 12 / 88 % · 32,5 % | 2,86 m · 18 / 48 / 34 % · 16,2 % | 3,10 m · 19 / 43 / 38 % · 15,6 % |
+
+Auf den neuen Strecken verteilen sich die Bots so wie in Etappe 3 auf den alten. Der Gänsemarsch auf Geraden bleibt bei −54 %, fast der ganze Rest entsteht kurz nach dem Start. Berührungen, Zurücksetzen und Stillstand sind seltener als in beiden alten Fassungen.
+
+**«Ultra» allein** (`FEST=1 node tools/ultra.js <strecke> 200` und `SAATEN=4711,4712,4713 STRECKEN=<strecke> node tools/ultraauto.js`): schnellste Runde mit dem Sportwagen gegen den Optimierer und jedes Auto mit gegen ohne Tempo-Vorteil (8 %, in Paris 12 %). Pro Auto zählt seit dieser Etappe die schnellste Runde aus drei Rennen statt aus einem: «Ultra» will nicht in jeder Kurve driften (in Paris in 94 %), und wenn er zufällig auf einem langen kurvigen Stück nicht will, verliert er in einem einzelnen Rennen über 1 s. Mit nur einem Rennen wäre der Rennwagen in Paris nur 3,5 % schneller gewesen.
+
+| Strecke | Optimierer | «Ultra» (Sportwagen) | schneller als der Optimierer (Ziel: mindestens 4 %) | jedes Auto mit statt ohne Tempo-Vorteil, kleinster Vorsprung (Ziel: mindestens 4 %) |
+|---|---|---|---|---|
+| Kiesgrube | 46,63 s | 44,43 s | 4,7 % ✓ | 4,4 % (Geländewagen) ✓ |
+| Bergpass | 43,01 s | 40,85 s | 5,0 % ✓ | 5,1 % (Limousine, Panzerwagen, Rallye-Auto) ✓ |
+| Paris | 49,28 s | 46,85 s | 4,9 % ✓ | 5,4 % (Rallye-Auto) ✓ |
+
+**«Schwer» und «Ultra» im Rennen** (`node tools/faehig.js 100 stark,ultra`, wie in Etappe 2 und 3: zufällige Autos, mit Bauen, 100 Rennen pro Strecke; vorher Fassung 1.3 auf den alten Strecken):
+
+| | Kiesgrube | Bergpass | Paris | alle drei |
+|---|---|---|---|---|
+| «Schwer» gewinnt gegen 7 «Mittel» (Ziel: fast immer) | 99 → 97 % | 96 → 100 % | 100 → 100 % | 98,3 → 99,0 % ✓ |
+| «Ultra» gewinnt gegen 7 «Schwer» (Ziel: mindestens 99 %) | 99 → 99 % | 100 → 100 % | 100 → 100 % | 99,7 → 99,7 % ✓ |
+
+
+**Gleich starke Bots mit verschiedenen Autos** (`STRECKEN=kiesgrube,bergpass,paris node tools/faehig.js 200`: 8 Bots derselben Stufe, jedes Auto einmal, zufällige Startplätze, mit Bauen, 200 Rennen pro Strecke und Stufe). Siege, Mittel aus «Mittel» und «Schwer»; erlaubt sind pro Strecke 4 bis 25 % (Ziel aus Teil 2). Vorher: Etappe 2 auf den alten Strecken (400 Rennen).
+
+| Strecke | Sportwagen | Limousine | Panzerwagen | Transporter | Geländewagen | Pick-up | Rennwagen | Rallye-Auto |
+|---|---|---|---|---|---|---|---|---|
+| Kiesgrube vorher | 9,9 % | 8,8 % | 19,1 % | 10,5 % | 3,6 % | 24,9 % | 14,3 % | 9,0 % |
+| Kiesgrube nachher | 8,5 % | 5,5 % | 17,0 % | 12,3 % | 9,3 % | **28,5 %** | 12,5 % | 6,5 % |
+| Bergpass vorher | 13,0 % | 9,8 % | 12,9 % | 10,3 % | 12,3 % | 14,9 % | 18,4 % | 8,6 % |
+| Bergpass nachher | 13,3 % | 6,8 % | 14,3 % | 8,0 % | 5,5 % | 21,5 % | 21,5 % | 9,3 % |
+| Paris vorher | 14,1 % | 13,1 % | 12,8 % | 17,8 % | 5,6 % | 9,1 % | 14,3 % | 13,3 % |
+| Paris nachher | 10,5 % | 5,3 % | 15,0 % | 10,5 % | 14,3 % | 17,5 % | 14,3 % | 12,8 % |
+
+Alle Autos liegen im erlaubten Bereich ausser dem Pick-up in der Kiesgrube (28,5 %, vorher 24,9 %). Ohne Bauen gewinnt er dort 20 % (Bots, die nie bauen, 100 Rennen pro Stufe): Etwa die Hälfte seines Vorsprungs kommt also vom Bauen, das er am billigsten kann. Am anderen Ende liegt die Limousine, auf allen drei Strecken knapp über der Grenze (5,3 bis 6,8 %). Die Autos stimme ich wie im Auftrag vorgesehen in Etappe 6 ab, wenn alle sechs Strecken neu sind: Ein Auto jetzt für die Kiesgrube zu ändern, würde auch die drei Strecken verschieben, die in Etappe 5 noch umgebaut werden.
+
+**33 Autos** (`node tools/gross.js gleich33 6 <strecke>`: 33 «Mittel»-Bots, 6 Rennen pro Strecke, vorher Fassung 1.3 auf den alten Strecken). Die Startaufstellung mit 33 Autos passt auf allen drei Strecken (Bilder unten).
+
+| 33 «Mittel»-Bots, pro Rennen | Kiesgrube | Bergpass | Paris |
+|---|---|---|---|
+| Treffer pro Auto | 0,81 → 0,13 | 1,91 → 0,81 | 1,00 → 0,14 |
+| Zurücksetzen | 0 → 0 | 0,33 → 0 | 0 → 0 |
+| längster Stillstand eines Autos | 0,2 → 0,1 s | 0,4 → 0,2 s | 0,2 → 0,2 s |
+| Abstand vom Ersten zum Letzten im Ziel (Median) | 4,5 → 7,2 s | 5,6 → 5,4 s | 8,5 → 9,2 s |
+
+Im grossen Feld treffen die Bots viel seltener ein Hindernis, weil die Bauplätze jetzt auf Geraden und in weiten Bögen liegen. In der Kiesgrube und in Paris kommt das Feld weiter auseinander ins Ziel, weil die Strecken länger und kurviger sind.
+
+**Leistung** (Software-Grafik der Testumgebung, vorher Fassung 1.3 auf den alten Strecken). Dreiecke und Zeichenaufrufe pro Bild (`tools/leistung.js`: 8 Fahrer, 5 s nach dem Start, Kamera hinter dem eigenen Auto, grösster Wert aus 10 Bildern, ein Lauf), dazu das Budget pro Grafik-Stufe aus `CONFIG.grafik.budget`:
+
+| Strecke | Stufe | Dreiecke vorher → nachher | Zeichenaufrufe vorher → nachher | Budget (Dreiecke / Aufrufe) |
+|---|---|---|---|---|
+| Kiesgrube | «Niedrig» | 87'992 → 92'806 | 82 → 83 | 160'000 / 160 |
+| Kiesgrube | «Mittel» | 280'422 → 404'151 | 138 → 219 | 460'000 / 370 |
+| Kiesgrube | «Hoch» | 361'954 → 381'536 | 160 → 162 | 560'000 / 390 |
+| Kiesgrube | «Ultra» | 477'339 → 491'035 | 161 → 143 | 570'000 / 370 |
+| Bergpass | «Niedrig» | 77'928 → 81'024 | 77 → 85 | 160'000 / 160 |
+| Bergpass | «Mittel» | 255'004 → 381'936 | 154 → 199 | 460'000 / 370 |
+| Bergpass | «Hoch» | 331'270 → 336'896 | 156 → 157 | 560'000 / 390 |
+| Bergpass | «Ultra» | 446'633 → 450'615 | 158 → 156 | 570'000 / 370 |
+| Paris | «Niedrig» | 126'108 → 130'362 | 106 → 107 | 160'000 / 160 |
+| Paris | «Mittel» | 303'671 → 316'605 | 143 → 146 | 460'000 / 370 |
+| Paris | «Hoch» | 377'445 → 380'059 | 181 → 149 | 560'000 / 390 |
+| Paris | «Ultra» | 471'614 → 477'452 | 187 → 185 | 570'000 / 370 |
+
+Rechenzeit der Spiel-Logik pro Rechenschritt von 1/60 s (`tools/schrittzeit.js`: 30 s Rennen, Mittel und die langsamsten 1 % der Schritte, Median aus je 3 Läufen, vorher und nachher abwechselnd, während sonst nichts lief):
+
+| Strecke | 8 Autos: Mittel (langsamste 1 %) vorher → nachher | 33 Autos: Mittel (langsamste 1 %) vorher → nachher |
+|---|---|---|
+| Kiesgrube | 0,38 (1,05) → 0,39 (1,15) ms | 1,32 (2,72) → 1,29 (2,78) ms |
+| Bergpass | 0,26 (0,64) → 0,27 (0,64) ms | 1,32 (2,27) → 1,33 (2,94) ms |
+| Paris | 0,27 (0,55) → 0,25 (0,70) ms | 1,38 (2,76) → 1,30 (2,31) ms |
+
+Alle Werte liegen im Budget. Die neuen Strecken zeichnen meist 1 bis 6 % mehr Dreiecke, weil sie länger sind und mehr Kurven, Wände und Bauten haben; die Zeichenaufrufe ändern sich wenig. Auf «Mittel» streuen die Dreiecke in der Kiesgrube und am Bergpass von Lauf zu Lauf stark, je nachdem, wo die Autos 5 s nach dem Start gerade stehen und was die Kamera sieht. Diese Fälle habe ich darum dreimal gemessen, «Hoch» zum Vergleich auch: Kiesgrube auf «Mittel» vorher 280'000 bis 362'000, nachher 382'000 bis 415'000 Dreiecke (Median +12 %), Bergpass vorher 248'000 bis 255'000, nachher 261'000 bis 382'000 (Median +2 %). Auf «Hoch» streut es kaum (bis 2,3 %). Der höchste Wert, 415'000 Dreiecke in der Kiesgrube, liegt bei 90 % des Budgets von «Mittel» (460'000).
+
+Die Spiel-Logik rechnet auf den neuen Strecken gleich schnell wie auf den alten: mit 8 Autos 0,25 bis 0,39 ms pro Rechenschritt, mit 33 Autos 1,3 ms. Die langsamsten 1 % streuen von Lauf zu Lauf um rund 0,3 ms.
+
+**Im Browser** (Fassung 1.4, Software-Grafik der Testumgebung, Firebase und Google gesperrt):
+
+- `tools/naehe.js`: auf allen drei Strecken 0 Fundstellen. Nichts steht auf der Fahrbahn oder dem Seitenstreifen, nichts schwebt darüber.
+- `tools/gabelbrowser.js`: jede Strecke zweimal über 2 Runden mit 3 Bots, das eigene Auto fährt ein «Schwer»-Bot, einmal an allen Gabelungen auf dem ersten Weg, einmal auf dem zweiten. Geprüft: der Weg wurde wirklich gefahren, beide Runden zählen, kein Zurücksetzen, nie «Falsche Richtung», die gefahrene Strecke springt nie (Platz und Abstände stimmen), der Hinweis zur Gabelung steht im HUD. 46 von 46 Prüfungen gut.
+- `tools/elfbots.js`: Bergpass und Paris mit 11 Bots bis zum Ergebnis, Rundenzeit ab der Ziellinie. 17 von 17 gut.
+- `tools/erhaltentest.js`: Die alten Zeiten der Bestenliste bleiben sichtbar. 20 von 20 gut.
+- `tools/browsertest.js`: ein Rennen gegen 7 Bots am Bergpass und in Paris bis zum Ergebnis, lokal am selben Gerät bis zum Ergebnis, online mit Host und Gast bis zum Ergebnis, mit Revanche und Abbruch, und das gestörte Netz (Host stumm, Netz blockiert, Neu-Anmeldung, Rennen mit drei Geräten): alles gut. In Paris und im geteilten Bild dauert ein Bildschirmfoto in der Software-Grafik der Testumgebung manchmal länger als die 30 s, die der Test bisher wartete (gemessen 34 s mit `tools/haengprobe.js`, mit und ohne die Korrektur der Auto-Vorschau gleich, in Paris auch mit Fassung 1.3). Der Test brach darum dort ab. Mit `FOTO_MS=120000` wartet er länger, dann laufen beide bis zum Ergebnis durch.
+- `tools/haenger.js`: ein ganzes Rennen in Paris auf «Hoch» bis zum Podest. Nach dem Countdown entsteht kein neues Shader-Programm und keine neue Textur.
+- In der Konsole stehen nur die bekannten Hinweise von three.js und der Software-Grafik und die gesperrten Adressen der Testumgebung.
+
+**Bilder** im Projektordner unter `leistung/`: Draufsichten `e4-plan-<strecke>-vorher.png` und `-nachher.png`; jede Strecke vorher und nachher aus denselben zwei Blickwinkeln (`e4-<strecke>-vorher-1.png` bis `-nachher-2.png`, Grafik «Hoch»); jede Gabelung mit dem blauen Schild 75 bis 90 m davor (`e4-gabel-<strecke>-<gabel>-schild.png`), kurz davor mit Hinweis und Minikarte einmal auf jedem Weg (`-vor-weg1.png`, `-vor-weg2.png`) und auf dem zweiten Weg (`-auf-weg2.png`); die Minikarte in einem Rennen mit 11 Autos in dem Moment, in dem mitten auf beiden Wegen einer Gabelung mindestens zwei Autos fahren, einmal ganz und einmal vergrössert um die Gabelung (`e4-minikarte-<strecke>-<gabel>.png` und `-nah.png`, dazu der ganze Bildschirm `-ganz.png`); die Startaufstellung mit 33 Autos (`e4-start33-<strecke>.png`); der Steckbrief im Menü (`e4-menue-kiesgrube.png`, `e4-menue-paris.png`). Die Messdaten stehen in `leistung/messungen-etappe4.tgz`.
+
+### CONFIG-Werte dieser Etappe
+
+| Wert | Bedeutung |
+|---|---|
+| Strecke `wege: [{ art: 'gabelung', name, nameHaupt, anteil, … }]` | Gabelung: zweiter Weg mit Namen, `nameHaupt` ist der Name des ersten Wegs auf dem Schild, `anteil` (0,5) die Grundlust der Bots auf den zweiten Weg |
+| `bots.gabel.auto` | 0,22: Auto (Geländewagen auf losem Belag, kurvenstarke Autos auf dem engeren Weg, Autos mit starkem Schub dort, wo Schanze oder Boost-Feld liegt) |
+| `bots.gabel.lieb` | 0,18: eigene Vorliebe pro Gabelung und Rennen, zufällig bis so viel mehr oder weniger |
+| `bots.gabel.verkehr` | 0,07 pro Auto, das bis 50 m vor ihm einen Weg fährt oder gewählt hat: so viel weniger Lust auf diesen Weg |
+| `bots.gabel.hinten` | 0,12: wer hinten liegt, nimmt eher den wilderen Weg (loser Belag, Schanze) |
+| `bots.gabel.wechsel` | 0,12: mehr Lust auf den Weg, den er beim letzten Mal nicht genommen hat |
+| `bots.gabel.folgen` | 0,12: weniger Lust, dem Bot direkt vor ihm (unter 1,5 s) einfach zu folgen |
+| `bots.gabel.sehen` | 0,35: mehr Lust auf den zweiten Weg, wenn er auf dem ersten ein Hindernis gesehen hat |
+| `bots.gabelZwang` | nur für Messungen: alle Bots auf den ersten (0) oder zweiten Weg (1), oder pro Gabelung (`{ park: 1 }`) |
+| `bots.stufen.ultra.strecken.kiesgrube`, `.bergpass`, `.paris` | neue Fahr-Einstellungen von «Ultra» für die neuen Strecken (`tools/ultra.js`, Paris mit einer Suche über alle 8 Autos); Kiesgrube und Bergpass mit 8 % Tempo-Vorteil, Paris mit 12 % (`tempo: 1.12`, wie am Himalaya, so am 19.11.2026 entschieden) |
+| Strecke `boostfelder: [{ pos, d }]` | Boost-Felder fest an diesen Stellen statt automatisch verteilt (neu in der Kiesgrube und am Bergpass, Paris hatte das schon) |
+| `version` | 1.4: Online müssen alle dieselbe Fassung haben |
+
+### Entscheidungen
+
+- **Entwurf übernommen:** Den angefangenen Umbau (Gabelungen im Code, `tools/streckenmass.js`, `tools/plan.js`, `tools/gabeltest.js` und die Kiesgrube) habe ich übernommen und fertig gebaut: Schild, Hinweis, Minikarte, Steckbrief und die Wahl der Bots sind neu, die Kiesgrube habe ich weitergebaut, bis sie die Ziele erreicht, und der zweite Bauplatz auf einem Weg ist weg. `tools/gabeltest.js` prüft jetzt jede Gabelung einzeln und fährt jede gefundene Einstellung auch auf dem anderen Weg (Gegenprobe gegen den Zufall der Suche).
+- **«Die längeren zwei»:** verstanden als: Die zwei längsten Strecken aus der Tabelle im Auftrag bekommen zwei Gabelungen, also Ägypten (1478 m) und Paris (1409 m). Paris hat darum zwei, Kiesgrube und Bergpass je eine. Ägypten folgt in Etappe 5.
+- **Aus Nebenwegen werden Gabelungen:** Die Passage in Paris (bisher eine Abkürzung), der Parkweg in Paris und der Alpweg am Bergpass (bisher Umleitungen) sind jetzt Gabelungen, weil sie schon als zweiter Weg da waren und zum Ort passen. Damit jede Strecke weiterhin eine Umleitung hat, gibt es neu den «Kreisel» in Paris und den «Talweg» am Bergpass, beide an der Start-Geraden. Die «Notbrücke» in der Kiesgrube fällt weg, weil sie die ganze neue Seeschlaufe abgeschnitten hätte.
+- **Wege ausgleichen:** In der Kiesgrube war der Weg über die Kieshalden zuerst 0,3 s schneller. Jetzt ist er Sand statt Schotter, 10 statt 12 m breit und hat eine grössere S-Kurve. In Paris war der Weg unter dem Eisenturm zuerst 1,2 s schneller als der Parkweg. Die neue Schlaufe auf dem Marsfeld und der Sand dort gleichen das aus. Mit vier Suchen statt einer fand der Optimierer unter dem Eisenturm später eine noch schnellere Runde, der Parkweg war damit 0,25 s langsamer. Sein Bogen reicht jetzt 7 m weniger weit in den Park hinaus. Am Bergpass passten die Wege schon.
+- **Bauplätze nur auf dem ersten Weg:** Der zweite Weg einer Gabelung hat keinen Bauplatz. So liegt nie mehr als ein Bauplatz auf einem Weg, und der zweite Weg ist der Ausweg, wenn auf dem ersten ein Hindernis steht.
+- **Bestenliste:** Der Auftrag verlangt für jede umgebaute Strecke eine neue Liste. Das widerspricht der Regel vom 18.11.2026, dass alle Zeiten sichtbar bleiben. Am 18.11.2026 hat Johann entschieden: Die alten Zeiten bleiben sichtbar, jede Liste behält ihre Kennung.
+- **«Ultra» in Paris:** `tools/ultra.js` sucht mit vier Autos. Mit den Einstellungen, die es fand, war «Ultra» in Paris mit dem Rallye-Auto, dem Pick-up und dem Transporter nur 3,5 bis 3,7 % schneller als ohne Tempo-Vorteil. 8 % ist die Grenze aus dem Auftrag (nur der Himalaya hatte 12 %, so entschieden am 17.11.2026). Ich habe darum 30 zufällige Einstellungen in der Nähe mit allen 8 Autos gemessen und die gewählt, mit der jedes Auto mindestens 4 % schneller ist als ohne Tempo-Vorteil und der Sportwagen mindestens 4 % schneller als der Optimierer. Trotzdem gewann «Ultra» in Paris mit 8 % nur 94 von 100 Rennen gegen sieben «Schwer», auch nachdem die Bauplätze verschoben waren und er kaum mehr ein Hindernis traf. Er verlor im dichten Feld in den engen Gassen, meist in der ersten Runde. Mit 10 % gewann er 99, mit 12 % alle 100 Rennen. Am 19.11.2026 hat Johann entschieden: Paris bekommt wie der Himalaya 12 %. Damit ist jedes Auto allein 4,4 bis 7,3 % schneller als ohne Tempo-Vorteil.
+- **«Ultra» am Bergpass:** Die neue Suche fand Einstellungen, mit denen «Ultra» weniger driftet (5,5 statt 6 Drifts pro Runde). Die bisherigen Einstellungen passen auch auf die neue Strecke, darum bleiben sie.
+- **Boost-Felder in Paris:** Die automatische Verteilung legte ein Feld auf einen Weg einer Gabelung und hätte diesen Weg schneller gemacht. Paris legt seine vier Felder darum selbst fest: vor der Steinbrücke, vor der Eisenbrücke, nach der Mühle und am Zielhang.
+- **Nichts auf der Strasse:** Das neue Prüfwerkzeug `tools/naehe.js` fand Kieshaufen, die mit ihrem Rand auf den Seitenstreifen reichten, einen Hügel hinter dem Pass, der am Alpweg bis an den Rand stieg, und die Treppengasse in Paris, die gleich neben der Strasse schon 1 m höher lag. Kieshaufen neben der Strasse sind jetzt nur so gross, wie Platz ist, der Hügel steht 22 m weiter hinten, und die Gasse steigt flacher an. Nachdem der Parkweg in Paris flacher geworden war, standen zwei Beine des Eisenturms auf seinem Seitenstreifen. Der Turm ist unten jetzt etwas schmaler (die Beine stehen 18,5 statt 21 m von seiner Mitte entfernt). Das ändert nur das Bild, an keiner Messung etwas.
+- **Zu spitze Kurven gerundet:** In der Kiesgrube waren drei Zickzack-Kurven (Gasse, Grubenrand, Mulde) mit 7 bis 9 m Radius so eng, dass die innere Wand einklappte und der Stand auf der Strecke beim Fahren sprang. Ich habe die Ecken abgeschnitten (jetzt mindestens 10 m Radius), so blieben die Drift-Stellen erhalten.
+- **Platz auf den Wegen:** Der Stand eines Autos auf einem Weg wird auf die Hauptstrecke umgerechnet: weit weg von ihr anteilig zwischen Abzweigung und Einmündung, nahe an ihr so, wie er auf der Hauptstrecke gemessen wird, dazwischen fliessend. Vorher sprang der Stand an der Abzweigung und an der Einmündung um mehrere Meter, und damit kurz auch Platz und Abstände.
+- **Wegweiser höher:** Die blaue Tafel hing auf breiten Strassen mit der Unterkante nur 3,8 m über der Fahrbahn, und der obere Balken schwebte gut einen halben Meter über den Pfosten. Jetzt liegt die Unterkante 5,2 m hoch (der untere Balken 4,9 m), und die Pfosten reichen bis über den oberen Balken.
+- **Betonelemente an Baustellen:** Sie wurden immer in Stücken von zwei Abschnitten gezeichnet. Wo eine Baustelle direkt an einer Einmündung liegt (Paris, Ende der Passage), ragte darum das letzte Stück 2 m in den Weg hinein. Jetzt enden sie genau dort, wo der Weg beginnt.
+- **Abkürzungen neu abgestimmt:** Eine eigene Abkürzung soll etwas Zeit sparen, aber nicht das Rennen entscheiden. Im ersten Entwurf sparte der gerade Steilhang am Bergpass 2,5 s pro Runde und der gerade Grubenweg in der Kiesgrube 1,9 s, so viel, dass «Ultra» und «Schwer» oft gegen Bots verloren, die eine Abkürzung bauten. Der Steilhang hat jetzt eine Kehre im Hang, der Grubenweg Schlangenlinien. Die Treppengasse in Paris dagegen war mit zwei spitzen Ecken 2,7 s langsamer als die Strasse (in Fassung 1.3 blieben Bots sogar darin hängen); sie führt jetzt fast gerade hinter der Mühle durch. Gewinn pro Runde, «Schwer» allein, Abkürzung in Runde 2 fertig gebaut, Mittel aus 8 Fahrten mit dem Sportwagen: Grubenweg 1,1 s (Fassung 1.3: 0,8 s), Steilhang 0,5 s (1.3: 2,9 s langsamer als die Strasse), Treppengasse 0,5 s (1.3: der Bot blieb darin hängen). Mit Pick-up und Rallye-Auto: Grubenweg 0,95 bis 1,19 s, Steilhang 0,52 bis 0,69 s, Treppengasse 0,50 bis 0,78 s.
+- **Kein Kreis mehr nach einer Umleitung:** Am Bergpass verlor «Schwer» jedes sechste Rennen gegen «Mittel». Der Grund: Wer von einer Umleitung zurück auf die Strasse kam, war noch keine 70 m nach deren Einfahrt. Der Bot wollte die Umleitung, die ja noch galt, nochmals nehmen und fuhr einen Kreis zurück (bis 7 s). Die neuen Umleitungen (Werkhof, Talweg, Kreisel) überbrücken nur 62 bis 68 m, darum trat das erst jetzt auf. Jetzt lenkt kein Bot mehr in eine Einfahrt, die schon hinter ihm liegt; das galt bisher nur für «Ultra». Das betrifft alle Strecken.
+- **Passage sanfter:** Die Passage zweigte mit 54° vom Boulevard ab. Jeder neunte Bot, der sie nehmen wollte, kam mit seinem Tempo nicht mehr hinein und prallte an die Ecke zwischen den beiden Wegen (in 30 Rennen 37 von 338 bei «Schwer», 7 von 53 bei «Ultra»). Jetzt biegt sie zuerst mit 27° ab und erst danach stärker. Danach war sie aber 0,27 s schneller als der Boulevard (beste von vier Suchen des Optimierers pro Weg, Ziel höchstens 0,2 s). Schmaler machen (8,5, 8 oder 7,5 statt 9 m) half kaum. Jetzt macht sie in der Mitte einen leichten Knick um ein Haus. In 30 Rennen verpassen sie seither 2 von 347 «Schwer» und 1 von 341 «Mittel», die sie nehmen wollen, und kein «Ultra».
+- **Bauplätze aus engen Kehren genommen:** Nach dem Umbau gewann «Ultra» am Bergpass nur 96 % und in Paris 92 %, «Schwer» in der Kiesgrube 95 %. Der Grund: Neun der neuen Bauplätze lagen mitten in engen Kehren oder direkt am Ausgang einer Kurve. Ein Hindernis dort konnte auch der beste Bot nicht umfahren (Prüfung mit einem Bot allein, das Hindernis steht fertig vor ihm: am Bergpass H9 in 24 von 24 Fahrten getroffen; «Ultra» fuhr dort im Mittel fast 5 Hindernisse pro Rennen an). Jetzt liegen diese Bauplätze auf Geraden oder in weiten Bögen (Kiesgrube H4, H5, H9; Bergpass H7, H8, H9; Paris H7, H8, H9), und man kann jedem Hindernis an jedem Bauplatz ausweichen (0 Treffer in 24 Fahrten pro Bauplatz, nur am Bergpass H2 einmal bei Pylonen). Die Boost-Felder der Kiesgrube und des Bergpasses stehen jetzt fest an ihren bisherigen Stellen: Sonst hätte die Strecke sie wegen der verschobenen Bauplätze neu verteilt, in der Kiesgrube auch weg vom ersten Weg der Gabelung, und die beiden Wege wären nicht mehr gleich schnell gewesen. Seither gewinnt «Ultra» am Bergpass 100 statt 96 von 100 Rennen und in der Kiesgrube 99, «Schwer» in der Kiesgrube 97 statt 95 (Paris siehe nächster Punkt).
+- **Treppengasse im Bogen:** Die neue Treppengasse zweigte rechtwinklig ab. Fast jeder dritte Bot, der sie gebaut hatte, kam mit vollem Tempo nicht hinein und fuhr an ihr vorbei (in 30 Rennen 18 von 59). Jetzt zweigt sie 11 m früher im Bogen ab, seither nehmen sie alle (in 30 Rennen 55 von 55, nach dem Ausgleich der Höhen im nächsten Punkt 58 von 58). Sie spart je nach Auto 0,5 bis 0,8 s pro Runde, weniger als der Grubenweg und etwa gleich viel wie der Steilhang.
+- **Abkürzungen ohne Stufe an den Enden:** Wo eine Abkürzung neben der Strasse beginnt oder endet, liegt sie auf deren Seitenstreifen und muss dort gleich hoch sein wie die Strasse. Der Steilhang lag beim Einbiegen bis 1,4 m darüber, die Autos schwebten dort kurz über der Strasse (so war es schon in Fassung 1.3). Der Grubenweg lag am Anfang bis 0,4 m darunter, die Treppengasse 0,4 m darüber. Jetzt fällt der Steilhang gleichmässig mit etwa 6 % statt am Ende mit 9 %, und alle drei liegen an den Enden höchstens 0,3 m neben der Strasse, in ihrer Mitte höchstens 0,15 m. Danach habe ich den Gewinn der Abkürzungen (oben) und die Einfahrten neu gemessen: In 30 Rennen nehmen 58 von 58 Bots die Treppengasse, 38 von 38 den Steilhang und 48 von 49 den Grubenweg (ein «Leicht» kam mit 28 m/s nicht hinein).
+- **Abkürzungen richtig gezählt:** `tools/spuren.js` zählte eine eigene Abkürzung nur als genommen, wenn der Bot 18 m nach der Abzweigung schon auf ihr war. Der neue Steilhang verlässt die Strasse erst nach 29 m, darum stand er dort mit 0 %. Jetzt zählt, ob der Bot bis 60 m nach der Abzweigung (höchstens die halbe Länge) auf ihr ist. Alle Werte vorher und nachher in dieser Etappe sind so gemessen.
+- **Auto-Vorschau blieb manchmal leer:** Beim Testen meldete three.js einmal einen Fehler. Wird das Auto gewechselt oder ein Rennen gestartet, während die Vorschau im Menü ihre Shader noch übersetzt, bricht `compileAsync` von three.js ab, und die Vorschau bleibt unsichtbar, bis man sie wieder öffnet. Das gab es seit Etappe 1. Jetzt fragt das Spiel selbst nach, ob die Shader fertig sind, und überspringt Materialien, die schon freigegeben sind.
+- **Fassung 1.4:** Die Strecken sind anders als in Fassung 1.3. Online müssen darum alle die Seite neu laden, damit alle mit derselben Fassung fahren (Hinweis in der Lobby wie bisher).
+
+
+### Grenzen
+
+- **Alte Zeiten in der Bestenliste:** Die alten Zeiten stammen von den kürzeren Strecken. Eine schnelle Runde dauert jetzt 2 bis 5 s länger, ein Rennen über 3 Runden also 6 bis 15 s. Neue Zeiten landen darum vorerst hinter den alten. So ist es am 18.11.2026 entschieden: Alle Zeiten bleiben sichtbar, jede Liste behält ihre Kennung.
+- **Pick-up in der Kiesgrube:** 28,5 % Siege unter gleich starken Bots, erlaubt sind höchstens 25 %. Die Limousine liegt auf allen drei Strecken knapp über 4 %. Das stimme ich in Etappe 6 ab, wenn alle Strecken neu sind.
+- **Gänsemarsch:** −54 % auf Geraden statt −60 %, wie schon in Etappe 3 auf den alten Strecken. Fast der ganze Rest entsteht kurz nach dem Start, solange das Feld in den drei Spalten der Startaufstellung fährt (ab 12 s nach dem Start −79 %).
+- **Paris auf den zweiten Wegen:** Wer an beiden Gabelungen den zweiten Weg nimmt, fährt pro Runde 8 Drift-Kurven statt 9. Das Ziel von 9 gilt für den ersten Weg.
+- **Passage:** In 30 Rennen verpassen 2 von 347 «Schwer» und 1 von 341 «Mittel» die Einfahrt, die sie nehmen wollten, kein «Ultra». Wer sie verpasst, fährt auf dem Boulevard weiter und verliert nichts.
+- **Bauplatz H2 am Bergpass:** Pylonen dort traf der Prüf-Bot in 1 von 24 Fahrten, an allen anderen Bauplätzen nie.
+- **Optimierer:** Eine einzelne Suche streut um bis zu 0,3 s. Darum sind die Gabelungen mit vier Suchen gemessen, und jede gefundene Einstellung fährt auch den anderen Weg. Je nachdem, welche Einstellungen die Suchen finden, verschiebt sich der Unterschied trotzdem um rund 0,1 s: Der Weg unter dem Eisenturm lag in Paris je nach Fassung des Parkwegs bei 49,20 oder 49,31 s.
+- **«Ultra» in Paris mit 12 %:** mehr als die 8 % aus dem Auftrag, wie am Himalaya (Entscheidung vom 19.11.2026, siehe oben).
+- **Himalaya, Ägypten und New York** sind noch nicht umgebaut. Ihre Abkürzungen sparen bisher keine Zeit: Am Himalaya und in Ägypten kosten sie rund 4 s, weil die Bots an der Ausfahrt hängen bleiben (siehe Etappe 3), in New York 0,1 s. Am Himalaya liegen die Enden der Abkürzungen zudem bis 1,9 m über oder unter der Strasse. Das nehme ich mir in Etappe 5 mit dem Umbau vor.
+- **Minikarte bei einer Gabelung:** Auf der Minikarte im Spiel liegen die beiden Wege einer Gabelung nahe beieinander, weil sie auch auf der Strecke höchstens 23 bis 37 m auseinanderliegen. Wer welchen Weg fährt, sieht man auf der kleinen Karte erst mitten in der Gabelung. Darum gibt es das Bild der Minikarte auch vergrössert.
+- **Bildschirmfotos in der Testumgebung:** In Paris und im geteilten Bild dauert ein Bildschirmfoto in der Software-Grafik bis 34 s (in Paris auch mit Fassung 1.3), und einzelne Bilder im Rennen brauchen dort mehrere Sekunden, ohne dass ein neuer Shader oder eine neue Textur dazukommt (`tools/haenger.js`). Ob Paris auf echten Geräten flüssig läuft, zeigt nur der Leistungstest im Spiel auf dem Gerät selbst.
+
+
+### Ziele dieser Etappe
+
+| Ziel | Ergebnis | |
+|---|---|---|
+| Kiesgrube: mindestens 24 Kurven, 9 Drift-Kurven pro Runde, höchstens 1601 m | 27 Kurven, 9 Drift-Kurven, 1558 m | erreicht |
+| Bergpass: mindestens 13 Kurven, 6 Drift-Kurven, höchstens 1484 m | 14 Kurven, 6 Drift-Kurven, 1381 m | erreicht |
+| Paris: mindestens 17 Kurven, 9 Drift-Kurven, höchstens 1620 m | 17 Kurven, 9 Drift-Kurven (auf den zweiten Wegen 8), 1560 m | erreicht |
+| Mehr Kurven, gut gemischt; eine gute Runde unter einer Minute | Haarnadeln, S-Kurven, Schikanen, Bögen zum Driften, Knicke; 41 bis 50 s | erreicht |
+| Jede Strecke mindestens eine Gabelung, die längeren zwei | Kiesgrube 1, Bergpass 1, Paris 2 (Ägypten folgt in Etappe 5) | erreicht |
+| Beide Wege einer Gabelung höchstens 0,2 s auseinander (Optimierer) | 0,11 / 0,12 / 0,16 / 0,15 s | erreicht |
+| Gabelung früh zu sehen (Schilder, Pfeile, Minikarte) | Schild 55 m vorher, Hinweis ab 150 m, Minikarte und Steckbrief | erreicht |
+| Platz, Abstände, Zurücksetzen und «Falsche Richtung» auf beiden Wegen | im Browser über jeden Weg geprüft, 46 von 46 | erreicht |
+| Auf jedem Weg höchstens ein Bauplatz | zweiter Weg ohne Bauplatz | erreicht |
+| Mindestens drei neue Elemente pro Strecke, passend zum Ort | siehe «Die drei Strecken» | erreicht |
+| Nichts auf der Strasse oder in der Luft (Prüfwerkzeug) | 0 Fundstellen auf allen drei Strecken (`tools/naehe.js`), Abkürzungen an den Enden höchstens 0,3 m neben der Strasse | erreicht |
+| Leistungsziele aus Teil 1 auch auf den neuen Strecken | Dreiecke und Zeichenaufrufe auf allen Stufen im Budget, Rechenzeit der Spiel-Logik wie vorher | erreicht |
+| Vorschau, Minikarte und Steckbrief nachgeführt | Steckbrief neu mit Kurven und Gabelungen | erreicht |
+| Bauplätze, Nebenwege, Boost-Felder, Startaufstellung (auch 33), Ideallinie, Spuren, «Ultra», Optimierer neu eingerichtet | siehe oben | erreicht |
+| Teil 2: «Schwer» gewinnt fast immer gegen 7 «Mittel» | 99,0 % (97 / 100 / 100 %) | erreicht |
+| Teil 2: «Ultra» gewinnt mindestens 99 % gegen 7 «Schwer» | 99,7 % (99 / 100 / 100 %) | erreicht |
+| Teil 2: «Ultra» mindestens 4 % schneller als der Optimierer, mit jedem Auto | 4,7 / 5,0 / 4,9 %, jedes Auto mindestens 4,4 % | erreicht |
+| Teil 2: pro Strecke jedes Auto 4 bis 25 % Siege | Pick-up in der Kiesgrube 28,5 % | **nicht erreicht** (Etappe 6) |
+| Teil 3: Streuung auf Geraden mindestens doppelt, jedes Drittel mindestens 20 % | 2,7-mal; 21,3 / 44,4 / 34,3 % | erreicht |
+| Teil 3: Gänsemarsch −60 % | −54 % (ab 12 s nach dem Start −79 %) | **nicht erreicht** |
+| Teil 3: jeder Weg einer Gabelung 30 bis 70 % | zweiter Weg 57,9 bis 60,2 % | erreicht |
+| Teil 3: mindestens die Hälfte der Bots nimmt beide Wege | 75,5 bis 78,8 % | erreicht |
+| Teil 3: höchstens 65 % derselbe Weg wie der Bot davor | 39,9 bis 43,6 % | erreicht |
+| Teil 3: Berührungen, Zurücksetzen und Stillstand höchstens +10 % | −20 %, 0 statt 1 Mal, 0,01 statt 0,11 s | erreicht |
+| Bestenliste: neue Liste für jede umgebaute Strecke | alte Zeiten bleiben sichtbar, Entscheidung vom 18.11.2026 | geändert |
+| Bilder: jede Strecke vorher und nachher, jede Gabelung, Minikarte mit Bots auf verschiedenen Wegen | Draufsichten, je zwei Blickwinkel vorher und nachher, jede Gabelung mit Schild und Hinweis und auf beiden Wegen (16 Bilder), Minikarte mit Bots auf beiden Wegen einer Gabelung auf jeder Strecke (ganz und vergrössert), Start mit 33 Autos, Steckbrief | erreicht |
+| Im Browser: jede umgebaute Strecke über jeden Weg jeder Gabelung | jeder Weg jeder Gabelung über 2 Runden, 46 von 46 Prüfungen gut (`tools/gabelbrowser.js`, dreimal gelaufen) | erreicht |
 
 ## Wichtigste CONFIG-Werte
 
@@ -981,8 +1239,9 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 | `windschatten.bonus` | 0,02 | 2 % mehr Höchsttempo im Windschatten |
 | `bots.stufen` | Mut 0,76 / 0,83 / 1,04 / 1,18 bis 1,30 | Fahrkönnen der Bots leicht, mittel, schwer, ultra («Ultra» je Strecke eigene Werte) |
 | `bots.stufen.schwer` | `profi`, `bremsen` 34, `driftAb` 0,5, `tempo` 1,03 | Profi ohne Fehler, spätere Bremspunkte, früher Drift, 3 % Tempo-Vorteil (höchstens erlaubt) |
-| `bots.stufen.ultra` | `tempo` 1,08 (Himalaya 1,12), `strecken`, `hindernisse` 0,15, `pylonen` 0, `umsichtig` | 8 % Tempo-Vorteil, am Himalaya 12 %, Fahr-Einstellungen pro Strecke vom Optimierer, baut nur selten Hindernisse und nie Pylonen, weicht vorausschauend aus |
+| `bots.stufen.ultra` | `tempo` 1,08 (Himalaya und Paris 1,12), `strecken`, `hindernisse` 0,15, `pylonen` 0, `umsichtig` | 8 % Tempo-Vorteil, am Himalaya und in Paris 12 %, Fahr-Einstellungen pro Strecke vom Optimierer, baut nur selten Hindernisse und nie Pylonen, weicht vorausschauend aus |
 | `bots.spuren` | Spur 0,6 bis 0,95 der halben Fahrbahn, neue Spur alle 25 s, `meiden` 2, `abstand` 2,2 m | Lieblingsspur auf Geraden, volle Spuren meiden, kein Gänsemarsch (siehe «Bots auf verschiedenen Spuren») |
+| `bots.gabel` | `auto` 0,22, `lieb` 0,18, `verkehr` 0,07, `hinten` 0,12, `wechsel` 0,12, `folgen` 0,12, `sehen` 0,35 | Wahl der Bots an einer Gabelung: nach Auto, eigener Vorliebe, Verkehr und Lage im Rennen, mit Abwechslung, ohne dem Vordermann einfach zu folgen, weg von einem gesehenen Hindernis (siehe «Neue Strecken») |
 | `bots.pylonen` | 0,4 | so oft wie früher setzen Bots Pylonen (1 = wie bis 17.11.2026, 0 = nie) |
 | `bots.schlammSparen` | 0,5 | so oft sparen Bots ihre Punkte, statt ein Schlammloch zu bauen (0 = nie, wie bis 17.11.2026) |
 | `grafik.auto` | 3,5 / 8 / 16 ms | so schnell muss ein Bild auf «Hoch» sein für «Ultra», «Hoch», «Mittel» |
@@ -1017,7 +1276,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Die Mindestzeit ist bewusst grosszügig (die besten Bots brauchen rund 40 % länger), damit keine echte Runde abgelehnt wird, auch nicht mit Abkürzung, Rampe und Windschatten. Unsinn wie eine 5-Sekunden-Runde lehnt die Datenbank ab, eine erfundene Zeit knapp über der Grenze nicht.
 - Bei Online-Rennen vor dieser Version hat jedes Gerät die Zeiten aller Mitspieler gespeichert, ohne sich zu merken, wer an welchem Gerät sass. Davon lädt ein Gerät beim ersten Hochladen nur die Zeiten mit dem eigenen Namen hoch, Bot-Zeiten aus solchen Rennen gar nicht.
 - Beim Öffnen lädt das Spiel die Liste höchstens einmal pro Minute neu, damit Blättern nicht jedes Mal lädt. «Aktualisieren» lädt sofort.
-- «Ultra» hat 8 % Tempo-Vorteil (die Grenze aus dem Auftrag), nur am Himalaya 12 % (entschieden am 17.11.2026, weil er dort mit 8 % nur 91 % der Rennen gegen «Schwer» gewann). Den Rest holt er nur mit Fahrkönnen: Die Einstellungen pro Strecke stammen aus derselben Suche wie beim Optimierer, nur mit Tempo-Vorteil und mit vier Autos geprüft.
+- «Ultra» hat 8 % Tempo-Vorteil (die Grenze aus dem Auftrag), nur am Himalaya 12 % (entschieden am 17.11.2026, weil er dort mit 8 % nur 91 % der Rennen gegen «Schwer» gewann) und in Paris 12 % (entschieden am 19.11.2026, weil er auf der neuen Strecke mit 8 % nur 94 % gewann). Den Rest holt er nur mit Fahrkönnen: Die Einstellungen pro Strecke stammen aus derselben Suche wie beim Optimierer, nur mit Tempo-Vorteil und mit vier Autos geprüft.
 - «Ultra» baut fast nur für sich selbst (Abkürzung, Rampe). Hindernisse für andere baut er in rund jedem siebten Fall, in dem ein anderer Bot eines bauen würde, Pylonen nie.
 - Pylonen: Bots setzen sie noch in 40 % der Fälle wie früher (`CONFIG.bots.pylonen` 0,4). Mit dem höheren Preis von 3 BP kommt das zusammen auf rund 0,2 Pylonen pro Rennen statt 14 bis 16. Menschen bauen wie bisher.
 - Ohne weitere Regel hätten die Bots die gesparten Punkte fast ganz in Schlammlöcher gesteckt (doppelt so viele wie vorher). Darum heben sie in der Hälfte dieser Fälle ihre Punkte auf (`CONFIG.bots.schlammSparen`).
@@ -1038,7 +1297,7 @@ Alle Werte stehen kommentiert ganz oben im Code im Objekt `CONFIG`.
 - Einen Grand-Prix-Modus gibt es nicht.
 - Bots bauen selten Umleitungen und Abkürzungen, weil die Punkte knapp sind.
 - three.js 0.160.0 schreibt eine harmlose Warnung in die Browser-Konsole.
-- **Umleitung kurz nach der Abzweigung:** Wird eine Umleitung gebaut, wenn ein Bot gerade an ihrer Abzweigung vorbei ist, lenkt er bei «Leicht», «Mittel» und «Schwer» trotzdem noch in den Nebenweg und fährt in die Wand. Das kostet einige Sekunden und kommt selten vor. Bei «Ultra» ist es behoben, bei den anderen Stufen nicht, damit sie genau gleich fahren wie vorher.
+- **Umleitung kurz nach der Abzweigung:** Seit Fassung 1.4 für alle Stufen behoben (bis dahin nur für «Ultra»): Kein Bot lenkt mehr in eine Einfahrt, die schon hinter ihm liegt (siehe «Neue Strecken», «Kein Kreis mehr nach einer Umleitung»).
 - **Mit Google anmelden:** Die Anmeldung ist gegen die Firebase-Emulatoren getestet (Regeln, Namenswahl, Hochladen, Abmelden, alle Fehlermeldungen), das echte Google-Fenster konnte ich in meiner Testumgebung nicht öffnen. Der echte Test ist die Prüfliste unter «Mit Google anmelden». Wer angemeldet ist und sich auskennt, kann weiterhin eine erfundene Zeit über 20 s schicken, aber nur unter seinem eigenen Konto: Solche Einträge findest du über die Konto-Nummer und kannst das Konto sperren.
 - **Gemeinsame Bestenliste:** Solange keine Datenbank eingetragen ist, hat jedes Gerät nur seine eigene Liste (wie bisher). Die Anbindung an Firebase ist nur gegen einen nachgebauten Ersatz-Server mit denselben Regeln getestet, weil die Test-Umgebung das Internet nicht erreicht. Der echte Test sind zwei Geräte (siehe «Gemeinsame Bestenliste einrichten», Schritt 6). Schummeln lässt sich ohne eigenen Server nicht ganz verhindern: Wer sich auskennt, kann eine erfundene Zeit über der Mindestzeit schicken. Solche Einträge löschst du in der Firebase-Konsole. Gleicher Name heisst gleiche Person, auch auf verschiedenen Geräten: Zwei Leute mit demselben Namen teilen sich einen Platz. Die Liste kann jeder lesen, der die Adresse kennt, darum besser Spitznamen statt voller Namen. Wer die Website-Daten im Browser löscht, löscht die Liste des Geräts und noch nicht hochgeladene Zeiten, die gemeinsame Liste bleibt.
 
