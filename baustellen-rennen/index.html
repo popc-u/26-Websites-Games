@@ -288,7 +288,7 @@ input[type=range]{accent-color:var(--gold)}
    Längen in Metern, Zeiten in Sekunden, Tempo in m/s (30 m/s = 108 km/h).
    ══════════════════════════════════════════════════════════════════════════ */
 const CONFIG = {
-  version: '1.4',
+  version: '1.4.1',
 
   // ── Fahrphysik ──────────────────────────────────────────────────────────
   fahren: {
@@ -10938,10 +10938,17 @@ const App = {
 // Mit Google-Anmeldung (Teil 14, Konto) tragen Einträge die Konto-Nummer u. Ein Konto steht einmal da, auch nach einem Namenswechsel,
 // und bekommt ein Häkchen. Alte Einträge ohne Konto (gemeinsame Liste v1, dieses Gerät vor dem Anmelden) bleiben sichtbar, ohne Häkchen.
 const BL_VERSION = 1;
-// Die Bestenliste bleibt immer erhalten (Johann, 18.11.2026): Neue Fassungen, neue Auto-Werte und umgebaute Strecken schreiben in
-// dieselbe Liste wie bisher, die Kennung einer Liste ist immer die Kennung der Strecke. Nur in Fassung 1.2 hiessen die Listen kurz
-// «<strecke>-2»: Diese Einträge holt das Spiel für immer dazu (im Browser einmal zusammengelegt, in der gemeinsamen Liste mitgelesen).
+// Die Daten der Bestenliste bleiben immer erhalten (Johann, 18.11.2026): Keine Fassung löscht Zeiten. Neue Fassungen und neue
+// Auto-Werte schreiben in dieselbe Liste wie bisher. Nur in Fassung 1.2 hiessen die Listen kurz «<strecke>-2»: Diese Einträge holt
+// das Spiel für immer dazu (im Browser einmal zusammengelegt, in der gemeinsamen Liste mitgelesen).
+// Eine neu gebaute Strecke bekommt dagegen eine neue, leere Liste (BL_LISTEN, Johann 23.11.2026): Ihre alten Zeiten bleiben
+// gespeichert, aber ungezeigt, weil sie auf der neuen, längeren Strecke niemand mehr schlagen kann.
 const BL_FRUEHER = ['-2'];
+// Kennung der Bestenliste pro Strecke (fehlt sie hier, ist es die Kennung der Strecke selbst). Eine neu gebaute Strecke bekommt hier
+// eine neue Kennung: Ihre Liste beginnt leer, denn auf der längeren Strecke kann niemand die alten Zeiten mehr schlagen. Die alten
+// Zeiten bleiben gespeichert, auf dem Gerät und in der gemeinsamen Liste, werden aber nicht mehr gezeigt (Johann, 23.11.2026).
+// Fassung 1.4 (20.11.2026): Kiesgrube, Bergpass und Paris neu gebaut. Ein Umbau braucht hier nur eine Zeile.
+const BL_LISTEN = { kiesgrube: 'kiesgrube-14', bergpass: 'bergpass-14', paris: 'paris-14' };
 const BL_STUFE = { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer', ultra: 'Ultra' };
 const BL_ARTIKEL = { limo: 'der' };                 // «mit der Limousine», sonst «mit dem …»
 const BL_HAKEN = '<svg class="bl-haken" viewBox="0 0 16 16" role="img" aria-label="angemeldet"><title>Angemeldeter Spieler</title><circle cx="8" cy="8" r="8"/><path d="M4.4 8.3 6.9 10.8 11.8 5.6"/></svg>';
@@ -11024,11 +11031,17 @@ const Bestenliste = {
     try { localStorage.setItem(CONFIG.bestenliste.schluessel, JSON.stringify(this.daten)); this.ohneSpeicher = false; }
     catch (e) { this.ohneSpeicher = true; }               // privates Fenster o. Ä.: Die Liste gilt dann bis zum Neuladen
   },
-  // Kennung der Liste einer Strecke: immer die Strecke selbst (siehe BL_FRUEHER). Frühere Kennungen: frueher(id).
-  frueher(id) { return BL_FRUEHER.map((x) => id + x); },
-  strecke(id) {
+  // Kennung der Liste einer Strecke (BL_LISTEN), die Strecke zu einer Kennung und alle Kennungen einer Strecke auf diesem Gerät
+  listenId(id) { return BL_LISTEN[id] || id; },
+  blStreckeVon(k) { return Object.keys(BL_LISTEN).find((id) => BL_LISTEN[id] === k) || k; },
+  kennungen(id) { return [this.listenId(id)].concat(this.listenId(id) === id ? [] : [id]); },
+  // Frühere Kennungen, die noch mitgelesen werden: nur solange die Strecke ihre eigene Kennung behält (sonst sind es alte Zeiten)
+  frueher(id) { return BL_LISTEN[id] ? [] : BL_FRUEHER.map((x) => id + x); },
+  // Liste einer Strecke; listeDaten nimmt die Kennung der Liste (so wie sie gespeichert ist)
+  strecke(id) { return this.listeDaten(this.listenId(id)); },
+  listeDaten(k) {
     if (!this.daten) this.laden();
-    return this.daten.strecken[id] || (this.daten.strecken[id] = { menschen: [], bots: {} });
+    return this.daten.strecken[k] || (this.daten.strecken[k] = { menschen: [], bots: {} });
   },
   schluessel(n) { return String(n == null ? '' : n).trim().toLowerCase(); },     // gleicher Name: Gross/klein und Leerzeichen am Rand egal
   autoName(a) { const f = FAHRZEUGE.find((x) => x.id === a); return f ? f.name : String(a); },
@@ -11062,9 +11075,9 @@ const Bestenliste = {
     return l;
   },
   platz(id, auto, e) { const i = this.liste(id, auto).indexOf(e); return i + 1; },     // 0 = nicht (mehr) in der Liste
-  // Liste eines Autos aufräumen: pro Name höchstens proName Zeiten, höchstens CONFIG.bestenliste.speichern Plätze
-  ordne(id, auto) {
-    const S = this.strecke(id), C = CONFIG.bestenliste, proName = Math.max(1, C.proName | 0);
+  // Liste eines Autos aufräumen (k = Kennung der Liste): pro Name höchstens proName Zeiten, höchstens CONFIG.bestenliste.speichern Plätze
+  ordne(k, auto) {
+    const S = this.listeDaten(k), C = CONFIG.bestenliste, proName = Math.max(1, C.proName | 0);
     const andere = S.menschen.filter((e) => e.a !== auto), diese = S.menschen.filter((e) => e.a === auto).sort((x, y) => x.z - y.z);
     const zahl = {}, bleiben = [];
     for (const e of diese) { const k = e.u ? 'u:' + e.u : 'n:' + this.schluessel(e.n); zahl[k] = (zahl[k] || 0) + 1; if (zahl[k] <= proName && bleiben.length < C.speichern) bleiben.push(e); }
@@ -11120,7 +11133,7 @@ const Bestenliste = {
     if (f.konto) e.u = f.konto;
     S.menschen.push(e);
     if (f.konto) this.vormerken(id, e, false, f.konto);            // hochgeladen wird nur, wer angemeldet ist (online jeder seine eigenen Zeiten)
-    this.ordne(id, f.auto); this.sichern(); this.merkeRekord();
+    this.ordne(this.listenId(id), f.auto); this.sichern(); this.merkeRekord();
     this.neu.push({ id, e, kart: f.kart, lokal: f.lokal, spieler1: f.spieler1 });
     const r = { besserG, platzG: this.platz(id, '', e), platzA: this.platz(id, f.auto, e), auto: f.auto, persoenlich: vorG.length > 0 && besserG };
     r.text = this.meldung(r);
@@ -11167,7 +11180,7 @@ const Bestenliste = {
   nachRennenAnmelden() {
     if (!this.aktiv || !Konto.angemeldet() || Konto.nutzer.offline) return;
     const N = Konto.nutzer;
-    for (const x of this.neu) if (x.spieler1 && !x.e.u) { x.e.n = N.name; x.e.u = N.uid; this.vormerken(x.id, x.e, false, N.uid); this.ordne(x.id, x.e.a); }
+    for (const x of this.neu) if (x.spieler1 && !x.e.u) { x.e.n = N.name; x.e.u = N.uid; this.vormerken(x.id, x.e, false, N.uid); this.ordne(this.listenId(x.id), x.e.a); }
     this.sichern(); this.merkeRekord();
   },
   nachRennen() {
@@ -11191,7 +11204,7 @@ const Bestenliste = {
   // Die Einträge aus diesem Rennen bekommen den neuen Namen (ältere Einträge behalten ihren)
   umbenennen(eintraege, n) {
     for (const x of eintraege) { x.e.n = n; const f = this.fahrer[x.kart]; if (f) f.name = n; }
-    for (const x of eintraege) this.ordne(x.id, x.e.a);
+    for (const x of eintraege) this.ordne(this.listenId(x.id), x.e.a);
     this.sichern(); this.merkeRekord();
     const el = document.querySelector('.bl-ergebnis');
     if (el) el.outerHTML = this.ergebnisHtml();
@@ -11217,7 +11230,8 @@ const Bestenliste = {
     }
     return this.testDbMem;
   },
-  adresse(id, alt, token) { const C = CONFIG.bestenliste; return this.url((alt ? C.pfadAlt : C.pfad) + '/' + encodeURIComponent(id), token); },
+  // k = Kennung der Liste (nicht der Strecke: eine neu gebaute Strecke hat eine neue Liste, siehe BL_LISTEN)
+  adresse(k, alt, token) { const C = CONFIG.bestenliste; return this.url((alt ? C.pfadAlt : C.pfad) + '/' + encodeURIComponent(k), token); },
   // Anfrage mit Zeitlimit; nie ein Fehler nach aussen: { ok, status, j } (status 0 = keine Verbindung)
   async anfrage(url, opt) {
     const ctl = typeof AbortController === 'function' ? new AbortController() : null;
@@ -11260,8 +11274,10 @@ const Bestenliste = {
     N.versuch = Date.now();
     const gut = (r) => r && r.ok && (r.j === null || typeof r.j === 'object');
     // Die alte Liste (v1) und die Listen mit früheren Kennungen ändern sich nicht mehr: einmal pro Besuch laden
-    const frueher = N.frueher ? [] : this.frueher(id);
-    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(id)), C.pfadAlt && !N.alt ? this.anfrage(this.adresse(id, true)) : null].concat(frueher.map((k) => this.anfrage(this.adresse(k)))))).then(([r, rAlt, ...rFr]) => {
+    const frueher = N.frueher ? [] : this.frueher(id), k = this.listenId(id);
+    // die alte Liste (v1) gehört zur Kennung der Strecke: bei einer neu gebauten Strecke sind das alte Zeiten, sie wird nicht geladen
+    const mitAlt = C.pfadAlt && !N.alt && k === id;
+    N.laedt = this.sende().then(() => Promise.all([this.anfrage(this.adresse(k)), mitAlt ? this.anfrage(this.adresse(id, true)) : null].concat(frueher.map((f) => this.anfrage(this.adresse(f)))))).then(([r, rAlt, ...rFr]) => {
       if (gut(rAlt)) N.alt = this.ausNetz(id, rAlt.j, false);
       if (frueher.length && rFr.every(gut)) N.frueher = [].concat(...rFr.map((x) => this.ausNetz(id, x.j, true)));
       if (gut(r)) { N.ok = true; N.zeit = Date.now(); N.neu = this.ausNetz(id, r.j, true); }
@@ -11310,7 +11326,7 @@ const Bestenliste = {
   // Nur mit Konto (u). Unerwünschte Namen kommen nicht in die gemeinsame Liste.
   vormerken(id, e, bot, u) {
     if (!this.mitNetz() || !u || this.verboten(e.n)) return;
-    this.schlange().push({ id, n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });      // id: Kennung der Liste = Strecke
+    this.schlange().push({ id: this.listenId(id), n: e.n, z: e.z, a: e.a, b: !!bot, s: bot ? String(e.s || '') : '', u });      // id: Kennung der Liste (BL_LISTEN)
     this.schlangeSichern();
   },
   // Nach dem ersten Anmelden eines Kontos auf diesem Gerät: die Zeiten, die hier vorher gefahren wurden, einmal mit dem Kontonamen
@@ -11328,7 +11344,7 @@ const Bestenliste = {
       const S = this.strecke(id);
       for (const e of S.menschen) if (!e.u && hier(e) && ich.has(this.schluessel(e.n))) { e.n = N.name; e.u = N.uid; this.vormerken(id, e, false, N.uid); }
       for (const a of Object.keys(S.bots)) { const e = S.bots[a]; if (hier(e)) this.vormerken(id, e, true, N.uid); }
-      for (const f of FAHRZEUGE) this.ordne(id, f.id);
+      for (const f of FAHRZEUGE) this.ordne(this.listenId(id), f.id);
     }
     fertig.push(N.uid);
     try { localStorage.setItem(merker, JSON.stringify(fertig)); } catch (e) { /* egal */ }
@@ -11362,7 +11378,7 @@ const Bestenliste = {
         const r = await this.anfrage(this.adresse(x.id, false, a.t), { method: 'POST', body: JSON.stringify({ n, z: x.z, a: x.a, b: x.b, s: x.s, u: a.uid, d: { '.sv': 'timestamp' } }) });
         if (!r.ok && (r.status === 0 || r.status === 429 || r.status >= 500)) break;
         l.splice(i, 1); this.schlangeSichern();
-        const N = this.netz[x.id];
+        const N = this.netz[this.blStreckeVon(x.id)];       // der Zwischenspeicher gehört zur Strecke, die Schlange zur Liste
         if (r.ok && N && N.neu) { const e = { n, z: x.z, a: x.a, d: Date.now(), s: x.s, bot: x.b, netz: true }; if (!x.b) e.u = a.uid; N.neu.push(e); }
       }
     } finally { this.sendet = false; }
@@ -11432,11 +11448,12 @@ const Bestenliste = {
   // Einstellungen: eine Strecke oder alle löschen, mit Rückfrage
   loeschenDialog() {
     const id = Speicher.daten.strecke, name = STRECKEN[id] ? STRECKEN[id].name : id;
-    const weg = (nur) => { const l = this.schlange(); for (let i = l.length - 1; i >= 0; i--) if (!nur || l[i].id === nur) l.splice(i, 1); this.schlangeSichern(); };
+    const weg = (nur) => { const l = this.schlange(); for (let i = l.length - 1; i >= 0; i--) if (!nur || nur.includes(l[i].id)) l.splice(i, 1); this.schlangeSichern(); };
     Dialog.zeige('<h2>Bestenliste löschen?</h2><p>Gelöschte Zeiten lassen sich nicht zurückholen.' +
       (this.mitNetz() ? ' Gelöscht wird nur die Liste dieses Geräts, die gemeinsame Liste aller Spieler bleibt.' : '') + '</p>', [
-      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); delete this.daten.strecken[id]; weg(id); this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
-      { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; weg(''); this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
+      // Johann löscht hier bewusst: dann gehen auch die Zeiten einer früheren Fassung dieser Strecke weg (BL_LISTEN)
+      { text: 'Nur ' + name + ' löschen', f: () => { this.strecke(id); for (const k of this.kennungen(id)) delete this.daten.strecken[k]; weg(this.kennungen(id)); this.sichern(); App.toast('Bestenliste ' + name + ' gelöscht.', 2200); } },
+      { text: 'Alle Strecken löschen', f: () => { this.daten = { v: BL_VERSION, strecken: {} }; weg(null); this.sichern(); App.toast('Alle Bestenlisten gelöscht.', 2200); } },
       { text: 'Abbrechen', klasse: 'zweit', abbruch: true },
     ]);
   },
